@@ -158,8 +158,8 @@ def validate_config(root, config, candidate):
         if not Path(config[key]).is_absolute():
             raise ValueError(f"{key} must be absolute")
     work = Path(config["work_root"])
-    if not (work / "works/active").is_dir():
-        raise ValueError("Missing WorkStore directory: active")
+    if not (work / "works").is_dir():
+        raise ValueError("Missing WorkStore directory: works")
     if candidate or config.get("review"):
         if config.get("review") is not True or not config.get("review_protected_roots"):
             raise ValueError("Candidate requires review=true and explicit review_protected_roots")

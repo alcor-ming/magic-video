@@ -33,7 +33,7 @@ class VisualPlanTest(unittest.TestCase):
         WORK_CLI.account_service(self.root).put("account", "main", {"name": "Fixture"})
         WORK_CLI.account_service(self.root).put("series", "fixture", {"name": "Fixture", "design": "stage-full"})
         self.run_cli("new", "Visual test", "--workflow", "hyperframes_video", "--account", "main")
-        self.variant = next((self.root / "works" / "active").iterdir()) / "variants" / "main"
+        self.variant = WORK_CLI.work_paths(self.root)[0][0] / "variants" / "main"
         # This suite protects existing 3.5.2 Variant behavior.
         state = WORK_CLI.read_json(self.variant / "variant.yaml")
         state.pop("line", None)

@@ -1007,7 +1007,7 @@ def install_component(
     if review_root is not None:
         from work_requests import review_identity
         review_identity(review_root)
-        if not Path(project).resolve().is_relative_to(Path(review_root).resolve() / "works" / "active"):
+        if not Path(project).resolve().is_relative_to(Path(review_root).resolve() / "works"):
             raise ComponentError("Candidate installation requires an isolated Review project")
     allow_unapproved = review_root is not None or acceptance is not None
     release = validate_component_release(Path(release_directory), expected_ref=expected_ref, allow_unapproved=allow_unapproved)

@@ -10,7 +10,7 @@
 
 账号属于 Variant；Work 级 Script/Research 由各 Variant 共享，各 Variant 独立维护 Plan、工程与接受结果。显式内容分支按 CLI 定位。新视频显式指定 `--purpose standard|ip|test`，生产用途指定系列；账号与制作版本可以稍后确定。视觉主题、背景、画幅和可选 Motion 按所选设计卡配置；设计身份由设计卡显式选择（公共包 `stage-full`、`stage-light`；其他设计由用户卡目录提供），旧身份只读并提示重选，不隐式套用 `explainer`。Theme 负责字体、语义色与表面，不决定模式、布局或 cue；Variant 使用冻结外观。
 
-系列经验规则按系列 ID 保存在 WorkStore 的系列 `AGENTS.md`，以 `work series rules show <id>` 读取、`work series rules put <id> --file FILE.md` 整份替换（旧版留历史）、`work series rules delete <id>` 撤下当前规则（正文转入历史）；`work status` 的 `series_rules` 给出所属系列规则路径。规则不随 Work 目录、系列浏览文件夹或链接位置查找，开始 Script 前读取；复盘只写回已成立、可复用的结论，合并重复、修正被推翻条目，不堆日志或猜测，也不自动变成系列默认配置。不再使用的系列以 `work series delete <id>` 退役：仍有任何 Work（含归档）归属时拒绝，须先 `series move`；配置、配置历史与规则整体移入 WorkStore `control-plane/deleted/series/`，不硬删，同 ID 可重新创建且版本从 1 起。系列 ID 不可改名，需要新 ID 时新建系列、逐个 `series move` 后删除旧系列。
+WorkStore 按系列物理分层：`works/<系列ID>/<Work>/`，临时实验在 `works/test/`，未登记系列的 Work 在 `works/_未归系列/`；归档与停放只是 Work 内标记，不移动目录，`series move` 会把 Work 目录一并移到新系列文件夹（存活 Studio 先 `preview studio stop`）。旧版 `works/active|parked|archive/` 布局以 `work migrate layout` 预览、`--apply` 执行一次性迁移，可重复执行；Studio 记录是写入它的运行时的绝对路径，生产根须用 Windows 侧 `work.cmd` 执行，WSL 下会拒绝；迁移报告列出仍写着旧绝对路径的工作文件，由使用者下次使用时改正，冻结快照与证据不改写。系列经验规则即系列文件夹内的 `works/<系列ID>/AGENTS.md`，以 `work series rules show <id>` 读取、`work series rules put <id> --file -` 从标准输入整份替换（也可给文件路径；`series put <id> --file -` 同样从标准输入读配置 JSON；不要在 WorkStore 根目录落请求草稿；旧版与历史留在 control-plane）、`work series rules delete <id>` 撤下当前规则（正文转入历史）；`work status` 的 `series_rules` 给出所属系列规则路径。读写一律经系列 ID 的 CLI，不从 Work 的上级目录或链接位置推断，开始 Script 前读取；复盘只写回已成立、可复用的结论，合并重复、修正被推翻条目，不堆日志或猜测，也不自动变成系列默认配置。不再使用的系列以 `work series delete <id>` 退役：仍有任何 Work（含归档）归属时拒绝，须先 `series move`；系列文件夹除 `AGENTS.md` 外仍有内容时也拒绝；配置、配置历史与规则整体移入 WorkStore `control-plane/deleted/series/` 并移除空系列文件夹，不硬删，同 ID 可重新创建且版本从 1 起。系列 ID 不可改名，需要新 ID 时新建系列、逐个 `series move` 后删除旧系列。
 
 设计身份与可改默认值以所选设计卡为准（内置卡或用户卡目录）：Plan 模板、阶段规则、Brief 字段、主体默认值、资产范围与豁免随卡片维护；Variant 创建时记录身份，制作中读取实时卡片；提交 Draft 时复制卡片文件及引用资产并记录摘要。status 与预览提示卡片变化，`variant design-update` 显式更新本 Variant 快照，保留工程副本并报告待重新安装资产；重新提交 Draft 后沿用原接受流程。已有旧 JSON 快照继续按原语义读取。旧 `explainer/math-rap` 及其他仍支持链路的冻结身份按原语义读取，不自动迁移。card 已移除制作与渲染支持，历史文件、接受快照与成片保留；继续内容须显式采用到受支持的新版本，不配送兼容实现。`talking_head` 是 Template。本版本只提供视频制作；已退役或未知 Work 不继续制作，也不阻断无关视频的定位。
 
@@ -68,7 +68,7 @@ Work 是内容容器，各 Variant 平级；`required_variants` 不再作为第�
 
 `work --work <Work-ID> archive --variant-id <Variant-ID>` 可手动收起未导出的版本，显示未导出，不冒充交付成功。归档和恢复保持物理路径稳定。`park` 只暂停 Work，`resume` 解除暂停；二者不搬目录、不改等待事项或兄弟版本的归档状态，已打开的 Studio 会话继续定位原路径。旧搬移布局只在能保持会话、Current 与原状态完整的兼容路径中处理。
 
-`list` 默认展示 active（含 parked），`list --archived` 查看归档，`list --all` 查看全部；`list --tree` 与可重建的 `浏览目录.md` 使用同一展示数据。按标题、系列号、版本归档数、当前焦点及最近导出定位，工程与成片链接指向准确对象。查看归档不等于重新激活。
+`list` 默认展示 active（含 parked），`list --archived` 查看归档，`list --all` 查看全部；`list --tree` 与可重建的 `浏览目录.md` 使用同一展示数据；`浏览目录.md` 按系列分组，附系列文件夹与系列规则链接，归档 Work 在所属系列内标为已归档。按标题、系列号、版本归档数、当前焦点及最近导出定位，工程与成片链接指向准确对象。查看归档不等于重新激活。
 
 `work storage inspect` 按 Work 盘点空间，`work storage cleanup` 默认仅预览，加 `--apply` 才执行；均可用 `--work <Work-ID>` 限定目标。容量按需统计，无法读取时报告未知。回收只处理已证明归属、可重建、无引用且相关进程已停止的缓存；源、原媒体、接受快照、历史成片、未知内容及失败证据保留，归档本身不触发删除。
 

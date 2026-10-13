@@ -41,14 +41,16 @@ class WindowsRootTest(unittest.TestCase):
         path.write_text(json.dumps(config))
         return root, config, path
 
-    def test_work_store_requires_active_but_not_legacy_lifecycle_directories(self):
+    def test_work_store_requires_works_but_not_legacy_lifecycle_directories(self):
         with tempfile.TemporaryDirectory() as temporary:
             root, config, _ = self.make_root(Path(temporary))
             self.assertEqual(config["work_root"], runtime.resolved_config(root)["work_root"])
             self.assertFalse((root / "works/parked").exists())
             self.assertFalse((root / "works/archive").exists())
             (root / "works/active").rmdir()
-            with self.assertRaisesRegex(ValueError, "WorkStore missing works/active"):
+            self.assertEqual(config["work_root"], runtime.resolved_config(root)["work_root"])
+            (root / "works").rmdir()
+            with self.assertRaisesRegex(ValueError, "WorkStore missing works"):
                 runtime.resolved_config(root)
 
     def test_doctor_reports_identity_and_invocation_separately(self):

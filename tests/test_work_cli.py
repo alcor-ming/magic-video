@@ -53,7 +53,7 @@ class WorkCliTest(unittest.TestCase):
 
     def new_work(self, title: str = "Test Work") -> tuple[str, Path]:
         work_id = self.invoke("new", title, "--workflow", "hyperframes_video")
-        return work_id, self.root / "works" / "active" / work_id
+        return work_id, WORK_CLI.locate_work(self.root, work_id)[0]
 
     def test_explicit_missing_variant_never_falls_back_to_main(self):
         work_id, _ = self.new_work()
@@ -204,7 +204,7 @@ class WorkCliTest(unittest.TestCase):
     def test_external_work_root_is_persisted_and_used(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             external = Path(temporary)
-            (external / "works/active").mkdir(parents=True)
+            (external / "works").mkdir(parents=True)
 
             configured = json.loads(self.invoke("root", "set", str(external)))
             self.assertTrue(configured["configured"])
@@ -212,7 +212,7 @@ class WorkCliTest(unittest.TestCase):
             WORK_CLI.account_service(self.root).put("account", "main", {"name": "External fixture"})
             WORK_CLI.account_service(self.root).put("series", "alpha", {"name": "Alpha", "design": "stage-full"})
             work_id = self.invoke("new", "External", "--workflow", "hyperframes_video")
-            self.assertTrue((external / "works" / "active" / work_id).is_dir())
+            self.assertTrue((external / "works" / "alpha" / work_id).is_dir())
             self.assertEqual(work_id, (external / ".runtime" / "current-work").read_text().strip())
             self.assertFalse((self.root / "works").exists())
             self.invoke("list")
@@ -386,7 +386,7 @@ class WorkCliTest(unittest.TestCase):
 
         active_final = Path(self.invoke("finalize", str(final_one), "--qa-passed"))
         self.assertTrue(active_final.is_file())
-        self.assertIn("/active/", active_final.as_posix())
+        self.assertIn("/alpha/", active_final.as_posix())
         self.assertEqual(first_manifest, (active_final.parent / "manifest.json").read_bytes())
         active_variant = active_final.parent.parent
         receipt_path = active_variant / ".runtime" / "finalize.json"
@@ -500,7 +500,7 @@ class WorkCliTest(unittest.TestCase):
             final = self.root / f"{variant_id}-final.mp4"
             final.write_bytes((variant_id + "-final").encode())
             output = Path(self.invoke("finalize", str(final), "--qa-passed"))
-            self.assertIn("/active/", output.as_posix())
+            self.assertIn("/alpha/", output.as_posix())
             self.assertEqual("active", WORK_CLI.read_json(work / "variants" / variant_id / "variant.yaml")["lifecycle"])
             if variant_id == "main":
                 self.assertEqual("active", WORK_CLI.locate_work(self.root, work_id)[1])

@@ -112,7 +112,7 @@ class SuccessorTest(unittest.TestCase):
         rename = cli.Path.rename
 
         def interrupt(path, target):
-            if path.name.startswith(".pending-") and path.parent.name == "active":
+            if path.name.startswith(".pending-") and path.parent.name == "one":
                 raise OSError("interrupted before publication")
             return rename(path, target)
 

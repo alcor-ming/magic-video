@@ -87,7 +87,10 @@ def _recover(root, journal, request, api):
     api.validate_id(target_name, "succession target")
     if not staging_name.startswith(".pending-") or not target_name.startswith("work-hyperframes_video-"):
         raise api.HarnessError("Invalid succession recovery paths")
-    parent = api.works_root(root) / "active"
+    # Journals from before the series layout have no parent and staged under works/active.
+    folder = record.get("parent", "active")
+    api.validate_id(folder, "succession folder")
+    parent = api.works_root(root) / folder
     staging, target = parent / staging_name, parent / target_name
     state = api.identity_state(root)
     if _fingerprint(state) not in (record["identity_before"], _fingerprint(record["identity_after"])):
@@ -172,10 +175,11 @@ def command(root, args, api):
                 settings = api.adopted_settings(root, args)
                 number = api.video_number(root, rows, identity)
                 work_id = f"work-hyperframes_video-{number:03d}-{api.work_slug(title)}"
-                target = api.works_root(root) / "active" / work_id
+                target = api.series_folder(root, source_meta["series"]) / work_id
                 if target.exists() or work_id in identity["aliases"]:
                     raise api.HarnessError("Successor identity already exists")
                 staging = target.with_name(f".pending-{uuid.uuid4().hex}")
+                staging.parent.mkdir(parents=True, exist_ok=True)
                 staging.mkdir()
                 try:
                     api.atomic_write(staging / "WORK.md", api.template_text(root, "WORK.template.md", {
@@ -218,6 +222,7 @@ def command(root, args, api):
                     identity["successions"][key] = chain
                     identity["video_highwater"] = number
                     api.write_json(journal, {"request": request, "staging": staging.name, "target": work_id,
+                                            "parent": target.parent.name,
                                             "identity_before": before, "identity_after": identity,
                                             "files": api.snapshot_tree_manifest(staging)})
                     target = _recover(root, journal, request, api)

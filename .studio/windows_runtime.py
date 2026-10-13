@@ -133,8 +133,8 @@ def resolved_config(root: Path) -> dict:
             or paths_overlap(directory, Path(config["asset_root"]))):
         raise ValueError("design_root must be outside tool, Work and legacy AssetStore directories")
     config["design_root"] = str(directory)
-    if not (work_root / "works/active").is_dir():
-        raise ValueError("WorkStore missing works/active")
+    if not (work_root / "works").is_dir():
+        raise ValueError("WorkStore missing works")
     # Retain explicit legacy settings without consulting a retired AssetStore.
     sources = config.get("asset_source_roots", [])
     if not isinstance(sources, list) or not all(isinstance(p, str) and Path(p).is_absolute() for p in sources):

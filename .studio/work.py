@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from contextlib import contextmanager, ExitStack
 from datetime import datetime
 import hashlib
@@ -90,6 +91,11 @@ WAIT_REASONS = {
 SNAPSHOT_ITEMS = ("index.html", "compositions", "DESIGN.md", "project-config.json")
 ID_PATTERN = re.compile(r"^[\w.-]+$", re.UNICODE)
 NUMBERED_TITLE_PATTERN = re.compile(r"^(\d{3})-(.+)$")
+# works/<series>/<Work>/; the legacy flat containers stay readable until `migrate layout`.
+LEGACY_WORK_CONTAINERS = ("active", "parked", "archive")
+RESERVED_SERIES_IDS = {*LEGACY_WORK_CONTAINERS, "history"}
+UNSORTED_SERIES_FOLDER = "_未归系列"
+LEGACY_ARCHIVE_MARKER = ".runtime/legacy-archive.json"
 
 
 class HarnessError(RuntimeError):
@@ -375,7 +381,14 @@ def account_service(root: Path) -> control_plane.AccountService:
 def command_config(root: Path, args: argparse.Namespace) -> None:
     service = account_service(root)
     if args.operation == "put":
-        record = service.put(args.command, args.identity, read_json(Path(args.file)))
+        if args.file == "-":
+            try:
+                data = json.loads(sys.stdin.read())
+            except ValueError as error:
+                raise HarnessError(f"Invalid JSON on stdin: {error}") from error
+        else:
+            data = read_json(Path(args.file))
+        record = service.put(args.command, args.identity, data)
     elif args.operation == "get":
         record = service.get(args.command, args.identity)
         if args.command == "series":
@@ -395,7 +408,8 @@ def command_series_rules(root: Path, args: argparse.Namespace) -> None:
     service = account_service(root)
     if args.rules_operation == "put":
         try:
-            content = Path(args.file).expanduser().read_text(encoding="utf-8")
+            # "-" reads stdin so agents need no draft file in the WorkStore.
+            content = sys.stdin.read() if args.file == "-" else Path(args.file).expanduser().read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError) as error:
             raise HarnessError(f"Cannot read series rules file: {error}") from error
         record = service.put_rules(args.identity, content)
@@ -983,7 +997,7 @@ def runtime_root(root: Path) -> Path:
 
 
 def ensure_roots(root: Path) -> None:
-    (works_root(root) / "active").mkdir(parents=True, exist_ok=True)
+    works_root(root).mkdir(parents=True, exist_ok=True)
     runtime_root(root).mkdir(parents=True, exist_ok=True)
 
 
@@ -1018,14 +1032,34 @@ def clear_pointer(root: Path, name: str) -> None:
     write_current(root, None if name == 'current-work' else current['work'], None)
 
 
-def archived_work_paths(root: Path) -> Iterable[Path]:
-    archive = works_root(root) / "archive"
-    if not archive.is_dir():
-        return []
-    paths: list[Path] = []
-    for month in sorted(archive.iterdir(), reverse=True):
-        if month.is_dir():
-            paths.extend(path for path in sorted(month.iterdir()) if path.is_dir() and (path / "WORK.md").is_file())
+def series_folder(root: Path, series: Any) -> Path:
+    """Physical home of a Work: works/<series>/, or the unsorted folder without a series."""
+    if not isinstance(series, str) or not series:
+        return works_root(root) / UNSORTED_SERIES_FOLDER
+    validate_id(series, "series")
+    if series in RESERVED_SERIES_IDS or series.startswith(("_", ".")):
+        raise HarnessError(f"Series identity {series!r} is reserved")
+    return works_root(root) / series
+
+
+def work_paths(root: Path) -> list[tuple[Path, str]]:
+    """Every Work directory with its physical container kind: series, or legacy active/parked/archive."""
+    base = works_root(root)
+    containers: list[tuple[Path, str]] = []
+    for child in sorted(base.iterdir()) if base.is_dir() else []:
+        if child.is_symlink() or not child.is_dir() or child.name.startswith("."):
+            continue
+        if child.name == "archive":
+            containers.extend((month, "archive") for month in sorted(child.iterdir(), reverse=True)
+                              if month.is_dir() and not month.is_symlink())
+        else:
+            containers.append((child, child.name if child.name in LEGACY_WORK_CONTAINERS else "series"))
+    paths: list[tuple[Path, str]] = []
+    for container, physical in containers:
+        for path in sorted(container.iterdir()):
+            if (path.is_dir() and not path.name.startswith(".pending-")
+                    and (physical != "archive" or (path / "WORK.md").is_file())):
+                paths.append((path, physical))
     return paths
 
 
@@ -1040,7 +1074,7 @@ def ensure_mutable_work(root: Path, work: Path) -> None:
         raise HarnessError('Work is retired; historical material remains readable')
     if any(work.name in record["chain"][:-1] for record in identity_state(root)["successions"].values()):
         raise HarnessError("Succession predecessor must remain archived")
-    if work.parent.parent.name == "archive":
+    if work.parent.parent.name == "archive" or (work / LEGACY_ARCHIVE_MARKER).is_file():
         raise HarnessError("Legacy physical archive remains read-only; create a new Work for further production")
 
 
@@ -1063,7 +1097,7 @@ def materialize_legacy_lifecycle(work: Path) -> None:
 
 
 def work_location(work: Path, physical: str) -> str:
-    if (work / ".runtime/archive.json").is_file() or physical == "archive":
+    if (work / ".runtime/archive.json").is_file() or physical == "archive" or (work / LEGACY_ARCHIVE_MARKER).is_file():
         return "archive"
     if (work / ".runtime/parked.json").is_file():
         return "parked"
@@ -1077,14 +1111,111 @@ def locate_work(root: Path, work_id: str) -> tuple[Path, str]:
     validate_id(work_id, "work id")
     work_id = identity_state(root)["aliases"].get(work_id, work_id)
     validate_id(work_id, "work id")
-    for location in ("active", "parked"):
-        candidate = works_root(root) / location / work_id
-        if candidate.is_dir():
-            return candidate, work_location(candidate, location)
-    for candidate in archived_work_paths(root):
-        if candidate.name == work_id:
-            return candidate, "archive"
+    matches = [(path, physical) for path, physical in work_paths(root) if path.name == work_id]
+    if len(matches) > 1:
+        raise HarnessError(f"Work {work_id} exists in several folders: " + ", ".join(str(path) for path, _ in matches))
+    if matches:
+        path, physical = matches[0]
+        return path, work_location(path, physical)
     raise HarnessError(f"Unknown work: {work_id}")
+
+
+def physical_container(root: Path, work: Path) -> str:
+    base = works_root(root).absolute()
+    if work.parent.parent.name == "archive" and work.parent.parent.parent.absolute() == base:
+        return "archive"
+    if work.parent.name in LEGACY_WORK_CONTAINERS and work.parent.parent.absolute() == base:
+        return work.parent.name
+    return "series"
+
+
+def relocation_plan(root: Path, work: Path, series: Any) -> dict[str, Any] | None:
+    """Plan moving a Work into works/<series>/; None when it is already there.
+
+    Studio records and cover recipes are read back by absolute path, so they are rewritten;
+    a possibly live Studio process blocks the move.
+    """
+    target = series_folder(root, series) / work.name
+    if target.absolute() == work.absolute():
+        return None
+    if target.exists():
+        raise HarnessError(f"Target folder already exists: {target}")
+    prefixes = [work.resolve(), (works_root(root) / "active" / work.name).resolve()]
+    def moved(value: str) -> str | None:
+        prefix = next((p for p in prefixes if Path(value).is_relative_to(p)), None)
+        return None if prefix is None else str(target.resolve() / Path(value).relative_to(prefix))
+    records = []
+    for variant in variant_paths(work):
+        state = read_json(variant / "variant.yaml")
+        recipe = state.get("cover_recipe")
+        if isinstance(recipe, dict):
+            # Cover assets outside the Work (asset library) keep their paths.
+            refs = {role: moved(ref["path"]) for role, ref in recipe.items()
+                    if isinstance(ref, dict) and isinstance(ref.get("path"), str)}
+            if any(refs.values()):
+                recipe = {**recipe, **{role: {**recipe[role], "path": path} for role, path in refs.items() if path}}
+                records.append((variant.relative_to(work).as_posix() + "/variant.yaml", {**state, "cover_recipe": recipe}))
+        for path in sorted((variant / ".runtime").glob("studio-*.json")):
+            record = read_json(path)
+            changed = {}
+            for key in ("project", "browser_profile"):
+                value = record.get(key)
+                if not isinstance(value, str) or not value:
+                    continue
+                changed[key] = moved(value)
+                if changed[key] is None:
+                    # Windows-written records (D:\...) are unreadable from WSL; liveness is unknowable there too.
+                    raise HarnessError(f"Studio record {path.name} of {work.name}/{variant.name} names a path outside this "
+                                       f"Work as seen by this runtime ({value}); run the move from the runtime that wrote it")
+            if changed:
+                if not record.get("stopped_at") and not storage.process_stopped(record.get("pid")):
+                    raise HarnessError(f"Studio for {work.name}/{variant.name} may still be running; "
+                                       "run preview studio stop before moving the Work")
+                records.append((path.relative_to(work).as_posix(), {**record, **changed}))
+    return {"work": work, "target": target, "physical": physical_container(root, work), "rewrites": records}
+
+
+def apply_relocation(root: Path, plan: dict[str, Any]) -> Path:
+    """Idempotent: records and markers are written inside the Work before the single rename."""
+    work, target = plan["work"], plan["target"]
+    for relative, record in plan["rewrites"]:
+        write_json(work / relative, record)
+    if plan["physical"] == "archive":
+        write_json(work / LEGACY_ARCHIVE_MARKER, {"migrated_from": work.parent.relative_to(works_root(root)).as_posix(),
+                                                  "migrated_at": now()})
+    elif (plan["physical"] == "parked" and not (work / ".runtime/resumed.json").is_file()
+          and not (work / ".runtime/parked.json").is_file()):
+        write_json(work / ".runtime/parked.json", {"parked_at": now(), "stable_path": True, "migrated_from": "parked"})
+    target.parent.mkdir(parents=True, exist_ok=True)
+    work.rename(target)
+    return target
+
+
+LEGACY_WORK_PATH = re.compile(r"works/(?:active|parked|archive/[^/\"'\s]+)/(work-[^/\"'\s]+)")
+# Frozen snapshots, caches and evidence keep their recorded paths; only working files are reported.
+FROZEN_WORK_PARTS = {"previews", ".runtime", "final", "history", "tts-segments", "covers", "vendor", "exports",
+                     "handoff", "node_modules", ".git"}
+CONTENT_ADDRESSED_PART = re.compile(r"[0-9a-f]{64}")
+
+
+def legacy_path_references(work: Path) -> list[dict[str, Any]]:
+    """Working text files that still name a pre-layout Work path; reported for the agent, never rewritten."""
+    found = []
+    for path in sorted(work.rglob("*")):
+        relative = path.relative_to(work)
+        if (FROZEN_WORK_PARTS.intersection(relative.parts) or any(map(CONTENT_ADDRESSED_PART.fullmatch, relative.parts))
+                or path.is_symlink() or not path.is_file()
+                or path.suffix.lower() not in {".json", ".md", ".txt", ".yaml", ".yml", ".py", ".html", ".ps1", ".sh", ".cmd"}
+                or path.stat().st_size > 2 * 1024 * 1024):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8").replace("\\\\", "/").replace("\\", "/")
+        except (OSError, UnicodeDecodeError):
+            continue
+        names = sorted(set(LEGACY_WORK_PATH.findall(text)))
+        if names:
+            found.append({"file": relative.as_posix(), "works": names})
+    return found
 
 
 def list_work_rows(root: Path, *, validate_identity: bool = True) -> list[dict[str, Any]]:
@@ -1149,14 +1280,12 @@ def list_work_rows(root: Path, *, validate_identity: bool = True) -> list[dict[s
         if row["series_number"] is not None and type(row["series_number"]) is not int:
             row["error"], row["series_number"] = "Invalid series number metadata", None
         return row
-    for location in ("active", "parked"):
-        parent = works_root(root) / location
-        if parent.is_dir():
-            for path in sorted(parent.iterdir()):
-                if path.is_dir() and not path.name.startswith(".pending-"):
-                    rows.append(row_for(path, location))
-    for path in archived_work_paths(root):
-        rows.append(row_for(path, "archive"))
+    for path, physical in work_paths(root):
+        rows.append(row_for(path, physical))
+    counts = Counter(row["id"] for row in rows)
+    for row in rows:
+        if counts[row["id"]] > 1:
+            row["error"] = "Work ID exists in several folders; run work migrate layout"
     if validate_identity:
         work_successor.validate(rows, identity_state(root), SimpleNamespace(**globals()))
     location_order = {"active": 0, "parked": 1, "archive": 2}
@@ -1383,12 +1512,14 @@ def command_new(root: Path, args: argparse.Namespace) -> None:
                 raise HarnessError("Experiment already exists: " + ", ".join(existing) + "; use --separate for a new comparison")
         assigned_series_number = (series_number(root, rows, identity, series)
                                   if args.workflow == "hyperframes_video" and args.purpose != "test" else None)
+        folder = series_folder(root, series)
+        folder.mkdir(parents=True, exist_ok=True)
         while True:
             work_id = f"work-{args.workflow}-{number:03d}"
             if args.workflow == "hyperframes_video":
                 work_id += f"-{work_slug(title_text)}"
             if work_id not in existing_ids:
-                work = works_root(root) / "active" / work_id
+                work = folder / work_id
                 try:
                     staging = work.with_name(f".pending-{uuid.uuid4().hex}")
                     staging.mkdir()
@@ -1543,14 +1674,35 @@ def tree_lines(root: Path, rows: list[dict[str, Any]]) -> list[str]:
 def refresh_browser(root: Path) -> None:
     store = works_root(root).parent
     rows = list_work_rows(root)
-    output = ["# 浏览目录", "", "★ 当前焦点；容量为按需盘点记录，非实时扫描。", ""]
-    def link(label: str, path: str) -> str:
+    output = ["# 浏览目录", "", "★ 当前焦点；容量为按需盘点记录，非实时扫描。每个系列对应 works/<系列ID>/ 文件夹，系列规则是其中的 AGENTS.md。", ""]
+    def link(label: str, path: str | Path) -> str:
         relative = Path(path).relative_to(store).as_posix()
         return "[" + label.replace("[", "\\[").replace("]", "\\]").replace("\n", " ") + "](" + quote(relative, safe="/") + ")"
-    for heading, members in (("制作中", [r for r in rows if r["location"] != "archive" and not r.get("error")]),
-                             ("历史归档", [r for r in rows if r["location"] == "archive" and not r.get("error")]),
-                             ("隔离对象", [r for r in rows if r.get("error")])):
-        output.extend(["## " + heading, ""])
+    def series_label(series: Any) -> str:
+        if series == "test":
+            return "临时实验"
+        if not series:
+            return "未归系列"
+        try:
+            return account_service(root).get("series", series)["name"]
+        except HarnessError:
+            return series
+    states = {"active": "制作中", "parked": "停放", "archive": "已归档"}
+    order = {"active": 0, "parked": 1, "archive": 2}
+    healthy = [row for row in rows if not row.get("error")]
+    for series in sorted({row["series"] for row in healthy}, key=lambda value: (value in (None, "test"), value == "test", value or "")):
+        members = sorted((row for row in healthy if row["series"] == series),
+                         key=lambda row: (order[row["location"]], row["series_number"] or 0, row["created_at"], row["id"]))
+        try:
+            folder = series_folder(root, series)
+        except HarnessError:
+            folder = None
+        heading = f"## {series_label(series)}"
+        if folder is not None and folder.is_dir():
+            heading += " · " + link("文件夹", folder)
+        if folder is not None and (folder / "AGENTS.md").is_file():
+            heading += " · " + link("系列规则", folder / "AGENTS.md")
+        output.extend([heading, ""])
         for row in members:
             label = display_name(root, row)
             if row["purpose"] == "test" and sum(r["purpose"] == "test" and r["title"] == row["title"] for r in rows) > 1:
@@ -1558,10 +1710,8 @@ def refresh_browser(root: Path) -> None:
             focus = " ★" if row["current"] else ""
             usage = row["usage"]
             capacity = f"{usage['bytes']} bytes（盘点记录）" if usage.get("bytes") is not None else f"占用未知：{usage.get('reason') or '盘点不可用'}"
-            output.append(f"- {link(label, row['path'])}{focus} · {row['location']} · {row['archived_variants']}/{row['variant_count']} 已归档 · {capacity}")
-            if row.get("error"):
-                output.append("  - 隔离：" + row["error"])
-            elif not row["variants"]:
+            output.append(f"- {link(label, row['path'])}{focus} · {states[row['location']]} · {row['archived_variants']}/{row['variant_count']} 已归档 · {capacity}")
+            if not row["variants"]:
                 output.append("  - 尚未创建制作版本")
             for variant in row["variants"]:
                 label = f"{variant_account_label(row, variant)} · {variant['name']} · {variant['ratio']}" + (" ★" if variant["current"] else "")
@@ -1571,6 +1721,12 @@ def refresh_browser(root: Path) -> None:
                     output.append("    - " + link("最新成片", variant["final"]))
                 for history in variant["history"]:
                     output.append("    - " + link(history["source_preview"] or "历史来源未知", history["path"]))
+        output.append("")
+    isolated = [row for row in rows if row.get("error")]
+    if isolated:
+        output.extend(["## 隔离对象", ""])
+        for row in isolated:
+            output.append(f"- {link(row['title'], row['path'])} · 隔离：{row['error']}")
         output.append("")
     atomic_write(store / "浏览目录.md", "\n".join(output))
 
@@ -1603,6 +1759,55 @@ def command_storage(root: Path, args: argparse.Namespace) -> None:
 def command_browser_rebuild(root: Path, args: argparse.Namespace) -> None:
     refresh_browser(root)
     print(str(works_root(root).parent / "浏览目录.md"))
+
+
+def command_migrate_layout(root: Path, args: argparse.Namespace) -> None:
+    """Idempotent move to works/<series>/<Work>/; only empty legacy containers are removed."""
+    with naming_lock(root):
+        plans, works, errors, references = [], [], [], []
+        for path, _ in work_paths(root):
+            found = legacy_path_references(path)
+            if found:
+                others = sorted({name for item in found for name in item["works"]} - {path.name})
+                references.append({"work": path.name, "files": [item["file"] for item in found], "other_works": others})
+            try:
+                plan = relocation_plan(root, path, read_frontmatter(path / "WORK.md").get("series"))
+            except (HarnessError, OSError, ValueError) as error:
+                errors.append({"work": path.name, "path": str(path), "error": str(error)})
+                continue
+            if plan:
+                plans.append(plan)
+                works.append({"work": path.name, "from": str(path), "to": str(plan["target"]),
+                              "rewritten_files": [name for name, _ in plan["rewrites"]], "legacy_container": plan["physical"]})
+        service, rules = account_service(root), []
+        for config in sorted((runtime_root(root) / "control-plane" / "series").glob("*.json")):
+            try:
+                path, _, legacy = service.rules_paths(config.stem)
+                if legacy.is_file():
+                    if path.exists():
+                        raise HarnessError(f"Series rules exist in both {legacy} and {path}; keep one")
+                    rules.append({"series": config.stem, "from": str(legacy), "to": str(path)})
+            except (HarnessError, OSError, ValueError) as error:
+                errors.append({"series": config.stem, "error": str(error)})
+        targets = Counter(item["to"] for item in works)
+        errors += [{"path": target, "error": "Several Works would move to the same folder"} for target, count in targets.items() if count > 1]
+        # Stale absolute paths in working files do not block the move; agents fix them when next used.
+        report = {"applied": False, "works": works, "rules": rules, "errors": errors, "stale_path_references": references}
+        if args.apply:
+            if errors:
+                raise HarnessError("Layout migration has errors; resolve them first: " + json.dumps(errors, ensure_ascii=False))
+            for plan in plans:
+                apply_relocation(root, plan)
+            for item in rules:
+                service.adopt_legacy_rules(item["series"])
+            base = works_root(root)
+            for container in [*(base / "archive").glob("*"), *(base / name for name in LEGACY_WORK_CONTAINERS)]:
+                if container.is_dir() and not container.is_symlink() and not any(container.iterdir()):
+                    container.rmdir()
+            report["applied"] = True
+    if args.apply:
+        refresh_browser(root)
+    print(json.dumps(report, ensure_ascii=False, indent=2))
 
 
 def command_migrate(root: Path, args: argparse.Namespace) -> None:
@@ -1689,8 +1894,11 @@ def command_series_move(root: Path, args: argparse.Namespace) -> None:
         if metadata.get("workflow") != "hyperframes_video" or metadata.get("purpose", "standard") == "test":
             raise HarnessError("Only production video Works can move between series")
         old_series, old_number = metadata.get("series"), metadata.get("series_number")
+        plan = relocation_plan(root, work, args.identity)
         if old_series == args.identity:
-            print(json.dumps({"work": work.name, "series": old_series, "series_number": old_number}))
+            # Re-running finishes an interrupted move; the folder follows the recorded series.
+            path = apply_relocation(root, plan) if plan else work
+            print(json.dumps({"work": work.name, "series": old_series, "series_number": old_number, "path": str(path)}, ensure_ascii=False))
             return
         rows, identity = list_work_rows(root), identity_state(root)
         new_number = series_number(root, rows, identity, args.identity)
@@ -1703,7 +1911,8 @@ def command_series_move(root: Path, args: argparse.Namespace) -> None:
         identity["series_highwater"][args.identity] = new_number
         write_identity(root, identity)
         atomic_write(metadata_path, "---\n" + json.dumps(metadata, ensure_ascii=False) + "\n---\n" + document_body(metadata_path))
-    print(json.dumps({"work": work.name, "series": args.identity, "series_number": new_number}))
+        path = apply_relocation(root, plan) if plan else work
+    print(json.dumps({"work": work.name, "series": args.identity, "series_number": new_number, "path": str(path)}, ensure_ascii=False))
 
 
 def command_variant_name(root: Path, args: argparse.Namespace) -> None:
@@ -1749,7 +1958,7 @@ def command_root_set(root: Path, args: argparse.Namespace) -> None:
     if not target.is_absolute() or target.is_symlink():
         raise HarnessError("WorkStore root must be an existing absolute directory, not a symlink")
     target = target.resolve()
-    required = [target / "works/active"]
+    required = [target / "works"]
     missing = [str(path) for path in required if not path.is_dir()]
     if missing:
         raise HarnessError("WorkStore root is missing required directories: " + ", ".join(missing))
@@ -4591,6 +4800,9 @@ def build_parser() -> argparse.ArgumentParser:
     apply = migrations.add_parser("apply")
     apply.add_argument("--mapping", required=True, help="Mapping produced by migrate dry-run")
     apply.set_defaults(handler=command_migrate)
+    layout = migrations.add_parser("layout", help="Move Works into works/<series>/ and series rules into the series folder; dry-run unless --apply")
+    layout.add_argument("--apply", action="store_true")
+    layout.set_defaults(handler=command_migrate_layout)
     research_catalog.register_cli(commands)
     appearance_parser = commands.add_parser("appearance", help="Resolve or explicitly rebind exact appearance assets")
     appearance_commands = appearance_parser.add_subparsers(dest="appearance_command", required=True)
@@ -4611,7 +4823,7 @@ def build_parser() -> argparse.ArgumentParser:
             if operation != "list":
                 operation_parser.add_argument("identity")
             if operation == "put":
-                operation_parser.add_argument("--file", required=True)
+                operation_parser.add_argument("--file", required=True, help="JSON file, or - for stdin")
             operation_parser.set_defaults(handler=command_config)
         if kind == "series":
             rules = operations.add_parser("rules", help="Read or replace the series AGENTS.md rules by series identity")
@@ -4620,7 +4832,7 @@ def build_parser() -> argparse.ArgumentParser:
             rules_show.add_argument("identity")
             rules_put = rules_operations.add_parser("put")
             rules_put.add_argument("identity")
-            rules_put.add_argument("--file", required=True)
+            rules_put.add_argument("--file", required=True, help="Rules Markdown file, or - for stdin")
             rules_operations.add_parser("delete", help="Remove the current rules; the text is kept in rules history").add_argument("identity")
             rules.set_defaults(handler=command_series_rules)
             delete = operations.add_parser("delete", help="Retire a series that no Work references; config, history and rules are archived")

@@ -157,10 +157,7 @@ def build_plan(root: Path, api: Any, *, title_overrides: dict[str, str] | None =
     all_ids = {row["id"] for row in rows}
     paths: dict[str, Path] = {}
     duplicate_ids = set()
-    candidates = [path for location in ("active", "parked")
-                  for path in (store / "works" / location).glob("*")
-                  if path.is_dir() and not path.name.startswith(".pending-")]
-    candidates.extend(api.archived_work_paths(root))
+    candidates = [path for path, _ in api.work_paths(root)]
     for path in candidates:
         if path.name in paths:
             duplicate_ids.add(path.name)
