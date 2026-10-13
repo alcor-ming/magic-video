@@ -1,0 +1,1316 @@
+TEST_ROOT=C:\Users\Jym\AppData\Local\Temp\hf-check-7604bcef
+SHA256_OK=dada60e6f750c473ab2d952862e424fb4ee83010e126c2226ab32f49bbaecc0b
+STEP=verify-package
+{
+  "schema_version": 3,
+  "layout": "root-v1",
+  "channel": "stable",
+  "product_version": "4.2.0",
+  "flavor": "public",
+  "source_file_sha256": {
+    ".agents/skills/hyperframes-design-authoring/SKILL.md": "5204bc52eb9fb3d27fcf3aeaf8ec9e0291c09bd2860343c3d960cefd3d2c186f",
+    ".agents/skills/hyperframes-production-workflow/CHANGELOG.md": "257da79377a002770484b8fc79b4714705a058434303721c6f869fce49ff3184",
+    ".agents/skills/hyperframes-production-workflow/README.md": "d2f10a7b692dab03d819a923ed10da80a96d4e1e428a764866c40b19da6506d9",
+    ".agents/skills/hyperframes-production-workflow/SHA256SUMS.txt": "2310e6a87373dcf8ab4b38e810397f5301c756a99a11732ad0fad1d1654f7a8d",
+    ".agents/skills/hyperframes-production-workflow/SKILL.md": "3096c7da66fa7598c3972e8360b0d15d7a78130b5d4bd71e2f462790ee8ae2d8",
+    ".agents/skills/hyperframes-production-workflow/VERSION": "c89b87c262e9d5ffd20e73aac74a1772adcc9f5a21682cc33adcf5086e5fef5c",
+    ".agents/skills/hyperframes-production-workflow/profile-registry.json": "d613e251695ebd3e7263a89c80a92727972b6aa0f476138077a0d4952e8d3ce1",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/CHANGELOG.md": "8a5a0e5f1d1086b31d3bebf756ed412c4e3a9d9ee302ea10e9280946b92471ae",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/DECISION.md": "a74d19ab332ba97287ed9b1c1e5f9c6f705cb896a9e86a4e474f1308e3c372b2",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/README.md": "7e50abbd41d3f246f36ac135c4f46d5c5896236aeb798fc10d2cb9e0b07b4119",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/SHA256SUMS.txt": "29152b093a40856746e57524bdcbbe6ba05a02b136f777f39a99cb3a757feb02",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/SKILL.md": "97bd8831b200c1bb388a29a6f3b91cd810d40cc20afc17f7facc73fc0a8f8dc2",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/manifest.json": "b03055e3bdc7b975f1592036cdc51ce7705b838916a6f669b11635dcf9af7a04",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/01-optical-fluidity/PROFILE.md": "01cea19e0d79d3ab19b7858d37d55c169c2a412f5c60b47f6ee41907ce1ffb10",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/01-optical-fluidity/subtemplates/hero-flow.md": "e40f7f2240dfa29f880c350cb33c3af80607387a8e10c7d2a5e5d6b324ffe371",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/01-optical-fluidity/subtemplates/module-stage.md": "2ba1bdfb8446143b94a907a1aee5f7ee45de105f5ad087f30c1b456fd55a3985",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/01-optical-fluidity/tokens.json": "c73de1641e4c37c88b1ab82363a79d726dc6f426153628a737b9364ff82daa6d",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/02-kami-editorial/PROFILE.md": "2270a65d7ec60dde7d41437575fc115ace21be4e909a207ae031fe5602df8c16",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/02-kami-editorial/tokens.json": "55bc8e02be19ae9684db83039f2c1dd6b29923bceef8ef47337e8d20b29d8808",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/03-monochrome-atelier/PROFILE.md": "7019aa6b359fc825cc1976403539cf8db0a5bf79ebeb9c2d4930f39d9afe45f3",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/03-monochrome-atelier/tokens.json": "82514239fb3d3c91062b4c5004d573cc3469c0c3942af40e93913a8720e39eb6",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/prompt-blocks/compact-visual-identity.md": "d29e2c867f08f1facce043f96343c6536ddd75fe57b23b7486beb80debfc6919",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/prompt-blocks/full-visual-identity.md": "2ebefc36df204a2b4c8b3e001bb28946b6cf8987aea0f4c809d775d2eb08fd90",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/prompt-blocks/profile-selector.md": "0d73033882cfa0e9a3c6498a8a380016d8a8f398f5fe2e680549fdb43e9734a4",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/shared/profile-contract.md": "ceb3e6c131a892e26186f7f2b6e77b22ab6d5b166f8c08ae3d21bdfed0d17684",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/shared/review-gate.md": "e60e16d3dc1efd3b1052c1f9a5b8e965cca46f170091510bddabb28abc9981a8",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/shared/two-template-mapping.md": "a815212a8dda8ee04f21880f953f8055a3e81b5745c2d117eabe9f7368e39486",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/upstream/OPTIONAL-INSTALL.md": "c22452d92888f492051941d0a2527ef053ce85c61ddf465e7151ab9d7bb06fae",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/upstream/SOURCES.md": "a87d0c0cf562929eafbccd1e8aa2b53a912a1363ba0acaeb2542e2ac6b815b76",
+    ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/upstream/THIRD_PARTY_NOTICES.md": "ca6ce63317f443387120878b98db043bc57489ccc19be122a2b900038cd188fa",
+    ".agents/skills/hyperframes-production-workflow/scripts/validate_package.py": "5f98b0367a763b4f57a0b57fdb4efcfced7516cd2474637d21eebdf9d54875cd",
+    ".gitignore": "e01d0705d0930368826989f6b5751bf3c882e7eaeec7e04d9e9176761ba75494",
+    ".studio/appearance.py": "aac5c1bd70eb3fb489dddbf52c190663038df180e3f73315b67790ecfef0414a",
+    ".studio/appearance_rebind.py": "d1a39ecc06a17c683e8b2a49edf2e13e0bbed3db5d5372f362d6eb145592f29a",
+    ".studio/asset_contract.py": "a8d7457f4c58454f6746e1b6f0a625271b5f5feaedd222cac0ab9f2898eec916",
+    ".studio/asset_maintenance.py": "7b9c0877b7e2e8292927002e5e382ee68d8118d3971b2513e27602efa1d912db",
+    ".studio/asset_store.py": "541bdad49a53b23c446eaab7fe5c07a93043308dae15b7a6521b7be7e84f3827",
+    ".studio/behavior-changes.yaml": "d9505c47fcb32e0863ee041590c1ccad32335b5ef22c485806978cb6449047db",
+    ".studio/capabilities.yaml": "901f9cf0cd015ea7914413f4a5bc97c892acf618c957ef2f35d85fe4cf08c604",
+    ".studio/cast_art.py": "a5f82e4836a22a1855b2c730be57999c2d008ab02a5970c8d7f317aec9613a6e",
+    ".studio/component_harness.py": "003ccf8635b264bcae3f8a3f8e6ceb7c86f7f610dc35eecf6a7eee2c02376892",
+    ".studio/content_adapters.py": "27376e0e8cdb508d4eda6406316bb7703a14e110eb29eb5e438427aa6a3619c7",
+    ".studio/content_analysis.py": "ec46c557cfcd835a2f9afa8562b4b8c3796e798409b24668451af3b929b33344",
+    ".studio/content_retro.py": "eb7c4f564aa75ac92cb99924a43e5cad35544e832a09190d3601cf88b8358566",
+    ".studio/control_plane.py": "d680a314b77e50966551ecaa213c767fe507a481249dd807f3fe804c474e4f5e",
+    ".studio/cover.mjs": "e22a0581fef2c09bccc383f0f3efa0999180b9a3985d0abc9eb426d41323b68a",
+    ".studio/cover.py": "07a2a2969e5af96b81bb0a63b4d132d188f1f8c33a061bac570237d9fe937814",
+    ".studio/critic.py": "d3462e19e0ad0b717462489340213904d895200ce8119de1ee7f08c87a453a86",
+    ".studio/dependency_scan.cjs": "863f57227fc8b92f643cff028d1c858531be380ef5acfb358ecdc96b311a9418",
+    ".studio/dependency_scan.py": "e79142a4613d39c2f5b78052c1fd7d4ff2baa2036b1b4167f6190467b6e811b0",
+    ".studio/design_examples.py": "03162a9e583433a8c30487291437eda33761280bce200cf8dd767b9454cc9256",
+    ".studio/design_preview.mjs": "ae23579094a1b2704275826ca3058d98c0728013232f3127ff1bd74d2db93349",
+    ".studio/design_snapshot.py": "ceaa420cc1b790a609c004ef232303fb9f464f742f150f9c45945aae0edc45fd",
+    ".studio/design_sources.py": "c502e815fdd2f77a5895f50e0abdf4fe3266d1be5bd3b12542ac803e2270c5e5",
+    ".studio/designs.py": "6f6eb1dd803e4821524d0eb36a0c5b342d021cca8f7c9fbd119df746fbd51e0e",
+    ".studio/designs/stage-full/GUIDE.md": "8486f932fca89092a3aa44cd36d4c5d65fd924bfdc5fbc594f164692fc84de06",
+    ".studio/designs/stage-full/assets/stage-rig/asset.json": "2949c1872b1ac70b27f9bd1d531d73360f397be3f6722640e83c1c0e280aed28",
+    ".studio/designs/stage-full/assets/stage-rig/stage-rig.js": "772802d3d12157638cc0070f04d88e6a11c34f774438cf9d2a008731e5b1c3eb",
+    ".studio/designs/stage-full/design.json": "35bf322472308dd3d2325edf704bc5d7bced3d607b2b1cd118269caf0fdd5815",
+    ".studio/designs/stage-full/example-manifest.json": "3f40ed9cc2054a1ab96e3bdce05af8678e277aecb4a1c975074999642c4f5199",
+    ".studio/designs/stage-full/example/DESIGN.md": "bde0352a3699894b02f9ff343764d5580e6d7c01f172319a0e0aff46883db0d7",
+    ".studio/designs/stage-full/example/index.html": "edcaf6c9f966217a26ede6fa76d8c6cfdfb7c687b08cd95bbd1050285d3645a5",
+    ".studio/designs/stage-full/example/project-config.json": "e8a7f57fe015657c6a4da84b9f56f3b469bf5daaefd0c55bb7678a9bbc3d39f1",
+    ".studio/designs/stage-full/example/scene.js": "64ab4c46840b012525215b66cf2802788af2c48fa4e6ee39c6b4fe41794bb097",
+    ".studio/designs/stage-full/example/style.css": "b1fbe67be1e8a10b9c4aef960631a34bf48e754d11f98d6586312fe54d1ed812",
+    ".studio/designs/stage-full/stages/draft.md": "b0bec64aea92dbb828d0d889a17fa67dad553def79d37945124916ce3e567e65",
+    ".studio/designs/stage-full/stages/export.md": "1687403e92f3e4954e7c2002f675f77e0c7fffe92d0380c3b3eefded31659236",
+    ".studio/designs/stage-full/stages/plan.md": "7da6fad5bd97d9b31f0191571bb3c9a34cd65dadc6fd217f6b346ab868d9dd5a",
+    ".studio/designs/stage-full/stages/research.md": "91c8084c04b0f6863d156d5f3f7c34720349d35a4cfcb53419cf2df67179125a",
+    ".studio/designs/stage-full/stages/script.md": "891367c60ec2d7158cd9a8dd04040158dac75bc0295782df765e02cfb951285f",
+    ".studio/designs/stage-light/GUIDE.md": "30c36c8e5ac3e724dea492b6dce034fd786a171059c6b481656923dcd0cf6811",
+    ".studio/designs/stage-light/design.json": "be8c5da46e5ffca4df824196e4bbce0d28b9d4d524ef5357886d09aef018b792",
+    ".studio/designs/stage-light/example-manifest.json": "b1f1347bc92afbc5e256800ab84f8bff35875079f5212ea03fe9ea596a11211e",
+    ".studio/designs/stage-light/example/DESIGN.md": "36b15d156463e78a183b1354f63b45496f0819c02ce00afcce97871e6719c147",
+    ".studio/designs/stage-light/example/index.html": "e5c4a079112db2ee93d9d514fbab73a8e5327754ed747f9d882da491440ac334",
+    ".studio/designs/stage-light/example/project-config.json": "e8a7f57fe015657c6a4da84b9f56f3b469bf5daaefd0c55bb7678a9bbc3d39f1",
+    ".studio/designs/stage-light/example/scene.js": "f81ed8c2b6835532324a9aadc145dee8d7ed8803a074993300bb093f9d7fd38f",
+    ".studio/designs/stage-light/example/style.css": "cb99b6e4b9d88b1150b9a4d232136d526cf448db47c80b7ce6c538038ef97ef5",
+    ".studio/designs/stage-light/stages/draft.md": "9444643169a9554c6a1addfa3173599e3606fe442af223e087350eae63517f23",
+    ".studio/designs/stage-light/stages/export.md": "c30ddbda61bb5b5cbdb9bd6c2526ac1150fd7827afe482681cfaa293cc7fd179",
+    ".studio/designs/stage-light/stages/plan.md": "359bc8a12c6a9832243815cc871637ca8440a683c0ba0ea6ba2a580be4d7ca01",
+    ".studio/designs/stage-light/stages/research.md": "28e1392fc248803f6047bc1e2a3090ba9850af1602b24217abcb1f676a9bdb4c",
+    ".studio/designs/stage-light/stages/script.md": "4aa0befbc81e41f359ff823e276384369c4da2b03a619f2b9071b53bf77805e4",
+    ".studio/director_plan.py": "c2c60536c49d6d6f309ec69cbb3c495e244cf600238a6310e65ecaf24b521780",
+    ".studio/english_plan.py": "2fa93c6f185d8612a00a052552530fb020053e2435dfe79a34a223d8caf279a9",
+    ".studio/explainer.py": "b4cde02751954ef52e66014b1da8c464ae1a7077f257df14d4248a44eb1383b4",
+    ".studio/exports.py": "f1719509059498cb2e059439a713a14be41e0acefa324a408be190a5beeade7d",
+    ".studio/font_cmap.mjs": "61cd8b3134066c5600593c48e64c528916187f94e6495fb562cf077e0c2d6f23",
+    ".studio/fonts/manifest.json": "490f3a133b88efb4352a70f75d35bee7e61fc041bb6298399b1ec92fc4601ad8",
+    ".studio/fonts/source-han-sans/LICENSE.txt": "fcac737e761ec63dbfbdce11030a1780161920d80315edba9c8beff1c2bac5a2",
+    ".studio/fonts/source-han-sans/SourceHanSansCN-Bold.otf": "62383707c086a32f3afd5e293f34c7eff64c7fea31f579fdc6cbe34d920519a6",
+    ".studio/fonts/source-han-sans/SourceHanSansCN-Regular.otf": "e2bc8a2e7f37474b774fff8db758681ece40bb6947a90d571bce9dd60671a8e4",
+    ".studio/future/patterns.md": "741e68960b010f001700d9cba5942bc756789cbc7da45b26a859afecee677eaa",
+    ".studio/icon_sets.py": "854ed1261362873994931799a69b8da87fbe88cef6e2fe4ea5acd71ecde930f4",
+    ".studio/lines.py": "5b5beaf366556c6db39fe7c78291505c9c3c871c66d0fc5b67f1fc78ccce72c2",
+    ".studio/lines.yaml": "18454690b8720949f3d0fbe0af64273dbb45db3967fe77fef77bddd6a0d5bd52",
+    ".studio/math_audio.py": "7f1c6ec61649d0086aa80843efc1d556e83d3631f426c451c6e6d250ff82eda1",
+    ".studio/math_build.py": "c558e8d4f4f97ef97f11546a431b05693a2d72e76b5ab1a8300c8d39b5b8a9f3",
+    ".studio/math_chain.py": "8b0fc1dfd585533842d762d4cb43a081d1588a761ed8fa9e2791cd6094e5e555",
+    ".studio/math_kit.py": "a103720d801960127a4fa73a2f214e1f441cd147876cbfaf289d2ebae3576947",
+    ".studio/math_kit_assets.py": "98911eeaf7c48e153d49cbef0f14e72c2ee4a436f0ce913b868830c465400322",
+    ".studio/math_kit_check.mjs": "e3aa9d0b41cbc21a52cc6172ebb844dfd4a9417998e58f8003c079e24a3abb58",
+    ".studio/mechanisms.yaml": "3a70b47e818f22e0ad6ffae5de6fe7de764026dffa57eb88f62a44c3c5f984ca",
+    ".studio/module_texts.py": "9d894b9f26268eddc9e31406850397cfa6951ac09e6f6991e176941a9150647e",
+    ".studio/package-scopes.json": "325e21da54fdb611ec1da25871a6f24d86981052b3da84d13706f78827318eb8",
+    ".studio/parser/.gitignore": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+    ".studio/parser/package-lock.json": "857b1ed9a58d1e9d195dcc71654b9ad3bf88d26e2ba3ab8987d9b38ba03da591",
+    ".studio/parser/package.json": "10436a9adfafb6ede9b3bbc47682881a35450593c1335295d8a448c3cdb28b1a",
+    ".studio/prepare_windows_runtime.py": "892f6bce75d5e5a74f36e3a9447f5dde38283ba67944bdf18985369de27294a1",
+    ".studio/recipes/pure-hyperframes.md": "c16bd1ed9b3c8ac347cf2092b6958e6faa741bcfb48400e0a44b2e82b4e13adf",
+    ".studio/recipes/talking-head.md": "5990784c0a40ba6d434387449c0e22065ce75f27b39b40c3832c79ab4fe0f30b",
+    ".studio/release-sources.json": "f56a488655c231ad8361e82fbd1a44a1dd4f7b612e85f93c1e1593b15450b83c",
+    ".studio/research_catalog.py": "c83ee2833972a9ac68ee94e939c1db63f32505cd0bf8fdebb3c0775dcfa97e15",
+    ".studio/review_bundle.py": "3eedade35aaf3184d926e8cd4acaeadc939ef6cf361b03a883ab37cc731357ec",
+    ".studio/root_deploy.py": "d2aaa0f7cdcc49a505da365fb4ee03fb155455b318f78db00f4d526299ebc5ef",
+    ".studio/runtime/appearance.js": "effa10f956b15fdf2f04f0663dfa5cb78e2480d681f580df3c40315714cc1925",
+    ".studio/runtime/broll.js": "a912749869d3e6e24678710c45e417aee0e4dde90b801a8fd776cf50894447ae",
+    ".studio/runtime/captions.js": "231563ea29a08a2d1863cd37f12ed35f4e0c32976ea8963593828f01a82554da",
+    ".studio/runtime/cues.js": "ea47be2cb7f25d452d50d58eaa2341337297aa4673da41fd5af9a0e779fc47c6",
+    ".studio/runtime/figures.js": "d4b152e01154e4d3cdcd5910aea7b38f558b4153e3a124c48886b644922bff4a",
+    ".studio/runtime/rolls.js": "16870880e6a3c2c6fca0d889312f0faee9c2423cab1a0878fbe8d59d9ff3cb68",
+    ".studio/runtime/scene-binding.js": "de9dc9f91581702f9920d95d39c2027fa25f13583b53bda3273b404fce0e1311",
+    ".studio/seek_check.cjs": "bb6660dbf55d459671490fa1745604983029f1bb288874221cf1acc8505b6b8c",
+    ".studio/seek_check.py": "674da4853323b4112bf517bf08437082340b89546ccfaa0f02675c6a710e8c4b",
+    ".studio/settings.py": "1c158c3181b23d4b4411b9edd4caa5017149911fbdb985c8aca7df2dcbc69162",
+    ".studio/settings.yaml": "e8b61161da40387d144a565334ed27557271754b7d92da7022c6149eb399c6b6",
+    ".studio/sfx/.gitignore": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+    ".studio/sfx/jsfxr.mjs": "f528a31fb03b8ef31fb80d6cc9e15579efff44a42b472846ba7d5639cc74e1c1",
+    ".studio/sfx/package-lock.json": "d21676567987fc260e88cb316f314589de7c1c7d8f77bb285447dc56a3dac4e8",
+    ".studio/sfx/package.json": "3bc97df9c5b0bf393f066b0acc93a549fedce218ed9b51837fadd9764a7fe434",
+    ".studio/sfx/render.scd": "443aa1428384cfcaabf48bf166421b889a6136af50536d28622d8ffed4a46a12",
+    ".studio/sfx/vendor/jsfxr/UNLICENSE": "7b30c10d168b77d43ddaa3269e7bef3e1a9dd68a54a5f23f1630a653d7e2e2f4",
+    ".studio/sfx/vendor/jsfxr/package.json": "43d3429fc14ae3fd267c3c08413e9164ff8889bf3e7a4ffc070eb1afd0f18353",
+    ".studio/sfx/vendor/jsfxr/riffwave.js": "ab3cea2bd157746d7b01b440a38d1eefc0c7b3bcb464b5aa80ccbd66be4daaec",
+    ".studio/sfx/vendor/jsfxr/riffwave.mjs": "74cd4ecd958f61a4068a04ca01f9125d611f8e3b2bcd7ea04c461b4b5af3e454",
+    ".studio/sfx/vendor/jsfxr/sfxr.js": "6095a6358e654bc3ffd55d9ccecf694f187953d78b1391ee2823a6fcb92551c5",
+    ".studio/sfx/vendor/jsfxr/sfxr.mjs": "96ac9be45fcd9b9794c512d935228e45d3c49d2757d6486f9bc8308cae10b4f4",
+    ".studio/sfx/vendor/manifest.json": "7bacaccc7b82ab8a884fdb01bba9a46ad3b2efe4e0cfd2ed785ca2f51814a58f",
+    ".studio/sfx_generate.py": "46b3cf792539540b0644bfd065cecc17c8e2cafd2aef98ed7ace3e91e4f837b9",
+    ".studio/sfx_import.py": "2c8a6609fefe0529f53c7e6f0fdcbe266a4cc2b435a3011b0d3f9e71f4e3015e",
+    ".studio/showcase_tools.py": "a7a40813c55e72179f5694ae42dcdbf3f4f4666227dbddd3631a9a69948a3d9f",
+    ".studio/spec/broll-assets.md": "2d8ec217f1a03acb2593ed275e74a7a813c09f2f0e5f8d31971bf3e6faed405b",
+    ".studio/spec/creative.md": "411b29d9f279ac6981ed5ca321cc2faa03ed38de3e11dae395915051e69e6499",
+    ".studio/spec/hyperframes-assets.md": "acaee505879fe9be071dade14ee57a4884b4564ba1b5c8c52935e43ba784384a",
+    ".studio/spec/hyperframes-final.md": "aab05c442b52afd3d80af0184de52badeaf80f902ec67e8fd0b02f85da56404f",
+    ".studio/spec/hyperframes-research.md": "7e96c47630c65a7c835d88ba0c95b081d205d61fc4588c818a3650ce4f48406f",
+    ".studio/spec/hyperframes.md": "ed7d804f1858822844dd4cf64bf352ea6c80ec9ef1aafe730e01f26602377f5c",
+    ".studio/spec/privacy.md": "a782e39201db9211d8fcf8bcf2f893c9d20082e38042818c531dbb8d43adb1b0",
+    ".studio/spec/runtime-interfaces.md": "8c122c8f3bbc262902152f2fd0de7ef81528de3aecfe2bc9fafdd7e262d9c54d",
+    ".studio/spec/visual-design.md": "11485a2735b1ee2a2670ec62e5bca4b4784493b71e4d668605d598058f202d79",
+    ".studio/stage_art.py": "d031400253cc140ae815db82d5fddcda5602f02a37a8763c8957b632c4050d6d",
+    ".studio/storage.py": "f11e23187991075ffee5c9697dc31d617261f684c70fca9dea678c2eb926bba2",
+    ".studio/studio_preview.py": "801e457623eaa92617f8d239bbac21be1c5450a8b9b4b1a78a6b2d537fe7e321",
+    ".studio/templates/ANIMATION_PLAN.template.md": "7937609bab466df38d9be81ffab4a1b0d3d121a573eff4ec7b61da382116ca7e",
+    ".studio/templates/BROLL_BRIEF.template.md": "52a37343a26ded49ed15dfe6375de9eab9bfe70bedafbbea56c2be0fe874e30e",
+    ".studio/templates/CLAUDE.template.md": "66214471fea27f474ef0302dfd52077f822923ace9c8cf3956b712358c5226d6",
+    ".studio/templates/CONTENT_RETRO.template.md": "80c97b0a69e3750eb053323c4e2bba851bb8426a9a4df062a03f85024e4b2e6f",
+    ".studio/templates/RESEARCH.template.md": "ff4b099e775ab892def47a36e557d0d7ae157549e4d5cd4dc4afc817b0f6109d",
+    ".studio/templates/SCRIPT.template.md": "e0fad7631a7f2e09aa8732e7547919a66f193a2c405f7078f98a5b1e1ae90310",
+    ".studio/templates/STUDIO_AGENTS.md": "f3e96783832d724da0c6a0618c1b91a9a9f95bf1abcade49d89eb1ef8b8d790b",
+    ".studio/templates/VARIANT.template.yaml": "61ffa07d79b0d3272016a6be6cdfaf5171c0b1a0ffcf7adf17545cee0d0b137e",
+    ".studio/templates/VISUAL_RETRO.template.md": "deec455adab8e5445042af74249a24396ca258bddbcf56b987cab0f906946217",
+    ".studio/templates/WINDOWS_AGENTS.md": "9789f978abbe990bb413ad2f9bcf3bfa561b6c1a22600ac7c22e9a8f1702c8c0",
+    ".studio/templates/WORK.template.md": "22b6eae10234eab321320d263ef6915d074a683eb9c0913a7cfc07173e652b5a",
+    ".studio/text_inventory.mjs": "7be31d6c8f5f360d05c98c0417db9e6d94cd69cb056fcf1d5b0d493535d885aa",
+    ".studio/tts.py": "093668135d77af056e67dd1ca3b59c4388183b2c5241de8c11b0b5004af9dd1b",
+    ".studio/visual_diagnostics.py": "86fcd46c9af5534475527e20d7be582b0625dbd1a778e686fdb57331f9df2fcc",
+    ".studio/visual_memory.py": "690f5532408a77d914b266d8b03b5f1e512586ab0394f2b1b3d6829d493ef692",
+    ".studio/visual_plan.html": "b8c123454535c4f348da92072298dc6b7464f16e49b8f944ce2e10fd2fb9bd19",
+    ".studio/visual_plan.py": "497f79ef4d3f1d641e059a23b8091f015d19976e1875efa18419b862ca0be4ad",
+    ".studio/visual_probe.mjs": "ae71fb26c173b089fc2cbc60150e1bb62b6a63c482120c1003a7c1b3da04f5fa",
+    ".studio/windows_node.cjs": "cfed34088866c68d3d1e36e3f5a0147924705b35dea76f3be9c1e26e244e60c3",
+    ".studio/windows_runtime.py": "2416a11e3025bf6a7c171b983e9159e5600ec211cf71201ece8af3359137db57",
+    ".studio/work.py": "2a07f84d0bf3a4b9e49155a5d89c78cc8c98e93728f9814fc6a48330e7b56e98",
+    ".studio/work_context.py": "b6b7e7ce7ad8ef2f37ba8083c834ada13a248db237a20d297be9053d05ae74b5",
+    ".studio/work_memory.py": "c9bad24ae9773b36479425b26c3d7b4ac1dbf6d840066312b378d99eaf0e777a",
+    ".studio/work_migration.py": "75f3ec5aa7375d93b3391cf15a56e58067b3aba351cbdc0551b86029647c8687",
+    ".studio/work_requests.py": "e1cfb5bcc60d01f8398fd4ce0b588606a59523837d463eed52635ecb8203ed19",
+    ".studio/work_storage.py": "ed502e039692789c515bbc48cd1a00d45463150db503261aa31115888c1daee6",
+    ".studio/work_successor.py": "b5cb2a52123e98ffd4a883cb542a65e46e950a41db6a4e8fd82b972a3ca1584a",
+    ".studio/work_tts.py": "954fcd81b95a07bfca7d1f90dca8e2bd5fae87f8c3a5eab6239eaa3c778b474d",
+    ".studio/work_wsl.py": "30cde6aa7a65b0d14ccc2e8790340f18b89d9d14d71b1cef2d7e82df091b8e01",
+    ".studio/workflow.md": "132a62461d7b6024f37c9697b59676df4d64936bfcf16441e6e39566b92af2fe",
+    ".studio/workflow_config.py": "71e84c2e3349f31e5f566a72570a3592701031f0b809ed0a0e71447ae6468845",
+    "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "README.md": "5da949d59639fda7feae3bdbb234ee68bf4a5b926b0e0804f7ed2326c77d724b",
+    "THIRD_PARTY_NOTICES.md": "3f7a6b0e554e4f1a544fe81794585d6aed5b91ce35f4f372b0088eb7eb8304b0",
+    "docs/PRD/PRD_MASTER.md": "5b76d323d42d8442b23c134d6d6e481df7a310a999f57f78a3d0ba083b1737e8",
+    "docs/PRD/_ledger/component-authoring-m0-m1.md": "b5495f5d8bb20654e7a5036f070d7a690fe71467d3e695168ab7f731dcd8b744",
+    "docs/PRD/_ledger/component-driven-motion-vnext.md": "b14d56b29ed894cb8cdf2ff41dfe7aaed2b9878fb3a1c53f8eda644081e44bbc",
+    "docs/PRD/_research/rnskill-motion-layering.md": "c94534fcafbee4ab3e5d86ee99ccf2406cfac663bf7c5d46a86259a8635e898f",
+    "docs/PRD/component-driven-motion-beta1-pro-handoff.md": "3d414a4cd6c2d0378d339b81624308f52932d059d36bce1e5112294f51513c45",
+    "docs/PRD/fix-tool-owned-work-directory-naming.md": "dd1bd318c413db4c93a4b464427bcd733075bea1e3d808a0ce2fca27343501e1",
+    "docs/PRD/hyperframes-asset-library-restructure.md": "6f1fec47d0dcde5c3e0da39479c55c428656c1f71f3f8bc014df06871fb1ece8",
+    "docs/PRD/hyperframes-component-motion.md": "30f495c3ba0ded89ec454932ef0a28f8798d2ee657d8c8176b1324c1ba2ab2d6",
+    "docs/PRD/hyperframes-rc2-execution-plan.md": "fc973e30875869e5337486d7635d33f6acd138beef865c99cc65dfaab8edd28a",
+    "docs/PRD/hyperframes-v33-production-contract.md": "0d8bdad705d52f0479da32ceb1d46387e88707e6a783e13ee558860160303dc2",
+    "docs/PRD/hyperframes-v341-supplement.md": "94f28f5963ffd930b9eb7c56d7a8ad93199ca57eff339c61e0d5f1ff280e3ecf",
+    "docs/PRD/hyperframes-v342-visual-outcomes.md": "96e5da7c644187e5124a5870b44ec7f9923af19783a105fd9a02adef5170dbf0",
+    "docs/PRD/hyperframes-v343-text-imagery.md": "d7b9d6360fb206da05fd8aad2242a47f1281d701ad292ddad6876d235d8f3a2c",
+    "docs/PRD/hyperframes-v35-expression.md": "c56101e875256f0ed9aa9f37aaf4e1258633363884cd613a6b49031c860ade57",
+    "docs/PRD/hyperframes-v352-acceptance-checklist.md": "1357305472dc978ba93ea1e8076e016d3b07d7a667bd82b3ac510b90fa138a89",
+    "docs/PRD/hyperframes-v352-asset-kits.md": "d9771b4b7a62fb9e6d3a38b885f67ec90b7403c73d4562cda355a17a607ee465",
+    "docs/PRD/hyperframes-v352-icons-rhythm-loop.md": "3363b7327054882a2514241281a9358c057bf123c1d816c781c4727cb9886eb5",
+    "docs/PRD/hyperframes-v36-showcase-math.md": "e7844d03d5d4b7d37aae280f5f878836e017229f82545655174eb04cbc3f5e39",
+    "docs/PRD/hyperframes-v361-broll-asset-authoring.md": "1af4df76854170b6cdfbef6b981e6c9aba13dbaf714dde36b6e891ca6c2cd319",
+    "docs/PRD/hyperframes-v361-motion-broll.md": "ea69cfc893a2f6d199b540939ab2915fd7f2d4bebdf88102de1be8a969498f6d",
+    "docs/PRD/hyperframes-v37-simplify-retro.md": "7c0483d719fa77b46d310ed8600030efc9c91b8230c2a42d2aefc00f972d12a6",
+    "docs/PRD/hyperframes-visual-plan-motion-reuse.md": "e5c9565da49f3403e20aade30dfb9f56c64ad407abb98105953674a46d79bd65",
+    "docs/PRD/hyperframes-windows-workbench-wsl-handoff.md": "f3fe3f9ce617425ff29ffa4a0bf7b7a13af5487953a88b7b8a78cf758a552542",
+    "docs/PRD/production-session-interface.md": "3f990124767040ae803bc974059856da0782f84a406983838eb15b3b1a1ffdf8",
+    "release": "c5a4b99a53e1798d64c88a5bfa2a076f2ad52a2457f2df6076cee95ba8aa5f93",
+    "release.ps1": "1c975c70b5ced15ead06c05c931db68f4b38f883d1d0be82e285c14d10fd88da",
+    "skills-lock.json": "303f4a487a90f89ea460f3c991f6e598a894e63b6d0c46c1ea8b8b69386488d9",
+    "tests/appearance-browser.mjs": "2dd8e123c8d7e0ae13600126502c77afff6fafcdcfc88b0f6fdcd08f7b05a949",
+    "tests/appearance-fonts.mjs": "5b12796f40842627af291e265103cb2b5cfc1aa0894428e10387f445d6b1f183",
+    "tests/broll-browser.mjs": "a8c2f99de6cfea672a92d5804c99cbc3b31717727b7b8c810c704458c87cb4ab",
+    "tests/capabilities-browser.mjs": "3846f47a34d79f60e34fa0e0afb2aeb43688a4f519eb01fa13aac41f03feb09d",
+    "tests/cues-runtime.mjs": "e8a0dbf142460b8fe1c82dd8012625ef197ce72d46755f208d42f9255ed7f928",
+    "tests/design-examples-browser.mjs": "24d5536510cdbb951ef4979a0d96c91c2fbb8fc1ee1b5f3a7566d88c90e915cf",
+    "tests/embedded-texts-browser.mjs": "6fa8a6c1fa7dd5ee0cb84b927083d45cbb9f882ef3fbab520df633845ad63a78",
+    "tests/english-example-cues.mjs": "b2437a63136f8f25bf4ade2b6bd76a51e3d642bc4b28be4663f2d3064b3d6a43",
+    "tests/explainer-browser.mjs": "c1f22b8216497d150a89c786d6eaf85935d4032cf226d79d2297bd010b28dc37",
+    "tests/fixtures/ANIMATION_PLAN.3.5.2.md": "47872e7ad2bc7fed50069e23ded60518647d6c6d115eda91c34a1c357e661191",
+    "tests/fixtures/asset-component/COMPONENT.md": "ac347afb6bc54bac9fcd3767be0cb0859a4270904ffe9231fb30a86ca8705e95",
+    "tests/fixtures/asset-component/baselines/README.md": "d7e6554398466d4b6619f57bf75f8b91fe1f8446ad0ab66cdfbd4ccae399579d",
+    "tests/fixtures/asset-component/component.html": "a8421680a4cd72fee1ead90f4fb8bf73e3e27c92a88ae44d1bff4cf5e5d7f8c2",
+    "tests/fixtures/asset-component/contract.schema.json": "bdb5b3f68e371ba436b2361ceaa0a0c9d6ee8fe475f7b413f67506b1e6cb5599",
+    "tests/fixtures/asset-component/preview.fixture.json": "700833bdad9e6513fafd3ae0400c65f984640f3248bcb871a16b418f9e4f60e9",
+    "tests/fixtures/broll-sample/USAGE.md": "79ddd168955b24b0aae9660a120a4988ec3c73ae5ea0a507d63ac20698726d46",
+    "tests/fixtures/broll-sample/asset.json": "4133011e98990349984288df5bec53a0229f7f8f41efb66c09ae3725d31f6108",
+    "tests/fixtures/broll-sample/main.js": "78e74e4af2fe0e0ee065cfd0277fd98fe7c6b2457341be3a04b55fcc7267275a",
+    "tests/fixtures/capabilities/legacy-locks.json": "3e63e5560f8d802abec9f5ceda48872c09236e7ffc5db27e58c2ddf0aee27432",
+    "tests/fixtures/components/capability-convergence/16x9/v1/COMPONENT.md": "183bca6de449404231939660b7ff83a5a5b8f5ef63bb27bbdaf9995d6c26b863",
+    "tests/fixtures/components/capability-convergence/16x9/v1/HASHES.json": "ec41f5f3b6e488f1bf1cfa1d47e031e111e37581dbe19e2a0dbd47e220f00cdd",
+    "tests/fixtures/components/capability-convergence/16x9/v1/baselines/README.md": "bb555e197a20ec0d7889ab1a11fdc34dc76a4f8463091e7acae65bb929bae923",
+    "tests/fixtures/components/capability-convergence/16x9/v1/component.html": "f58dbce226246fdff8cc81bd67d9e0136c3d16dfdf0460674cefee354d8ab154",
+    "tests/fixtures/components/capability-convergence/16x9/v1/contract.schema.json": "476e2b0b58184f2ea0a679276f7cbb7a1ecffee8c5ec684f24de6fc9e65959e0",
+    "tests/fixtures/components/capability-convergence/16x9/v1/preview.fixture.json": "c845640fcd15d00230870c6fe54b1ac4908ee332a55e718c5a61d0021de27826",
+    "tests/fixtures/components/capability-convergence/4x3/v1/COMPONENT.md": "e03562df4d63321b6f15d717637013af44a610befe4a38619fbfb256fcb696a0",
+    "tests/fixtures/components/capability-convergence/4x3/v1/HASHES.json": "5a6bb269e40c1786b960bc465dde9d8cf8984f439706eef50d041397157d811a",
+    "tests/fixtures/components/capability-convergence/4x3/v1/baselines/README.md": "bb555e197a20ec0d7889ab1a11fdc34dc76a4f8463091e7acae65bb929bae923",
+    "tests/fixtures/components/capability-convergence/4x3/v1/component.html": "689dc8ae05537fc0fdcadd5221fe3c1553327d027b34ec0312685eb2a97075ee",
+    "tests/fixtures/components/capability-convergence/4x3/v1/contract.schema.json": "8e3fbdd5fc2977280d6da22b085e42340b61cb0e1e6a1b927574f9b7a975469b",
+    "tests/fixtures/components/capability-convergence/4x3/v1/preview.fixture.json": "c7e14ccebd83f69fafc934cc3c549b6092c497211db91e2bb937747b7a66f043",
+    "tests/fixtures/components/capability-convergence/v1/COMPONENT.md": "bb11837dc17d1b464da3ded599001a6bb1412c793c85c7f6f9563ca1ff6d4c5d",
+    "tests/fixtures/components/capability-convergence/v1/HASHES.json": "0e3949fae7467f2ee2939c77bfc2ae883acc2258275767510fd7a34ad3bd08d2",
+    "tests/fixtures/components/capability-convergence/v1/baselines/README.md": "bb555e197a20ec0d7889ab1a11fdc34dc76a4f8463091e7acae65bb929bae923",
+    "tests/fixtures/components/capability-convergence/v1/component.html": "f58dbce226246fdff8cc81bd67d9e0136c3d16dfdf0460674cefee354d8ab154",
+    "tests/fixtures/components/capability-convergence/v1/contract.schema.json": "ec4c6b3f1c22d393e711facc79e9276abc0b1283e3a41993ba20acdaaec8f389",
+    "tests/fixtures/components/capability-convergence/v1/preview.fixture.json": "70b5868f658df6d6c4d87e0db43694eabd360111d186dc18f4ac2e2392a13234",
+    "tests/fixtures/components/chapter-intro/16x9/v1/COMPONENT.md": "bfbe36c15d6775d7ed13447aef86963b4727d79e40f11ddf627c8c8467ee8f96",
+    "tests/fixtures/components/chapter-intro/16x9/v1/HASHES.json": "864d31da59e92da52195baf09148167cd6f3145e422fe175de35edcd62765837",
+    "tests/fixtures/components/chapter-intro/16x9/v1/baselines/README.md": "bb555e197a20ec0d7889ab1a11fdc34dc76a4f8463091e7acae65bb929bae923",
+    "tests/fixtures/components/chapter-intro/16x9/v1/component.html": "4fa4a2115056f089b8f9bf32ba19d41ab08bd5786fcdc31875bcd0d6dfd589f7",
+    "tests/fixtures/components/chapter-intro/16x9/v1/contract.schema.json": "bce030875139603df0bf54f2698df8c4f8374b991d1af67c0f09543cdfcd3fcd",
+    "tests/fixtures/components/chapter-intro/16x9/v1/preview.fixture.json": "1d79698dbcca923dfc2817a3b374e596ee462da1aeafd45614a5958070824c9a",
+    "tests/fixtures/components/chapter-intro/4x3/v1/COMPONENT.md": "ed20634dbd1637e46eaa07f705c1c6471a0ff0d1872d2a931808400d007aae53",
+    "tests/fixtures/components/chapter-intro/4x3/v1/HASHES.json": "1baa7e73078ba6717d88054e5035afe61d08f9645ddeee7694228f2ee690fc7e",
+    "tests/fixtures/components/chapter-intro/4x3/v1/baselines/README.md": "bb555e197a20ec0d7889ab1a11fdc34dc76a4f8463091e7acae65bb929bae923",
+    "tests/fixtures/components/chapter-intro/4x3/v1/component.html": "5e2afc4043a4f27e8af4077b54cf0353f53be144e1e33636019ba726b3265cd0",
+    "tests/fixtures/components/chapter-intro/4x3/v1/contract.schema.json": "aaef45f06af9eeadc7984c5f0df0de709497c434837c47e2656df21e5fe20f42",
+    "tests/fixtures/components/chapter-intro/4x3/v1/preview.fixture.json": "b7f2d7854bf57dffcdc7e969675d4ad395eebb2a892099a859863a4980a555db",
+    "tests/fixtures/components/chapter-intro/v1/COMPONENT.md": "4fe68a6d0e6c709d546ef36fcd2f94811591c439eafe8032cf53ebf29d3586d9",
+    "tests/fixtures/components/chapter-intro/v1/HASHES.json": "5980fa24fec38146636cd7e5f4024c5469c3c890ed079dcf5c5ef158b145e54e",
+    "tests/fixtures/components/chapter-intro/v1/assets/fallback.mp4": "f4de5015619d26a29fb59aa8f6e3844f6e4e2bc7a8f9add709bfbe231f8dea17",
+    "tests/fixtures/components/chapter-intro/v1/baselines/README.md": "bb555e197a20ec0d7889ab1a11fdc34dc76a4f8463091e7acae65bb929bae923",
+    "tests/fixtures/components/chapter-intro/v1/component.html": "6608097a1bf9d678a6aa96526aa6786b39f6879f523916d0660826f3e3ee44e5",
+    "tests/fixtures/components/chapter-intro/v1/contract.schema.json": "aeae0be382520406a009dc48f2fe195245d3bbd1c1865020852a26e6ae4e7008",
+    "tests/fixtures/components/chapter-intro/v1/preview.fixture.json": "f37771095d6b98741df1c7fa94a505b7308061a1936683fb088149bfd96578ae",
+    "tests/fixtures/components/gap-first-selection/v1/COMPONENT.md": "fa6ec1b559a7ec0f5d36e9258c1c09d9439dca20451e5824a89048e1f89188a6",
+    "tests/fixtures/components/gap-first-selection/v1/HASHES.json": "d667863fb55784a118e412576c26b441da663e6ab4a36733e7dac985cd6eeb38",
+    "tests/fixtures/components/gap-first-selection/v1/baselines/README.md": "bb555e197a20ec0d7889ab1a11fdc34dc76a4f8463091e7acae65bb929bae923",
+    "tests/fixtures/components/gap-first-selection/v1/component.html": "d52cc6861dbdc25f645b0ae9bd324f3d40fdc5753b81bc36f089e79e5201639f",
+    "tests/fixtures/components/gap-first-selection/v1/contract.schema.json": "838ecfdfbedc42114c32540a7fe697b5a6955c5d2a9c9710097073a295f31607",
+    "tests/fixtures/components/gap-first-selection/v1/preview.fixture.json": "9cdf359118427309f0acdc0248f74ed4fa5765d202d27298ead64692cd99e660",
+    "tests/fixtures/components/rich-skill-explanation/v1/COMPONENT.md": "a71d02ccb0122720e9032e809fa2178fe91bee377164da0d6be2dfdb54fd0d11",
+    "tests/fixtures/components/rich-skill-explanation/v1/HASHES.json": "107b25a48e9b05ed34738a061c77194698852208afde415aecd16dae847f7edb",
+    "tests/fixtures/components/rich-skill-explanation/v1/baselines/README.md": "bb555e197a20ec0d7889ab1a11fdc34dc76a4f8463091e7acae65bb929bae923",
+    "tests/fixtures/components/rich-skill-explanation/v1/component.html": "31a808001371c80075ef8b49079bf05afc91299fea8ff02b766c53824090beeb",
+    "tests/fixtures/components/rich-skill-explanation/v1/contract.schema.json": "fde41b7fd10d1e52214a4aa31371f317b0cd326e668cd90f9f967926dbcd0d57",
+    "tests/fixtures/components/rich-skill-explanation/v1/preview.fixture.json": "5ae8db4d9d4c3b02434dbfaa9b1ed29c6dd1da03d52b191e4108839f0c45dcde",
+    "tests/fixtures/components/rich-skill-explanation/v2/COMPONENT.md": "1d191fc83821e3243264f53aa43bda1f2a6ade35603ae12387ab5600af02c085",
+    "tests/fixtures/components/rich-skill-explanation/v2/HASHES.json": "14e12dddb14b7b484a6e2c28752674a652617cdcdc25de35bae8a012bfede226",
+    "tests/fixtures/components/rich-skill-explanation/v2/baselines/README.md": "bb555e197a20ec0d7889ab1a11fdc34dc76a4f8463091e7acae65bb929bae923",
+    "tests/fixtures/components/rich-skill-explanation/v2/component.html": "adc4f897a4f54fcef37dc5effb4f1b5166c5d1a7163fb8e635d44b57f6da5ba2",
+    "tests/fixtures/components/rich-skill-explanation/v2/contract.schema.json": "29143a8adb088cf528f2562cbd0f2cb53a3edeaf3ae0387a9b832332202024dd",
+    "tests/fixtures/components/rich-skill-explanation/v2/preview.fixture.json": "c1a3399e19d4be311ac200787b3fad95d275478d096ecb3cc01006e03f394ec3",
+    "tests/fixtures/explainer-background.js": "35b428a98b439e7fcfd631526e11689d5953bbc67384acd8cb2e615aded36b15",
+    "tests/fixtures/legacy-packages/background-only/4x3/v1/BACKGROUND.md": "c0ec82d53856a3d8871b6ae40345374d987a63b1870970ac70154ac6bffd4995",
+    "tests/fixtures/ratio-migration/backgrounds/rse-functional-background/16x9/v1/BACKGROUND.md": "6ae31a97eeff001bf18f376424c5181acee8c7c70e96e69ba68ccfb80311e431",
+    "tests/fixtures/ratio-migration/backgrounds/rse-functional-background/16x9/v1/HASHES.json": "f3399ebbe42bd1700a25d0c021aeafd9bbc8edd89cc0dd21e217f95685f92197",
+    "tests/fixtures/ratio-migration/backgrounds/rse-functional-background/16x9/v1/artifact.html": "732fedfe8b0eb62c9b92f263ea8efb07c3aa9872fb3fd90d392151e7becceaad",
+    "tests/fixtures/ratio-migration/backgrounds/rse-functional-background/16x9/v1/background.html": "78f6e157c44ffb85d1a917923c32bc5c603597defbfc861caef052e3628d1402",
+    "tests/fixtures/ratio-migration/backgrounds/rse-functional-background/4x3/v1/BACKGROUND.md": "357841c2ea737def3d452317e01065545b93f4fdfb0912380d8ca9accde63bcb",
+    "tests/fixtures/ratio-migration/backgrounds/rse-functional-background/4x3/v1/HASHES.json": "1394535e722dea22ab1e459756b1b4fe4fa1e2665986ad597c759b62845eaa26",
+    "tests/fixtures/ratio-migration/backgrounds/rse-functional-background/4x3/v1/artifact.html": "9730f13d22883e4c2227d641bb9913bc2cf5d12c623355110c8afcfdcfc8d687",
+    "tests/fixtures/ratio-migration/backgrounds/rse-functional-background/4x3/v1/background.html": "7ebfc0d4d1be9cc980d1570ef123fbcce90e74d7c3aba51a980142aa568d9447",
+    "tests/fixtures/ratio-migration/components/capability-convergence/16x9/v1/COMPONENT.md": "5ed714326b244b25cf9b72e789d38d00fe8f57f3974f0c9145cd265bc1a0ce45",
+    "tests/fixtures/ratio-migration/components/capability-convergence/16x9/v1/HASHES.json": "03f7d02bbeddef7f4fcdf331e085c89a8bd4056773a13c3d5703664a090bfdd7",
+    "tests/fixtures/ratio-migration/components/capability-convergence/16x9/v1/artifact.html": "42f6cc3bb5ecae8174b8f384cff5e2c8e51e35bdea1ece79cb02336e14cfa5a4",
+    "tests/fixtures/ratio-migration/components/capability-convergence/16x9/v1/component.html": "5d954bdbe9fb2ee878e59e7c49445c4a89bc18dcdb7804aeac17d970ce3f5864",
+    "tests/fixtures/ratio-migration/components/capability-convergence/16x9/v1/contract.schema.json": "e685616b3ec70d917f1838ddb8e900d2dadfe2fbbf1a2a4e5456e5af8714a13d",
+    "tests/fixtures/ratio-migration/components/capability-convergence/16x9/v1/preview.fixture.json": "ae13667cceed310eee1c37cc83ceac9ea8fa88f7a590ba03c1f62b107dc4dcaf",
+    "tests/fixtures/ratio-migration/components/capability-convergence/4x3/v1/COMPONENT.md": "d93ae2fdab698c0d4938e116ad471a09277065ab47877f2b145db542b0dd2ed7",
+    "tests/fixtures/ratio-migration/components/capability-convergence/4x3/v1/HASHES.json": "ff15f8e485ff136a3cdcbab1306aa546f8a3d5456d127feadca3a821f0fc32f6",
+    "tests/fixtures/ratio-migration/components/capability-convergence/4x3/v1/artifact.html": "b14f51701cd490f26a7111747051c6f5885a20ef5037ff9e32140ad1ed55d6e2",
+    "tests/fixtures/ratio-migration/components/capability-convergence/4x3/v1/component.html": "76f38b68c2378b678a8b324aa21f545b205578a3e6b13d69d3fef6c846781796",
+    "tests/fixtures/ratio-migration/components/capability-convergence/4x3/v1/contract.schema.json": "911e26561ecc3d21c4ace4ec731e26c9c0d12f9b929e90534a59f77bc683abb4",
+    "tests/fixtures/ratio-migration/components/capability-convergence/4x3/v1/preview.fixture.json": "a9315b5493203c203f3bcf34c4bff27666bcd4e3677cd3941d467f14800a37f7",
+    "tests/fixtures/ratio-migration/components/chapter-intro/16x9/v1/COMPONENT.md": "320d76afb5d5c9968f00af0f35db10a6d60af21de86f8437a0e71a58a5b9fd28",
+    "tests/fixtures/ratio-migration/components/chapter-intro/16x9/v1/HASHES.json": "c4d0d8c64125f833a2645e9b6b7a68d68381b31b9f52d24011cd7fd586316c0e",
+    "tests/fixtures/ratio-migration/components/chapter-intro/16x9/v1/artifact.html": "207a2793cc27ba2b9745e57e4e504c71d965247c73a570064440861b414ab9b7",
+    "tests/fixtures/ratio-migration/components/chapter-intro/16x9/v1/component.html": "926d10f4311c0185212844f35202e48b3c6439bf35fc98ba79ac68ff19de69c6",
+    "tests/fixtures/ratio-migration/components/chapter-intro/16x9/v1/contract.schema.json": "eef99b3cea4adbd6945dd01f1a344a20ec4d621256651d6785d55fd8110721c6",
+    "tests/fixtures/ratio-migration/components/chapter-intro/16x9/v1/preview.fixture.json": "0926cbd3a028ac63692ad51a87340d31b0c2c3625027fbe48339f272626641aa",
+    "tests/fixtures/ratio-migration/components/chapter-intro/4x3/v1/COMPONENT.md": "fd6e47b2a5eef65eb05bcca8e8a3f3b263b1642ca9a85258f8bfb112bec7fe58",
+    "tests/fixtures/ratio-migration/components/chapter-intro/4x3/v1/HASHES.json": "be68b0eb7e4ba4f8053b9363b3681abc3d9d0273fac638b07bd0f182b28a5f99",
+    "tests/fixtures/ratio-migration/components/chapter-intro/4x3/v1/artifact.html": "59fd169039cc2ddd5003fc28231a8a43cbb9f9d3272f1c40dd6e1fcb7f709854",
+    "tests/fixtures/ratio-migration/components/chapter-intro/4x3/v1/component.html": "25d508965e7792d385d1fcf340dc82b1679a206d8ba8f5153e6deae80dd807c2",
+    "tests/fixtures/ratio-migration/components/chapter-intro/4x3/v1/contract.schema.json": "121b52fc23ea31a2443292421c11a8389edc12b0518be0f0eea056716754e15d",
+    "tests/fixtures/ratio-migration/components/chapter-intro/4x3/v1/preview.fixture.json": "f80c61c6de3640974bd234fc1111fe9d4a4c6bfcf2032263a5c71b9b2042bca2",
+    "tests/fixtures/v352-plan.md": "8772fa1a3cdd5e4d894b2236cac7a03c5a37384741051c76b2163852144281c2",
+    "tests/font-cmap.mjs": "c3998ff4417f27e2fab7d8b4289aded20974474766911c15afed6745f1f6e553",
+    "tests/icon-probe-browser.mjs": "a0f6c8287d166e8c7b9099f9988268fe9a311a4621b983a5c38c6cfbf7d2e9cb",
+    "tests/math-cues-runtime.mjs": "30f478dedd5c6105de190a9f3b402086d34c4f7cdfbbca954528f526d2229847",
+    "tests/math-kit-browser.mjs": "6d66fabfc489137f28666c8f8a9e6400ed8407f409f6f950a9b7982bea7ce030",
+    "tests/motion-browser.mjs": "9be48fd3bfe3d2319814e04e1e8bec122dd5da6b594e8c24895ffbad56a56817",
+    "tests/motion-v3-browser.mjs": "46bcd6a7f381d5d0ab155a3ebcdf68780e3086a469b054d1d8cda2e13c074acd",
+    "tests/onnx-windows.cjs": "1eb19436886d77f89af550d6821917139abebc50441a680e07aa38c9e4d95af2",
+    "tests/rhythm-browser.mjs": "46f4dc8a0cedeb8797d23111d6aeb42184e4bec9c0e956fc3e7f2b8253c46798",
+    "tests/rhythm-gsap-browser.mjs": "efc3eb797629ea0050e0283ab3dae2b407b111236f28e1777c3d9ab435ef9588",
+    "tests/runtime-texts.mjs": "e1ce4a75fcb16504427b7b2f2a933a7b4c912935d3350d9ad2c20764d8bde0f2",
+    "tests/sfx-jsfxr.mjs": "c38efcef3fcd09d5fef3f038f543a89783d35319a17d8aec58f29b36803347fc",
+    "tests/studio-readonly.mjs": "639fef65cf80aec2c1c6f63468e7b183b10ebdce3e90e8495511b28fff6b3b31",
+    "tests/test_appearance_assets.py": "7685247c5da2176866808069ae092563d2995d0cd68c92a0c55af7b5a26a884f",
+    "tests/test_appearance_installation.py": "328aa768e3566358e06d144a7bdda7eda17b40a4a274ec22d358bbdbfd39c3f4",
+    "tests/test_appearance_rebind.py": "f7938e17d1d48baa35c04deece602c53490f7baac3d9e1c66ee14b6b6227eecc",
+    "tests/test_appearance_resolver.py": "18976d63f5008a2fa4692d214f2847b9853eb0d448b2564a4c12bba9fb502f7e",
+    "tests/test_asset_cards.py": "fc3dd6dd8e2da1b74f5bd80926dfb325ab37f287ce70b1a3f8c7f8eb69e7ff62",
+    "tests/test_asset_catalog.py": "2cceef64c97d09c0cf8ace115e4451df2ec87134c402b35894518b1f393546b9",
+    "tests/test_asset_contract.py": "6293dcd86eabcb4c69239c698b3105395719aa81aee69e1c782e14fa1faae317",
+    "tests/test_asset_discovery.py": "bc1a5acf6ebee943d0d6e7d8d2a39766e6bdb63e9eb38dee770fd278c11414c9",
+    "tests/test_asset_entry.py": "98724f0f9adf512a91cb854872ff977d414eb5b7c0c6bd7119c775be9a9393f8",
+    "tests/test_asset_maintenance.py": "670ec4cf419a95c30eca51584c5d8cd6b561f0eee18c498e0a6c4f4ebc455249",
+    "tests/test_asset_store.py": "5d95e5101279d170c9f96c9ab10571334554090544b708dab84b077396225c14",
+    "tests/test_audio_assets.py": "f59d17dab50bd0103ee7c965a6acf8fb7010b8f0a8759415327a0bec8fec425f",
+    "tests/test_broll_contract.py": "338081e63d454ad34c8982f1ecd5175351ac74e4b78f5ecfc83689006fae421e",
+    "tests/test_card_catalog.py": "1bf7abf429a77ea4d8ab3a930f629232c55c130aeb488f4ead054ba3e55981f1",
+    "tests/test_character_assets.py": "3fb6e7bd3ae8a430f016c6e39c59bf8f22006bb15ddc60ad92d6e655affc339d",
+    "tests/test_component_harness.py": "fef70b66edbf66fe869068d83d710632a3e60f60d550acff2fd3120561f04662",
+    "tests/test_cover.py": "b3e839ec0317049931f58eb7f36c67abfc2bff58e1c55109f802d37a0f4881a0",
+    "tests/test_dependency_scan.py": "09a4d14896902f3711c4853e7a492042d5ef94eb7c44efc503c5a88c8d9e6288",
+    "tests/test_design_capabilities.py": "18df2ae3855a111606b0012b88ec1aff3c19ae98e0f46dfafde070070184bc55",
+    "tests/test_design_cards.py": "61e0b949347afa434791a7d22e19c892b429b719dec31c262723f051000189dc",
+    "tests/test_design_choice.py": "423ceceb6ededef6df9bebe0963d981e7edeca8116184d01378e0d12b05c9d8d",
+    "tests/test_design_cli.py": "e70527d82d4e97dd5d83ce203008bffabebd37948cb91e6ce22df333c25e1ad7",
+    "tests/test_design_examples.py": "fd1fefd0eb08d0f96c979e688c48c5429dc26cceaa36345aa47a120f0767cf22",
+    "tests/test_design_migration.py": "d402a0796d56e74ff53d9b0566b2c3957dd5e53e032294e82a2248ed3cb5b842",
+    "tests/test_design_snapshot.py": "5e7399305f575fba66f4d531ad86a5574f20687c68e9a4e974d8afa69af1952b",
+    "tests/test_design_sources.py": "0587a75e58245f422ab1256355b6fe34046475ea334b596ccba32aa828809d31",
+    "tests/test_draft_cover.py": "12c9913e3ef76ee694e480245ff874061c588d986127fe8a26f26925af26e1c3",
+    "tests/test_english_plan.py": "f8ebc6d11fabcfecb04464f701efe248a61b1eca5df29ee3839b7a23f38522bf",
+    "tests/test_explainer_cues.py": "e702ed930b1440c7c5163e068ae18da96d639847a8830f46950bb1e4dc8173f0",
+    "tests/test_explainer_sound.py": "f66c7e938a1642dad7dde4e074c857e735b90fd9eaa6bba36c0120f1de06943a",
+    "tests/test_exports.py": "567c30d6c598d8d6e83d5c30277714688b08d8afac996af64d2d1f1866225f47",
+    "tests/test_icon_sets.py": "998a788e650ed2ee4b427ca5b67588945c0806a3ef46d67c30742ebf159cf443",
+    "tests/test_independent_lines.py": "f32dc6eadba6d1f418e9954a5d37a102f973069e88ce349d305185c73f9fbbee",
+    "tests/test_independent_lines_cli.py": "5e8f774fdadac46b8a48838f39b9849d11975d341e351e792fb1df05850c3724",
+    "tests/test_math_build.py": "7cac0a9472a4251b20c4b0879ab11be027422a58775091755068b3eaf7a8e3b1",
+    "tests/test_math_chain.py": "96605488becf72977b03fcc10032f756f58cbcd1901001146657f8eaca4f67c5",
+    "tests/test_math_cli.py": "63ab7dba1207e5d8034e5324b82acb29b7157d78820dcf3e82bb5ca7b0de7652",
+    "tests/test_math_delivery.py": "e37eb3bf40d5050922d8bfc404b755b79ca3a5f7ce09cd1fdf3f10708033d4ef",
+    "tests/test_math_kit.py": "b7fd2a21a26c8d4a554a2d19a999da2a8a467a1739b89cecadcfe94a4de5f86f",
+    "tests/test_module_texts.py": "86182acb4147f9d449e2fddff543d644e2bf1b1c6c5704847db0224d5b67bcb7",
+    "tests/test_motion_contract.py": "1b8dcb7e28a0023acc698f05b7786c404fc59412a03720a0061b826a7c3d494a",
+    "tests/test_operation_locks.py": "ffccd5788352db2f973326a7b159952eb350651e9be8b907dd7644f7dabec87d",
+    "tests/test_plan_v352.py": "2e4eae266bc76471bfe4df88607f0d76a9870f66fb5b999aa50a3c18f64a5f96",
+    "tests/test_ratio_asset_migration.py": "eb85fd9d9e1197039c45ca2fb70da624393db6941d3a385ab0924cd8ab5a9882",
+    "tests/test_rc2_control.py": "5c7e530a70ad62ef327d01f780236998fd502342f78811602ad2d7327fd694dc",
+    "tests/test_rc2_migration.py": "0e43abd2aa9b60c94817f0107e1cf8336964f9529c36388ecd61d7b6d94b85ef",
+    "tests/test_rc2_rules.py": "32cb442f8e8aea08a292606fbaf9077c5a55f3ee7dc64a6e5175eba520529a35",
+    "tests/test_release_cli.py": "a51c4d8ef019e61ad3455071a9c5f84dd16664489648e9126a11a4cfad36870b",
+    "tests/test_release_personal.py": "dc87bdf686b05452b33d41b4d139c3d20ac853baf789ad6f633d7416929e92e4",
+    "tests/test_research_catalog.py": "04aeff2a04e1b81a35c325308ab3fa84fbc7545705e155f2b1adb39af316327d",
+    "tests/test_rhythm_diagnostics.py": "d782680611fac2f6b1a99fade8ad42dffc010eb7ce5d8267d213b7bb71c2618d",
+    "tests/test_root_deploy.py": "d2437dc4d174c764d054109e98039887b6f3006a9c3db11af1b3e4d6028ffc90",
+    "tests/test_runtime_retirement.py": "b7a9c8bbb447c6f0550713d0a4c54514fa45727260ffa5139b33fc0797a94ebe",
+    "tests/test_seek_check.py": "fec3c7bd731e472bacf3461ba70210d69636c4ef4645b23ca939625c27433766",
+    "tests/test_sfx_generate.py": "c834b865e7e6cd3e82f7f78f26f7318a1a9c085acdb213f836c04bada45989b8",
+    "tests/test_sfx_import.py": "343e4aa4d2120ba98a362745d412d5db663df9bfe4b2e008347888ab6437283c",
+    "tests/test_showcase_core.py": "66ef2f8c5a05f66e789a15655dc4fe9d8ec73b94c58b0cf1744b5925de285e87",
+    "tests/test_showcase_tools.py": "c54e3ab0f53bc8acdb755411eb6b0a22f79fc1dde5572c181a284da60491ddd6",
+    "tests/test_tts.py": "4a3955a1911ffa875455cc10509f522f32395e00252f96cfb3ed18de5f3d486e",
+    "tests/test_upgrade_export.py": "8c4c5b0b922be7fefe2db81336b7f93fbac5d90cb9a52ac4680c2fc20c3776ef",
+    "tests/test_v33_control_plane.py": "3bb60985acc7f43b7469f389b6e7e85721fee911da6f3e892d42c407e10074f9",
+    "tests/test_v33_rules.py": "7136042263d5df2ee8e7553f265d9fc661ec098a8fd9860e453be968e3274806",
+    "tests/test_v33_storage.py": "59971c98c1df5a7eade0344a14fb39d9534195ab52d21e1e43a82758c4ab31d2",
+    "tests/test_v341_successor.py": "69f843242745cb6f77857825cfdb9030710ba09f3f9c12ddd36be02657cca2b7",
+    "tests/test_v341_variants.py": "a56b2f0b7672fbe963ad87f7784d8509b156d0d874b040f5573c1a4a3997592d",
+    "tests/test_v342_rules.py": "30c414b3e6e2a57ddf0a37ef03e347649c4248a9f2c4d6dcd4bb9fc73914a684",
+    "tests/test_v343_rules.py": "70c9b3ee0dcb3685807c647504e483630e4c0b84ab4fd1620def904b2f9dba02",
+    "tests/test_v34_rules.py": "09b596a4dd72bf0874fc507f3aae779b211d2bae819c318c2de9ca01f25de959",
+    "tests/test_v351_rules.py": "991dea70b630e8581039472c8c83b0652ad1af2e5a55da5986eeb2e967db13c8",
+    "tests/test_v352_cli.py": "587f1292efb3d33aaefeac004a6c19545d06bc25f122e6c69207511531f16a11",
+    "tests/test_v352_rules.py": "4fa13e3d0753e065ac4923af569296e320c4925d7011bafc730aeae36e2fb60d",
+    "tests/test_v35_rules.py": "8ae3ebd0b1ad8ed610fab77cb10864d3fe651af08823200ac79f5e216c90e890",
+    "tests/test_v36_integration.py": "6019b62427e24acb6146118f1e130ddb85fb28757e3da7ee118691d19c0cb624",
+    "tests/test_v36_rules.py": "16bdffe2b5bc23eb0eddfadff136149a6bdea90475b3de8b102c05182344f0ff",
+    "tests/test_v370.py": "054e709a67355e2e35cc9d68edc84a93ee898c537f240100efce94bb842646a5",
+    "tests/test_v370_cli.py": "483420bc0aff025b8188c351175b3a3e398890af7c36ae894e2a01e4a15bbbb5",
+    "tests/test_v371.py": "35471eb9f6be2477fd4078bc99e8d3656f0b8e6beac25bf40b3834dc6b7ab80f",
+    "tests/test_v372.py": "af59d6c4c1d4985eb3f06ab571c680033341d2621bdc8920ea8d68bfddb8cf1a",
+    "tests/test_v372_adapter.py": "31a20b58532f8c8804dab4595ade69b69a60243c284091c3acc0892b90eb1f2b",
+    "tests/test_v372_analysis.py": "6334701d6916d304bb2fc6c9bd5ac76f23ede04931bbbfd2c81a8c1782b2f86f",
+    "tests/test_v38_deployment.py": "9c571902565189a997ca80d1414ef253c61305b91f4a042aaf3275e4b77923cc",
+    "tests/test_v38_lifecycle.py": "fdb04da0d0dd108d3b13c073dac685561acc6f4b8df772f35564c087ab518d82",
+    "tests/test_visual_diagnostics.py": "89fde5939916b9339838a769ee82cdc1e0002c558e47c76aa41262814d79377b",
+    "tests/test_visual_diagnostics_cli.py": "6df09b1c27d329f7b11e08e14464ce2c5d1ff41aa51a30ac4d7800e4eeb6cb9a",
+    "tests/test_visual_plan.py": "051a1ebf69daa584e2d6cfa015f895186353302b50367c815f93d6320392cfc1",
+    "tests/test_windows_installer.ps1": "67b9c63199431847bc5098ea4f1fb8e19bfaef88b269f777a9a818b4d2b34a59",
+    "tests/test_windows_runtime.py": "652850a51532bb5eebb460880beb74583026fe7089a260022f1e8bb10cc29e53",
+    "tests/test_work_appearance.py": "32376b91d23672c6c9eb0f6af8a0dfb8f328d95270882931fb92bd38a3507069",
+    "tests/test_work_cli.py": "b7123f6a8ba1cdb3a47c5a9458f1e98ef0bffbcc5e6cd77eed19eca63ce04124",
+    "tests/test_work_context.py": "a9f3c0d69624545269738c3a7d54769f11cae2ee76b3086c365873e16efb998f",
+    "tests/test_work_requests.py": "39cbcb2cc60ca11757b55b027f04f8a051a42aed5036b17c6e1cc139b8fa0220",
+    "tests/test_work_wsl.py": "2b2bc8f8e450da8e7044c399f311de3d7c392bc005663c01653f59a9388f7e15",
+    "tests/test_workflow_cli.py": "463d32b412f3a0f6e99b734764e8b88a2263c6e2732d1c2318d282f2a266f5c7",
+    "tests/test_workflow_config.py": "c650b2890bcafec718f72eac03d093154901b711b97749305d9282b025ab8d98",
+    "tests/v352-studio-browser.mjs": "7588344c0e4c211b74449908d0397841aefd43e5c5cb4e3ea05581bdb1e11e22",
+    "tests/v370-browser.mjs": "337744aed20f4248ee0e206a203d2cb08ccaba83a91ef930314ac1ad376ea48a",
+    "tests/v370-studio.mjs": "712bb7a83b8171a21c84d1092974d22f1980cd4c44343612f8c2de717c1e3acf",
+    "tests/visual-diagnostics-studio.mjs": "790e6bdd076d0447b82bae5cb2c71ecc73db7f4f76dcc4ca7785d2734392500a",
+    "tests/visual-layout.mjs": "2ce62c2f892bbf95aed1e48b193d0f9da200781cea1a291c405563fbdfe0f78d",
+    "tests/visual-mixed.html": "28d76ffabdfa2065811744cf6035c64655889bd9f02281e06bea449942fcee69",
+    "tests/visual-mixed.mjs": "7137f128a07d95d8e3a54d0234c0602235843b09a8923ed3648b7b9327f72253",
+    "tests/visual-plan.mjs": "daa0ab25232c811015d8a144aeb29d65c46eaf90e52414ff42e5b15c632dac83",
+    "tests/visual-probe.mjs": "33902aeb8c397b513f770147dd666cc7f9a76fbb48ef2c2fa1c56d5e40adbd95",
+    "tests/visual-studio.mjs": "00056a81e492269b43494eb8cf949e599ec9ea452c54974ee6f9379b29a45688",
+    "tests/windows-authoring.mjs": "7125ee8600ba8e66ff0974610970847af41dbf78b7a1316c6be9a0fbba77fc98",
+    "windows-npm.lock.json": "615ae8272875b6b08ad512db4caa4fca680073dd66256e891432fcb441235b16",
+    "windows-runtime.lock.json": "a4a035f13c5c9dad5398ab03f3e44bb6e37ceb71d0219f556497bd17f7fd9d0d",
+    "work": "824da9d61ff55bfc6b32db2e05801215f81cfc19d46221c7e9653cb82ffb4879",
+    "work-wsl.sh": "76e01e21c4f3f6885fc00f90ed506e8f27c9d975e5eaa0ae0234cf9af642d1a0",
+    "work.cmd": "a339b866fdd36acdb75b6360f8e538ec591a180c40363ce38c32b36fba78697d",
+    "work.ps1": "266f0dff502b63ed2ef07e5fcb87b2b65edeea658f965fdfd639132d744c1505"
+  },
+  "modules": {
+    "skill/dbs": {
+      "version": "4.2.0",
+      "sha256": "30b3e4ed6652636ea1271b21432f4476c227421fbd0132515466273ad7dde773",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs/SKILL.md": "d0a32daa8d80786e604e55c5d15f93a1611da51d697d96ecc54d4d1df7f657eb"
+      }
+    },
+    "skill/dbs-action": {
+      "version": "4.2.0",
+      "sha256": "56f9e957f8973934be14912cc6bec43833b177c6cbc6f532bba8ca74dad0ddb6",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-action/SKILL.md": "62af03e94f5312654cc0371389f35780b139c1a74debc74875fbbbf4ec8abed2"
+      }
+    },
+    "skill/dbs-agent-migration": {
+      "version": "4.2.0",
+      "sha256": "7c445f13868a67998cf147d38eac0642d640a9a9a31f5c5f254b990427012079",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-agent-migration/SKILL.md": "e8638805492b112eac9ff6794b867c8dd9d63bdb48e871159473f9b4c165d302"
+      }
+    },
+    "skill/dbs-ai-check": {
+      "version": "4.2.0",
+      "sha256": "25f28403607dfb87c683666f1d15cf24b158bcc1f7733ad339a82307052abdf7",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-ai-check/SKILL.md": "af647c712933e45fa0e18ad42c7c9cc3cb71de3b2cf473bd7f86407e27698a19"
+      }
+    },
+    "skill/dbs-benchmark": {
+      "version": "4.2.0",
+      "sha256": "5faf29f70a06e89b67cea8cd8dfa42e358be523158f9d63c173a024238342b79",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-benchmark/SKILL.md": "f7e4cd020b3848dcbe66480f6ecedc93b35a87639d6bc478bba9afc1d41703c2"
+      }
+    },
+    "skill/dbs-bridge": {
+      "version": "4.2.0",
+      "sha256": "04ed5f6b23cbd560f688c86d2d53b6babb2066d2da0724a100a3d11bcf0d8f4d",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-bridge/SKILL.md": "57d98a5404b2ce7654e0ddf9785d73b9a30f23669be7105f062e0e78c75044f3",
+        ".agents/skills/dbs-bridge/scripts/bridge-skill.sh": "e8d9345c5a2f7793c6e5c80fd2b37c1d87dd99f1af71b6104de4e637eaafbf8e"
+      }
+    },
+    "skill/dbs-chatroom": {
+      "version": "4.2.0",
+      "sha256": "5d47b9675d3955d1ebf308588c694e1c61da7132630f672b2e89878912697610",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-chatroom/SKILL.md": "69796476a2467482f82ff5004766b58f47e2a6987b98cc8182c10a84e0a917b1"
+      }
+    },
+    "skill/dbs-chatroom-austrian": {
+      "version": "4.2.0",
+      "sha256": "2002a1f5b244918f66cc846a11f08f63e961e0539bd7cff09db49dc89bd9ba7e",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-chatroom-austrian/SKILL.md": "52da1bd98c67f59e6b1e9bb6107576580380ef5b5087421f4a8a9e9146f4c38d"
+      }
+    },
+    "skill/dbs-content": {
+      "version": "4.2.0",
+      "sha256": "ca234a31ea73a20c86da09f7184bb524ad8086bcefaf89cb9537f3260aff5b70",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-content/SKILL.md": "51b7dfb999d20e6f306e46f62be1b5e80c0e8cb291c399fc56218ed828d3bcbc"
+      }
+    },
+    "skill/dbs-content-system": {
+      "version": "4.2.0",
+      "sha256": "74d3a6c9ad3b7d17ad5e4513ae600c8dc0d3e67a1e51194d62207742a3b3936b",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-content-system/SKILL.md": "e700be93957dbb5e68c83d661bd4caf0ebd46f89b37ad65ad2a0dbfaaad08032",
+        ".agents/skills/dbs-content-system/docs/acceptance.md": "1a5b7c5a94f8eb4ef18e4a1dc544222c217a1a8c80d13fece1a19a3ed7cf0242",
+        ".agents/skills/dbs-content-system/docs/quickstart.md": "54ee6935d156302ab85863c81455b55993b0075548483e341b69002df1a1d839",
+        ".agents/skills/dbs-content-system/scaffold/root/AGENTS.md": "086efd98dbba1358956d7f645affd06646c2ba1fd6e411174ddd75411051372b",
+        ".agents/skills/dbs-content-system/scaffold/root/CLAUDE.md": "e6b968be910df2172359da18274c37e70aa0684462cec1a69803b1b8c292b9f2",
+        ".agents/skills/dbs-content-system/scaffold/root/README.md": "02bc9400560ece282f25cb001f58c0ffd0f02baf35d71dd42db684aa8c5f2201",
+        ".agents/skills/dbs-content-system/scaffold/root/SOURCE_OF_TRUTH.md": "2aaab764725935997caf6b43df86872876041fae3dbe2f4655d85acffef065e4",
+        ".agents/skills/dbs-content-system/scaffold/rules/\u5185\u5bb9\u5355\u5143\u5173\u7cfb\u89c4\u5219.md": "768da5de978e1bd2c8a9fba9b534caec5e2ccbf45ce55375bc5df156768065fe",
+        ".agents/skills/dbs-content-system/scaffold/rules/\u5185\u5bb9\u5355\u5143\u53bb\u91cd\u4e0e\u7248\u672c\u89c4\u5219.md": "371296a93b3e6a618d85926fbcb167292066bcec395f291ed3836cd3e55733b6",
+        ".agents/skills/dbs-content-system/scaffold/rules/\u5185\u5bb9\u5355\u5143\u5b57\u6bb5\u89c4\u8303.md": "23057d548b133b3c616e75d3f5025ae3ad13d2597bbca1de570279983857ab7a",
+        ".agents/skills/dbs-content-system/scaffold/rules/\u5904\u7406\u6d41\u7a0b.md": "99ec2d3f65cb024ecd9f7dc53c08db1c9c02d17bba7b07de11af529d9f1e7350",
+        ".agents/skills/dbs-content-system/scaffold/rules/\u65b0\u589e\u6587\u7a3f\u8fdb\u5165\u7cfb\u7edf\u6d41\u7a0b.md": "cf3e4032075093220b5a8c1458fad2bd32163ff7f85649e7dac7cce62dc4d8a4",
+        ".agents/skills/dbs-content-system/scaffold/rules/\u6765\u6e90\u547d\u540d\u89c4\u8303.md": "9f50f5f04f8d6e3ac3781db3b59dd21930db91cc24b410fab0dd6dc9eafe31d6",
+        ".agents/skills/dbs-content-system/templates/\u4e3b\u9898\u5730\u56fe\u6a21\u677f.md": "b7bbed4987a508067717b4e89c792ad5a4bd8a6e1e942fc5535e72a28b9823c0",
+        ".agents/skills/dbs-content-system/templates/\u65b9\u6848\u5355\u5143\u6a21\u677f.md": "88dd3c25f4c8e83c624a7e707fb7666bd79b0d5b65b133f53dbc421cd4178122",
+        ".agents/skills/dbs-content-system/templates/\u6848\u4f8b\u5355\u5143\u6a21\u677f.md": "952135d67967271ad104c4c208413dcb6685cf4691b4f56c3db7d747d5ccb188",
+        ".agents/skills/dbs-content-system/templates/\u6982\u5ff5\u5355\u5143\u6a21\u677f.md": "80bc570dfcb7b28a2cdc07a77f23a974cf530c079b12e93b41576c3943738452",
+        ".agents/skills/dbs-content-system/templates/\u89c2\u70b9\u5355\u5143\u6a21\u677f.md": "4d42caa3e09aba45294f0e0797f3e7cb68801bbf0a2163eb698b4b6938495c9f",
+        ".agents/skills/dbs-content-system/templates/\u9009\u9898\u88c5\u914d\u6a21\u677f.md": "2233afcab0e42a99f2a84065e6b3a9e81670b8352b340b0566545fa1edfa8d7a",
+        ".agents/skills/dbs-content-system/templates/\u95ee\u9898\u5355\u5143\u6a21\u677f.md": "3aa0bf960a72daca367cce03d4e99c956f014b97517fbe275f7de089ab100ec7",
+        ".agents/skills/dbs-content-system/tools/assemble-topic-from-units.js": "837c9f3831f951cc0b7519e1b6831071ef68a996812a9ca5fd1c2ec2ad7fd6c1",
+        ".agents/skills/dbs-content-system/tools/extract-sample-units.js": "95c18a890fe05844e472e32edbf3c0300a207df34fa7bef72360264e7cc94eb1",
+        ".agents/skills/dbs-content-system/tools/fill-obsidian-links.js": "99467045932407200303c2d872366a82f526a4d305c52d4fdf5d95534371ad95",
+        ".agents/skills/dbs-content-system/tools/generate-duplicate-candidates.js": "4c848c724c745c637e28033a29259bb18ab5bd5f20ebf96c34249289d297042f",
+        ".agents/skills/dbs-content-system/tools/generate-link-map.js": "e5cd36a5c594f87edf2a7e50766247d68f8a6300877b4a9e1704baff54dbc7f0",
+        ".agents/skills/dbs-content-system/tools/generate-source-registry.js": "7a799f12ed531663eaeb1f8b998d6c0e4b0e01a7ce82d3b91b66f59a61a751de",
+        ".agents/skills/dbs-content-system/tools/generate-unit-draft.js": "6b5c07966ad02351fc4da348d0dddd9bb32a96ba57fd75656730e47a9002cc22",
+        ".agents/skills/dbs-content-system/tools/init-content-system.js": "ae42aebc3f303a10273236aff8d64b6fbddd4e603811ef28a11daafd3ceada9a",
+        ".agents/skills/dbs-content-system/tools/rebuild-processing-ledger.js": "f35a0736289bff0acbf6d421f20741dc43901e05631c22a273913dd7d99c7628",
+        ".agents/skills/dbs-content-system/tools/summarize-system.js": "f692b746c4efccf1cd13d57e5fb1ac1baa2cfeec3d107ebc6648f10dd431086f"
+      }
+    },
+    "skill/dbs-decision": {
+      "version": "4.2.0",
+      "sha256": "69ad08de9f6fea6e028b0135ea35fd830f13b0a5bf16815132f714713f11535f",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-decision/SKILL.md": "d9c5c556d863c5e73ebbf2d848b76da1746268d1038e16d30c88274c8178a68c"
+      }
+    },
+    "skill/dbs-deconstruct": {
+      "version": "4.2.0",
+      "sha256": "a7b13ac94411c5c21ecb41cd5c623d3d7cd7a352a1ceca1fa46e3c8b3c3286f0",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-deconstruct/SKILL.md": "71e8e0164c2c78d11bfc95e9487537789dd7de71c9ccad22e4c8ae4457390996"
+      }
+    },
+    "skill/dbs-diagnosis": {
+      "version": "4.2.0",
+      "sha256": "49c59b7ce84f836518afeb1354c9465788aef4bd3d44aad26fd98ca3a1b65bfe",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-diagnosis/SKILL.md": "6a7342a235012ef4efee8cecd943b7c165dbd2a2dba33f926db600b633b9959a"
+      }
+    },
+    "skill/dbs-goal": {
+      "version": "4.2.0",
+      "sha256": "88d934cd6457f471a07a93b87b4d835245ec400df9d2f6467b54ef415cda911a",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-goal/SKILL.md": "e564d8a5641553f5efef2e178f1a4379b0f4e56a223461188c50fd689f834098"
+      }
+    },
+    "skill/dbs-good-question": {
+      "version": "4.2.0",
+      "sha256": "283619c8c9dd6553e191d81c39ee5724975681f0a039ea25cff8739853b38424",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-good-question/SKILL.md": "6cdee076fab826950350061e515d191222d7986b75b93ac63d550789887753c4"
+      }
+    },
+    "skill/dbs-hook": {
+      "version": "4.2.0",
+      "sha256": "2c5cb2ea9c08a95a883aa1225a64544032d488902352896bb20e641b1e667bb1",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-hook/SKILL.md": "a98318aa6f80dfdfa400e24946d1ee99a83f31ce79acf78d4aba99b021010a30"
+      }
+    },
+    "skill/dbs-knowledge": {
+      "version": "4.2.0",
+      "sha256": "efae49722a04e9723da62490d639a727f0d607533b8fc3ccd76ea878467c1b9e",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-knowledge/SKILL.md": "0699f90921aec7b5a1a9b48e8c296fa09d1eaf9517cdc05707d5a8cb8b8adc1a"
+      }
+    },
+    "skill/dbs-learning": {
+      "version": "4.2.0",
+      "sha256": "a1f884f3008cb6b1125822870b04d0777e60539f1c876fc0024d149a55581182",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-learning/SKILL.md": "55da5460998127fdcf262cf4ad96029ce604ed42dce6e112b37dfc2f8c2fe17a"
+      }
+    },
+    "skill/dbs-report": {
+      "version": "4.2.0",
+      "sha256": "b7f96cbce074a35bf13856e11d66d9c2401e22ccfca48e746431b13f3bfa2b58",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-report/SKILL.md": "d9706d46c6198712e34922b4f9be731e82c9dbbb271adc589b31f54fadf819f5"
+      }
+    },
+    "skill/dbs-resonate": {
+      "version": "4.2.0",
+      "sha256": "b35af5a99f619b168e14e1308074c63c0ca17b5ca40b01a315cc343908730a71",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-resonate/SKILL.md": "7481b7b2d75342a48b2787d49014003cb524f3d7ce3221dc671d979f91c19039"
+      }
+    },
+    "skill/dbs-restore": {
+      "version": "4.2.0",
+      "sha256": "4b78f3191544a55d2a48005a4b5af585807f73d104fc7274a189d6ee0a4c69f9",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-restore/SKILL.md": "5718156fcc3da65876e7c1ccb2011a4fc0272668a8681fa25b6d5701948c5157"
+      }
+    },
+    "skill/dbs-save": {
+      "version": "4.2.0",
+      "sha256": "4382cc6ec944d7aaa1156619d8fda1584a1113ab79990a4b1b2c6cab6b850a2e",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-save/SKILL.md": "a31f1ec72edc0187f7252cc5a891b6ff3f69f3a8e53d3791113fe0e01daba6be"
+      }
+    },
+    "skill/dbs-script-flow": {
+      "version": "4.2.0",
+      "sha256": "460d670a1a44ea7164a8a9858a6821ce5c56e1f1bbbf6af5984e9d20f3901af2",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-script-flow/SKILL.md": "10f403ed888fb536e568354a9a8955b8507f97e30386f8db90e7652c9bee39d9"
+      }
+    },
+    "skill/dbs-skill-cleaner": {
+      "version": "4.2.0",
+      "sha256": "1dbadcb79c10eec385acc479b1e07dacb2f6d0bacedf877dd68baa94f823c95a",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-skill-cleaner/SKILL.md": "8e06de2c9fd819a98b0142cbb2ebe132738bbde5d98d6f47e4f16b7cbc9fdf64",
+        ".agents/skills/dbs-skill-cleaner/scripts/skill_cleaner.py": "a236c034ebad8ec48018c6b8f385d8fd16e91554c425eb679a06fda3e6a34c32"
+      }
+    },
+    "skill/dbs-slowisfast": {
+      "version": "4.2.0",
+      "sha256": "c76b6a2d7fac2f2612abf4954d439c36101f0b5a98b3471503afc07146baec2f",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-slowisfast/SKILL.md": "83f994b51ee75ffe2c4d3e2c891ba6c44b5e080d9cf73405e0b37238aeeb4bf2"
+      }
+    },
+    "skill/dbs-spread": {
+      "version": "4.2.0",
+      "sha256": "0c01fd6be5ce01c001bf99c579121c5f96f891e10704a971472998233b8da573",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-spread/SKILL.md": "96d28b75d404c7c047ed4cbfb7397fb810cf03440c55e258fdaac9f55a1efb88"
+      }
+    },
+    "skill/dbs-standard-answer": {
+      "version": "4.2.0",
+      "sha256": "4074be823074f12eaa8c617ecf49828cb44922db0bad725ce94521905b01ce69",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-standard-answer/SKILL.md": "dca756068361784bc1fe2512db438a7fc834dab5f292b8e9c13ec438e02f29be",
+        ".agents/skills/dbs-standard-answer/evals/evals.json": "8ed96df7a7bf6b98bb86da76960ef3fbeceb8370ea60d6f722f7199d02c5e1ce"
+      }
+    },
+    "skill/dbs-update": {
+      "version": "4.2.0",
+      "sha256": "6fc4f2e5d4ad8a245c5dd463ef912aea10c87c3c72a4c68a54f5a5f62a75878d",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-update/SKILL.md": "7b0ea860c34867d8f95aeb140d48eff8bc776e1759f1384c58a6887c55ee56a0"
+      }
+    },
+    "skill/dbs-wechat-html": {
+      "version": "4.2.0",
+      "sha256": "538869840925fa9e8b551ad122753643f2a1a54d353f1ca6397d16a2c0acb9db",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-wechat-html/SKILL.md": "85cd45bb07fe8e98b3ab7d6cbf8f030d3871cbaf3e269a39301bdcbbd801b387",
+        ".agents/skills/dbs-wechat-html/templates/styles.md": "445c9a3b777f9b89887f54e18fc5fd833186c922861e6fa9877b4aaa7e01cbb2"
+      }
+    },
+    "skill/dbs-xhs-title": {
+      "version": "4.2.0",
+      "sha256": "40356e76dea5027f56eaa256029f16905ac5999323b9f9d0fa88be8a8725ed57",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/dbs-xhs-title/SKILL.md": "44ca91d64219b06c83884e353dbb9f1f86dccbd4d40b5a4b9d3a94f044a9d762"
+      }
+    },
+    "skill/design-taste-frontend": {
+      "version": "4.2.0",
+      "sha256": "e21b155ffda180457231e464c2840124a83295f414f842db85765ca8f25eb9b2",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/design-taste-frontend/SKILL.md": "aa194351b246b8b4799099d4ed7b033d29eab6e6e3d58d8d2172978be7b3ec89"
+      }
+    },
+    "skill/hyperframes-design-authoring": {
+      "version": "4.2.0",
+      "sha256": "989fb139eeb715cc7c74aa8b9a71f6da2b3a44cf8f85c0280bd02f6c2aa3d3ba",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/hyperframes-design-authoring/SKILL.md": "5204bc52eb9fb3d27fcf3aeaf8ec9e0291c09bd2860343c3d960cefd3d2c186f"
+      }
+    },
+    "skill/hyperframes-production-workflow": {
+      "version": "4.2.0",
+      "sha256": "9fd68d863561734e33429c4fdb8d76a276b3c5ecef52ddec126253c4bf21c1f7",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".agents/skills/hyperframes-production-workflow/CHANGELOG.md": "257da79377a002770484b8fc79b4714705a058434303721c6f869fce49ff3184",
+        ".agents/skills/hyperframes-production-workflow/README.md": "d2f10a7b692dab03d819a923ed10da80a96d4e1e428a764866c40b19da6506d9",
+        ".agents/skills/hyperframes-production-workflow/SHA256SUMS.txt": "2310e6a87373dcf8ab4b38e810397f5301c756a99a11732ad0fad1d1654f7a8d",
+        ".agents/skills/hyperframes-production-workflow/SKILL.md": "3096c7da66fa7598c3972e8360b0d15d7a78130b5d4bd71e2f462790ee8ae2d8",
+        ".agents/skills/hyperframes-production-workflow/VERSION": "c89b87c262e9d5ffd20e73aac74a1772adcc9f5a21682cc33adcf5086e5fef5c",
+        ".agents/skills/hyperframes-production-workflow/profile-registry.json": "d613e251695ebd3e7263a89c80a92727972b6aa0f476138077a0d4952e8d3ce1",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/CHANGELOG.md": "8a5a0e5f1d1086b31d3bebf756ed412c4e3a9d9ee302ea10e9280946b92471ae",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/DECISION.md": "a74d19ab332ba97287ed9b1c1e5f9c6f705cb896a9e86a4e474f1308e3c372b2",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/README.md": "7e50abbd41d3f246f36ac135c4f46d5c5896236aeb798fc10d2cb9e0b07b4119",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/SHA256SUMS.txt": "29152b093a40856746e57524bdcbbe6ba05a02b136f777f39a99cb3a757feb02",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/SKILL.md": "97bd8831b200c1bb388a29a6f3b91cd810d40cc20afc17f7facc73fc0a8f8dc2",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/manifest.json": "b03055e3bdc7b975f1592036cdc51ce7705b838916a6f669b11635dcf9af7a04",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/01-optical-fluidity/PROFILE.md": "01cea19e0d79d3ab19b7858d37d55c169c2a412f5c60b47f6ee41907ce1ffb10",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/01-optical-fluidity/subtemplates/hero-flow.md": "e40f7f2240dfa29f880c350cb33c3af80607387a8e10c7d2a5e5d6b324ffe371",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/01-optical-fluidity/subtemplates/module-stage.md": "2ba1bdfb8446143b94a907a1aee5f7ee45de105f5ad087f30c1b456fd55a3985",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/01-optical-fluidity/tokens.json": "c73de1641e4c37c88b1ab82363a79d726dc6f426153628a737b9364ff82daa6d",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/02-kami-editorial/PROFILE.md": "2270a65d7ec60dde7d41437575fc115ace21be4e909a207ae031fe5602df8c16",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/02-kami-editorial/tokens.json": "55bc8e02be19ae9684db83039f2c1dd6b29923bceef8ef47337e8d20b29d8808",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/03-monochrome-atelier/PROFILE.md": "7019aa6b359fc825cc1976403539cf8db0a5bf79ebeb9c2d4930f39d9afe45f3",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/profiles/03-monochrome-atelier/tokens.json": "82514239fb3d3c91062b4c5004d573cc3469c0c3942af40e93913a8720e39eb6",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/prompt-blocks/compact-visual-identity.md": "d29e2c867f08f1facce043f96343c6536ddd75fe57b23b7486beb80debfc6919",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/prompt-blocks/full-visual-identity.md": "2ebefc36df204a2b4c8b3e001bb28946b6cf8987aea0f4c809d775d2eb08fd90",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/prompt-blocks/profile-selector.md": "0d73033882cfa0e9a3c6498a8a380016d8a8f398f5fe2e680549fdb43e9734a4",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/shared/profile-contract.md": "ceb3e6c131a892e26186f7f2b6e77b22ab6d5b166f8c08ae3d21bdfed0d17684",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/shared/review-gate.md": "e60e16d3dc1efd3b1052c1f9a5b8e965cca46f170091510bddabb28abc9981a8",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/shared/two-template-mapping.md": "a815212a8dda8ee04f21880f953f8055a3e81b5745c2d117eabe9f7368e39486",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/upstream/OPTIONAL-INSTALL.md": "c22452d92888f492051941d0a2527ef053ce85c61ddf465e7151ab9d7bb06fae",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/upstream/SOURCES.md": "a87d0c0cf562929eafbccd1e8aa2b53a912a1363ba0acaeb2542e2ac6b815b76",
+        ".agents/skills/hyperframes-production-workflow/references/hyperframes-design-profile-pack-v0.1.0/upstream/THIRD_PARTY_NOTICES.md": "ca6ce63317f443387120878b98db043bc57489ccc19be122a2b900038cd188fa",
+        ".agents/skills/hyperframes-production-workflow/scripts/validate_package.py": "5f98b0367a763b4f57a0b57fdb4efcfced7516cd2474637d21eebdf9d54875cd"
+      }
+    },
+    "core": {
+      "version": "4.2.0",
+      "sha256": "2a9eb1c10cff20341c370f20fa170e87f0004e7d840a21ff241fa6e89ce6fec1",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".gitignore": "e01d0705d0930368826989f6b5751bf3c882e7eaeec7e04d9e9176761ba75494",
+        ".studio/AGENTS.md": "f3e96783832d724da0c6a0618c1b91a9a9f95bf1abcade49d89eb1ef8b8d790b",
+        ".studio/appearance.py": "aac5c1bd70eb3fb489dddbf52c190663038df180e3f73315b67790ecfef0414a",
+        ".studio/appearance_rebind.py": "d1a39ecc06a17c683e8b2a49edf2e13e0bbed3db5d5372f362d6eb145592f29a",
+        ".studio/asset_contract.py": "a8d7457f4c58454f6746e1b6f0a625271b5f5feaedd222cac0ab9f2898eec916",
+        ".studio/asset_maintenance.py": "7b9c0877b7e2e8292927002e5e382ee68d8118d3971b2513e27602efa1d912db",
+        ".studio/asset_store.py": "541bdad49a53b23c446eaab7fe5c07a93043308dae15b7a6521b7be7e84f3827",
+        ".studio/behavior-changes.yaml": "d9505c47fcb32e0863ee041590c1ccad32335b5ef22c485806978cb6449047db",
+        ".studio/capabilities.yaml": "901f9cf0cd015ea7914413f4a5bc97c892acf618c957ef2f35d85fe4cf08c604",
+        ".studio/cast_art.py": "a5f82e4836a22a1855b2c730be57999c2d008ab02a5970c8d7f317aec9613a6e",
+        ".studio/component_harness.py": "003ccf8635b264bcae3f8a3f8e6ceb7c86f7f610dc35eecf6a7eee2c02376892",
+        ".studio/content_adapters.py": "27376e0e8cdb508d4eda6406316bb7703a14e110eb29eb5e438427aa6a3619c7",
+        ".studio/content_analysis.py": "ec46c557cfcd835a2f9afa8562b4b8c3796e798409b24668451af3b929b33344",
+        ".studio/content_retro.py": "eb7c4f564aa75ac92cb99924a43e5cad35544e832a09190d3601cf88b8358566",
+        ".studio/control_plane.py": "d680a314b77e50966551ecaa213c767fe507a481249dd807f3fe804c474e4f5e",
+        ".studio/cover.mjs": "e22a0581fef2c09bccc383f0f3efa0999180b9a3985d0abc9eb426d41323b68a",
+        ".studio/cover.py": "07a2a2969e5af96b81bb0a63b4d132d188f1f8c33a061bac570237d9fe937814",
+        ".studio/critic.py": "d3462e19e0ad0b717462489340213904d895200ce8119de1ee7f08c87a453a86",
+        ".studio/dependency_scan.cjs": "863f57227fc8b92f643cff028d1c858531be380ef5acfb358ecdc96b311a9418",
+        ".studio/dependency_scan.py": "e79142a4613d39c2f5b78052c1fd7d4ff2baa2036b1b4167f6190467b6e811b0",
+        ".studio/design_examples.py": "03162a9e583433a8c30487291437eda33761280bce200cf8dd767b9454cc9256",
+        ".studio/design_preview.mjs": "ae23579094a1b2704275826ca3058d98c0728013232f3127ff1bd74d2db93349",
+        ".studio/design_snapshot.py": "ceaa420cc1b790a609c004ef232303fb9f464f742f150f9c45945aae0edc45fd",
+        ".studio/design_sources.py": "c502e815fdd2f77a5895f50e0abdf4fe3266d1be5bd3b12542ac803e2270c5e5",
+        ".studio/designs.py": "6f6eb1dd803e4821524d0eb36a0c5b342d021cca8f7c9fbd119df746fbd51e0e",
+        ".studio/director_plan.py": "c2c60536c49d6d6f309ec69cbb3c495e244cf600238a6310e65ecaf24b521780",
+        ".studio/english_plan.py": "2fa93c6f185d8612a00a052552530fb020053e2435dfe79a34a223d8caf279a9",
+        ".studio/explainer.py": "b4cde02751954ef52e66014b1da8c464ae1a7077f257df14d4248a44eb1383b4",
+        ".studio/exports.py": "f1719509059498cb2e059439a713a14be41e0acefa324a408be190a5beeade7d",
+        ".studio/font_cmap.mjs": "61cd8b3134066c5600593c48e64c528916187f94e6495fb562cf077e0c2d6f23",
+        ".studio/future/patterns.md": "741e68960b010f001700d9cba5942bc756789cbc7da45b26a859afecee677eaa",
+        ".studio/icon_sets.py": "854ed1261362873994931799a69b8da87fbe88cef6e2fe4ea5acd71ecde930f4",
+        ".studio/lines.py": "5b5beaf366556c6db39fe7c78291505c9c3c871c66d0fc5b67f1fc78ccce72c2",
+        ".studio/lines.yaml": "18454690b8720949f3d0fbe0af64273dbb45db3967fe77fef77bddd6a0d5bd52",
+        ".studio/math_audio.py": "7f1c6ec61649d0086aa80843efc1d556e83d3631f426c451c6e6d250ff82eda1",
+        ".studio/math_build.py": "c558e8d4f4f97ef97f11546a431b05693a2d72e76b5ab1a8300c8d39b5b8a9f3",
+        ".studio/math_chain.py": "8b0fc1dfd585533842d762d4cb43a081d1588a761ed8fa9e2791cd6094e5e555",
+        ".studio/math_kit.py": "a103720d801960127a4fa73a2f214e1f441cd147876cbfaf289d2ebae3576947",
+        ".studio/math_kit_assets.py": "98911eeaf7c48e153d49cbef0f14e72c2ee4a436f0ce913b868830c465400322",
+        ".studio/math_kit_check.mjs": "e3aa9d0b41cbc21a52cc6172ebb844dfd4a9417998e58f8003c079e24a3abb58",
+        ".studio/mechanisms.yaml": "3a70b47e818f22e0ad6ffae5de6fe7de764026dffa57eb88f62a44c3c5f984ca",
+        ".studio/module_texts.py": "9d894b9f26268eddc9e31406850397cfa6951ac09e6f6991e176941a9150647e",
+        ".studio/package-scopes.json": "325e21da54fdb611ec1da25871a6f24d86981052b3da84d13706f78827318eb8",
+        ".studio/parser/.gitignore": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+        ".studio/parser/package-lock.json": "857b1ed9a58d1e9d195dcc71654b9ad3bf88d26e2ba3ab8987d9b38ba03da591",
+        ".studio/parser/package.json": "10436a9adfafb6ede9b3bbc47682881a35450593c1335295d8a448c3cdb28b1a",
+        ".studio/prepare_windows_runtime.py": "892f6bce75d5e5a74f36e3a9447f5dde38283ba67944bdf18985369de27294a1",
+        ".studio/recipes/pure-hyperframes.md": "c16bd1ed9b3c8ac347cf2092b6958e6faa741bcfb48400e0a44b2e82b4e13adf",
+        ".studio/recipes/talking-head.md": "5990784c0a40ba6d434387449c0e22065ce75f27b39b40c3832c79ab4fe0f30b",
+        ".studio/research_catalog.py": "c83ee2833972a9ac68ee94e939c1db63f32505cd0bf8fdebb3c0775dcfa97e15",
+        ".studio/review_bundle.py": "3eedade35aaf3184d926e8cd4acaeadc939ef6cf361b03a883ab37cc731357ec",
+        ".studio/root_deploy.py": "d2aaa0f7cdcc49a505da365fb4ee03fb155455b318f78db00f4d526299ebc5ef",
+        ".studio/runtime/appearance.js": "effa10f956b15fdf2f04f0663dfa5cb78e2480d681f580df3c40315714cc1925",
+        ".studio/runtime/broll.js": "a912749869d3e6e24678710c45e417aee0e4dde90b801a8fd776cf50894447ae",
+        ".studio/runtime/captions.js": "231563ea29a08a2d1863cd37f12ed35f4e0c32976ea8963593828f01a82554da",
+        ".studio/runtime/cues.js": "ea47be2cb7f25d452d50d58eaa2341337297aa4673da41fd5af9a0e779fc47c6",
+        ".studio/runtime/figures.js": "d4b152e01154e4d3cdcd5910aea7b38f558b4153e3a124c48886b644922bff4a",
+        ".studio/runtime/rolls.js": "16870880e6a3c2c6fca0d889312f0faee9c2423cab1a0878fbe8d59d9ff3cb68",
+        ".studio/runtime/scene-binding.js": "de9dc9f91581702f9920d95d39c2027fa25f13583b53bda3273b404fce0e1311",
+        ".studio/seek_check.cjs": "bb6660dbf55d459671490fa1745604983029f1bb288874221cf1acc8505b6b8c",
+        ".studio/seek_check.py": "674da4853323b4112bf517bf08437082340b89546ccfaa0f02675c6a710e8c4b",
+        ".studio/settings.py": "1c158c3181b23d4b4411b9edd4caa5017149911fbdb985c8aca7df2dcbc69162",
+        ".studio/settings.yaml": "e8b61161da40387d144a565334ed27557271754b7d92da7022c6149eb399c6b6",
+        ".studio/sfx/.gitignore": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+        ".studio/sfx/jsfxr.mjs": "f528a31fb03b8ef31fb80d6cc9e15579efff44a42b472846ba7d5639cc74e1c1",
+        ".studio/sfx/package-lock.json": "d21676567987fc260e88cb316f314589de7c1c7d8f77bb285447dc56a3dac4e8",
+        ".studio/sfx/package.json": "3bc97df9c5b0bf393f066b0acc93a549fedce218ed9b51837fadd9764a7fe434",
+        ".studio/sfx/render.scd": "443aa1428384cfcaabf48bf166421b889a6136af50536d28622d8ffed4a46a12",
+        ".studio/sfx/vendor/jsfxr/UNLICENSE": "7b30c10d168b77d43ddaa3269e7bef3e1a9dd68a54a5f23f1630a653d7e2e2f4",
+        ".studio/sfx/vendor/jsfxr/package.json": "43d3429fc14ae3fd267c3c08413e9164ff8889bf3e7a4ffc070eb1afd0f18353",
+        ".studio/sfx/vendor/jsfxr/riffwave.js": "ab3cea2bd157746d7b01b440a38d1eefc0c7b3bcb464b5aa80ccbd66be4daaec",
+        ".studio/sfx/vendor/jsfxr/riffwave.mjs": "74cd4ecd958f61a4068a04ca01f9125d611f8e3b2bcd7ea04c461b4b5af3e454",
+        ".studio/sfx/vendor/jsfxr/sfxr.js": "6095a6358e654bc3ffd55d9ccecf694f187953d78b1391ee2823a6fcb92551c5",
+        ".studio/sfx/vendor/jsfxr/sfxr.mjs": "96ac9be45fcd9b9794c512d935228e45d3c49d2757d6486f9bc8308cae10b4f4",
+        ".studio/sfx/vendor/manifest.json": "7bacaccc7b82ab8a884fdb01bba9a46ad3b2efe4e0cfd2ed785ca2f51814a58f",
+        ".studio/sfx_generate.py": "46b3cf792539540b0644bfd065cecc17c8e2cafd2aef98ed7ace3e91e4f837b9",
+        ".studio/sfx_import.py": "2c8a6609fefe0529f53c7e6f0fdcbe266a4cc2b435a3011b0d3f9e71f4e3015e",
+        ".studio/showcase_tools.py": "a7a40813c55e72179f5694ae42dcdbf3f4f4666227dbddd3631a9a69948a3d9f",
+        ".studio/spec/broll-assets.md": "2d8ec217f1a03acb2593ed275e74a7a813c09f2f0e5f8d31971bf3e6faed405b",
+        ".studio/spec/creative.md": "411b29d9f279ac6981ed5ca321cc2faa03ed38de3e11dae395915051e69e6499",
+        ".studio/spec/hyperframes-assets.md": "acaee505879fe9be071dade14ee57a4884b4564ba1b5c8c52935e43ba784384a",
+        ".studio/spec/hyperframes-final.md": "aab05c442b52afd3d80af0184de52badeaf80f902ec67e8fd0b02f85da56404f",
+        ".studio/spec/hyperframes-research.md": "7e96c47630c65a7c835d88ba0c95b081d205d61fc4588c818a3650ce4f48406f",
+        ".studio/spec/hyperframes.md": "ed7d804f1858822844dd4cf64bf352ea6c80ec9ef1aafe730e01f26602377f5c",
+        ".studio/spec/privacy.md": "a782e39201db9211d8fcf8bcf2f893c9d20082e38042818c531dbb8d43adb1b0",
+        ".studio/spec/runtime-interfaces.md": "8c122c8f3bbc262902152f2fd0de7ef81528de3aecfe2bc9fafdd7e262d9c54d",
+        ".studio/spec/visual-design.md": "11485a2735b1ee2a2670ec62e5bca4b4784493b71e4d668605d598058f202d79",
+        ".studio/stage_art.py": "d031400253cc140ae815db82d5fddcda5602f02a37a8763c8957b632c4050d6d",
+        ".studio/storage.py": "f11e23187991075ffee5c9697dc31d617261f684c70fca9dea678c2eb926bba2",
+        ".studio/studio_preview.py": "801e457623eaa92617f8d239bbac21be1c5450a8b9b4b1a78a6b2d537fe7e321",
+        ".studio/templates/ANIMATION_PLAN.template.md": "7937609bab466df38d9be81ffab4a1b0d3d121a573eff4ec7b61da382116ca7e",
+        ".studio/templates/BROLL_BRIEF.template.md": "52a37343a26ded49ed15dfe6375de9eab9bfe70bedafbbea56c2be0fe874e30e",
+        ".studio/templates/CLAUDE.template.md": "66214471fea27f474ef0302dfd52077f822923ace9c8cf3956b712358c5226d6",
+        ".studio/templates/CONTENT_RETRO.template.md": "80c97b0a69e3750eb053323c4e2bba851bb8426a9a4df062a03f85024e4b2e6f",
+        ".studio/templates/RESEARCH.template.md": "ff4b099e775ab892def47a36e557d0d7ae157549e4d5cd4dc4afc817b0f6109d",
+        ".studio/templates/SCRIPT.template.md": "e0fad7631a7f2e09aa8732e7547919a66f193a2c405f7078f98a5b1e1ae90310",
+        ".studio/templates/STUDIO_AGENTS.md": "f3e96783832d724da0c6a0618c1b91a9a9f95bf1abcade49d89eb1ef8b8d790b",
+        ".studio/templates/VARIANT.template.yaml": "61ffa07d79b0d3272016a6be6cdfaf5171c0b1a0ffcf7adf17545cee0d0b137e",
+        ".studio/templates/VISUAL_RETRO.template.md": "deec455adab8e5445042af74249a24396ca258bddbcf56b987cab0f906946217",
+        ".studio/templates/WINDOWS_AGENTS.md": "9789f978abbe990bb413ad2f9bcf3bfa561b6c1a22600ac7c22e9a8f1702c8c0",
+        ".studio/templates/WORK.template.md": "22b6eae10234eab321320d263ef6915d074a683eb9c0913a7cfc07173e652b5a",
+        ".studio/text_inventory.mjs": "7be31d6c8f5f360d05c98c0417db9e6d94cd69cb056fcf1d5b0d493535d885aa",
+        ".studio/tts.py": "093668135d77af056e67dd1ca3b59c4388183b2c5241de8c11b0b5004af9dd1b",
+        ".studio/visual_diagnostics.py": "86fcd46c9af5534475527e20d7be582b0625dbd1a778e686fdb57331f9df2fcc",
+        ".studio/visual_memory.py": "690f5532408a77d914b266d8b03b5f1e512586ab0394f2b1b3d6829d493ef692",
+        ".studio/visual_plan.html": "b8c123454535c4f348da92072298dc6b7464f16e49b8f944ce2e10fd2fb9bd19",
+        ".studio/visual_plan.py": "497f79ef4d3f1d641e059a23b8091f015d19976e1875efa18419b862ca0be4ad",
+        ".studio/visual_probe.mjs": "ae71fb26c173b089fc2cbc60150e1bb62b6a63c482120c1003a7c1b3da04f5fa",
+        ".studio/windows_node.cjs": "cfed34088866c68d3d1e36e3f5a0147924705b35dea76f3be9c1e26e244e60c3",
+        ".studio/windows_runtime.py": "2416a11e3025bf6a7c171b983e9159e5600ec211cf71201ece8af3359137db57",
+        ".studio/work.py": "2a07f84d0bf3a4b9e49155a5d89c78cc8c98e93728f9814fc6a48330e7b56e98",
+        ".studio/work_context.py": "b6b7e7ce7ad8ef2f37ba8083c834ada13a248db237a20d297be9053d05ae74b5",
+        ".studio/work_memory.py": "c9bad24ae9773b36479425b26c3d7b4ac1dbf6d840066312b378d99eaf0e777a",
+        ".studio/work_migration.py": "75f3ec5aa7375d93b3391cf15a56e58067b3aba351cbdc0551b86029647c8687",
+        ".studio/work_requests.py": "e1cfb5bcc60d01f8398fd4ce0b588606a59523837d463eed52635ecb8203ed19",
+        ".studio/work_storage.py": "ed502e039692789c515bbc48cd1a00d45463150db503261aa31115888c1daee6",
+        ".studio/work_successor.py": "b5cb2a52123e98ffd4a883cb542a65e46e950a41db6a4e8fd82b972a3ca1584a",
+        ".studio/work_tts.py": "954fcd81b95a07bfca7d1f90dca8e2bd5fae87f8c3a5eab6239eaa3c778b474d",
+        ".studio/work_wsl.py": "30cde6aa7a65b0d14ccc2e8790340f18b89d9d14d71b1cef2d7e82df091b8e01",
+        ".studio/workflow.md": "132a62461d7b6024f37c9697b59676df4d64936bfcf16441e6e39566b92af2fe",
+        ".studio/workflow_config.py": "71e84c2e3349f31e5f566a72570a3592701031f0b809ed0a0e71447ae6468845",
+        "AGENTS.md": "9789f978abbe990bb413ad2f9bcf3bfa561b6c1a22600ac7c22e9a8f1702c8c0",
+        "CLAUDE.md": "66214471fea27f474ef0302dfd52077f822923ace9c8cf3956b712358c5226d6",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "README.md": "5da949d59639fda7feae3bdbb234ee68bf4a5b926b0e0804f7ed2326c77d724b",
+        "THIRD_PARTY_NOTICES.md": "3f7a6b0e554e4f1a544fe81794585d6aed5b91ce35f4f372b0088eb7eb8304b0",
+        "docs/PRD/PRD_MASTER.md": "ccf0ca1a8d21edf8752e2279d9ab153d95a4f6d2c0c0ec28e7b93239e6e4ab29",
+        "docs/PRD/_ledger/component-authoring-m0-m1.md": "b5495f5d8bb20654e7a5036f070d7a690fe71467d3e695168ab7f731dcd8b744",
+        "docs/PRD/_ledger/component-driven-motion-vnext.md": "b14d56b29ed894cb8cdf2ff41dfe7aaed2b9878fb3a1c53f8eda644081e44bbc",
+        "docs/PRD/_research/rnskill-motion-layering.md": "c94534fcafbee4ab3e5d86ee99ccf2406cfac663bf7c5d46a86259a8635e898f",
+        "docs/PRD/component-driven-motion-beta1-pro-handoff.md": "3d414a4cd6c2d0378d339b81624308f52932d059d36bce1e5112294f51513c45",
+        "docs/PRD/fix-tool-owned-work-directory-naming.md": "dd1bd318c413db4c93a4b464427bcd733075bea1e3d808a0ce2fca27343501e1",
+        "docs/PRD/hyperframes-asset-library-restructure.md": "6f1fec47d0dcde5c3e0da39479c55c428656c1f71f3f8bc014df06871fb1ece8",
+        "docs/PRD/hyperframes-component-motion.md": "30f495c3ba0ded89ec454932ef0a28f8798d2ee657d8c8176b1324c1ba2ab2d6",
+        "docs/PRD/hyperframes-rc2-execution-plan.md": "fc973e30875869e5337486d7635d33f6acd138beef865c99cc65dfaab8edd28a",
+        "docs/PRD/hyperframes-v33-production-contract.md": "0d8bdad705d52f0479da32ceb1d46387e88707e6a783e13ee558860160303dc2",
+        "docs/PRD/hyperframes-v341-supplement.md": "94f28f5963ffd930b9eb7c56d7a8ad93199ca57eff339c61e0d5f1ff280e3ecf",
+        "docs/PRD/hyperframes-v342-visual-outcomes.md": "96e5da7c644187e5124a5870b44ec7f9923af19783a105fd9a02adef5170dbf0",
+        "docs/PRD/hyperframes-v343-text-imagery.md": "d7b9d6360fb206da05fd8aad2242a47f1281d701ad292ddad6876d235d8f3a2c",
+        "docs/PRD/hyperframes-v35-expression.md": "c56101e875256f0ed9aa9f37aaf4e1258633363884cd613a6b49031c860ade57",
+        "docs/PRD/hyperframes-v352-acceptance-checklist.md": "1357305472dc978ba93ea1e8076e016d3b07d7a667bd82b3ac510b90fa138a89",
+        "docs/PRD/hyperframes-v352-asset-kits.md": "d9771b4b7a62fb9e6d3a38b885f67ec90b7403c73d4562cda355a17a607ee465",
+        "docs/PRD/hyperframes-v352-icons-rhythm-loop.md": "3363b7327054882a2514241281a9358c057bf123c1d816c781c4727cb9886eb5",
+        "docs/PRD/hyperframes-v36-showcase-math.md": "e7844d03d5d4b7d37aae280f5f878836e017229f82545655174eb04cbc3f5e39",
+        "docs/PRD/hyperframes-v361-broll-asset-authoring.md": "1af4df76854170b6cdfbef6b981e6c9aba13dbaf714dde36b6e891ca6c2cd319",
+        "docs/PRD/hyperframes-v361-motion-broll.md": "ea69cfc893a2f6d199b540939ab2915fd7f2d4bebdf88102de1be8a969498f6d",
+        "docs/PRD/hyperframes-v37-simplify-retro.md": "7c0483d719fa77b46d310ed8600030efc9c91b8230c2a42d2aefc00f972d12a6",
+        "docs/PRD/hyperframes-visual-plan-motion-reuse.md": "e5c9565da49f3403e20aade30dfb9f56c64ad407abb98105953674a46d79bd65",
+        "docs/PRD/hyperframes-windows-workbench-wsl-handoff.md": "f3fe3f9ce617425ff29ffa4a0bf7b7a13af5487953a88b7b8a78cf758a552542",
+        "docs/PRD/production-session-interface.md": "3f990124767040ae803bc974059856da0782f84a406983838eb15b3b1a1ffdf8",
+        "release": "c5a4b99a53e1798d64c88a5bfa2a076f2ad52a2457f2df6076cee95ba8aa5f93",
+        "release.ps1": "1c975c70b5ced15ead06c05c931db68f4b38f883d1d0be82e285c14d10fd88da",
+        "skills-lock.json": "303f4a487a90f89ea460f3c991f6e598a894e63b6d0c46c1ea8b8b69386488d9",
+        "windows-npm.lock.json": "615ae8272875b6b08ad512db4caa4fca680073dd66256e891432fcb441235b16",
+        "windows-runtime.lock.json": "a4a035f13c5c9dad5398ab03f3e44bb6e37ceb71d0219f556497bd17f7fd9d0d",
+        "work": "824da9d61ff55bfc6b32db2e05801215f81cfc19d46221c7e9653cb82ffb4879",
+        "work-wsl.sh": "76e01e21c4f3f6885fc00f90ed506e8f27c9d975e5eaa0ae0234cf9af642d1a0",
+        "work.cmd": "a339b866fdd36acdb75b6360f8e538ec591a180c40363ce38c32b36fba78697d",
+        "work.ps1": "266f0dff502b63ed2ef07e5fcb87b2b65edeea658f965fdfd639132d744c1505"
+      }
+    },
+    "design/stage-full": {
+      "version": 1,
+      "sha256": "23e595d54cbb317a2f0f81efac79a796f35943e129bcc3eeeba400422ad39a2a",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".studio/designs/stage-full/GUIDE.md": "8486f932fca89092a3aa44cd36d4c5d65fd924bfdc5fbc594f164692fc84de06",
+        ".studio/designs/stage-full/assets/stage-rig/asset.json": "2949c1872b1ac70b27f9bd1d531d73360f397be3f6722640e83c1c0e280aed28",
+        ".studio/designs/stage-full/assets/stage-rig/stage-rig.js": "772802d3d12157638cc0070f04d88e6a11c34f774438cf9d2a008731e5b1c3eb",
+        ".studio/designs/stage-full/design.json": "35bf322472308dd3d2325edf704bc5d7bced3d607b2b1cd118269caf0fdd5815",
+        ".studio/designs/stage-full/example/DESIGN.md": "bde0352a3699894b02f9ff343764d5580e6d7c01f172319a0e0aff46883db0d7",
+        ".studio/designs/stage-full/example/index.html": "edcaf6c9f966217a26ede6fa76d8c6cfdfb7c687b08cd95bbd1050285d3645a5",
+        ".studio/designs/stage-full/example/project-config.json": "e8a7f57fe015657c6a4da84b9f56f3b469bf5daaefd0c55bb7678a9bbc3d39f1",
+        ".studio/designs/stage-full/example/scene.js": "64ab4c46840b012525215b66cf2802788af2c48fa4e6ee39c6b4fe41794bb097",
+        ".studio/designs/stage-full/example/style.css": "b1fbe67be1e8a10b9c4aef960631a34bf48e754d11f98d6586312fe54d1ed812",
+        ".studio/designs/stage-full/example-manifest.json": "3f40ed9cc2054a1ab96e3bdce05af8678e277aecb4a1c975074999642c4f5199",
+        ".studio/designs/stage-full/stages/draft.md": "b0bec64aea92dbb828d0d889a17fa67dad553def79d37945124916ce3e567e65",
+        ".studio/designs/stage-full/stages/export.md": "1687403e92f3e4954e7c2002f675f77e0c7fffe92d0380c3b3eefded31659236",
+        ".studio/designs/stage-full/stages/plan.md": "7da6fad5bd97d9b31f0191571bb3c9a34cd65dadc6fd217f6b346ab868d9dd5a",
+        ".studio/designs/stage-full/stages/research.md": "91c8084c04b0f6863d156d5f3f7c34720349d35a4cfcb53419cf2df67179125a",
+        ".studio/designs/stage-full/stages/script.md": "891367c60ec2d7158cd9a8dd04040158dac75bc0295782df765e02cfb951285f"
+      }
+    },
+    "design/stage-light": {
+      "version": 1,
+      "sha256": "fc837192d07c160c5a9216cecffe29c60dc06f32f273947a82d94f8a995d539c",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".studio/designs/stage-light/GUIDE.md": "30c36c8e5ac3e724dea492b6dce034fd786a171059c6b481656923dcd0cf6811",
+        ".studio/designs/stage-light/design.json": "be8c5da46e5ffca4df824196e4bbce0d28b9d4d524ef5357886d09aef018b792",
+        ".studio/designs/stage-light/example/DESIGN.md": "36b15d156463e78a183b1354f63b45496f0819c02ce00afcce97871e6719c147",
+        ".studio/designs/stage-light/example/index.html": "e5c4a079112db2ee93d9d514fbab73a8e5327754ed747f9d882da491440ac334",
+        ".studio/designs/stage-light/example/project-config.json": "e8a7f57fe015657c6a4da84b9f56f3b469bf5daaefd0c55bb7678a9bbc3d39f1",
+        ".studio/designs/stage-light/example/scene.js": "f81ed8c2b6835532324a9aadc145dee8d7ed8803a074993300bb093f9d7fd38f",
+        ".studio/designs/stage-light/example/style.css": "cb99b6e4b9d88b1150b9a4d232136d526cf448db47c80b7ce6c538038ef97ef5",
+        ".studio/designs/stage-light/example-manifest.json": "b1f1347bc92afbc5e256800ab84f8bff35875079f5212ea03fe9ea596a11211e",
+        ".studio/designs/stage-light/stages/draft.md": "9444643169a9554c6a1addfa3173599e3606fe442af223e087350eae63517f23",
+        ".studio/designs/stage-light/stages/export.md": "c30ddbda61bb5b5cbdb9bd6c2526ac1150fd7827afe482681cfaa293cc7fd179",
+        ".studio/designs/stage-light/stages/plan.md": "359bc8a12c6a9832243815cc871637ca8440a683c0ba0ea6ba2a580be4d7ca01",
+        ".studio/designs/stage-light/stages/research.md": "28e1392fc248803f6047bc1e2a3090ba9850af1602b24217abcb1f676a9bdb4c",
+        ".studio/designs/stage-light/stages/script.md": "4aa0befbc81e41f359ff823e276384369c4da2b03a619f2b9071b53bf77805e4"
+      }
+    },
+    "assets/fonts": {
+      "version": "4.2.0",
+      "sha256": "b41f393dbc233c3d924c38e15f6bd049a36ec986e0757e2d47a8834d6c7316d8",
+      "compatibility": {
+        "product": "4.0.0"
+      },
+      "files": {
+        ".studio/fonts/manifest.json": "490f3a133b88efb4352a70f75d35bee7e61fc041bb6298399b1ec92fc4601ad8",
+        ".studio/fonts/source-han-sans/LICENSE.txt": "fcac737e761ec63dbfbdce11030a1780161920d80315edba9c8beff1c2bac5a2",
+        ".studio/fonts/source-han-sans/SourceHanSansCN-Bold.otf": "62383707c086a32f3afd5e293f34c7eff64c7fea31f579fdc6cbe34d920519a6",
+        ".studio/fonts/source-han-sans/SourceHanSansCN-Regular.otf": "e2bc8a2e7f37474b774fff8db758681ece40bb6947a90d571bce9dd60671a8e4"
+      }
+    },
+    "runtime": {
+      "sha256": "a4a035f13c5c9dad5398ab03f3e44bb6e37ceb71d0219f556497bd17f7fd9d0d",
+      "version": "locked",
+      "compatibility": {
+        "target": "windows-x64"
+      }
+    }
+  },
+  "release": "harness-2026.10.0",
+  "commit": "46cf0e4ab87eef1686790786ca2df71cc1d283d6",
+  "target": "windows-x64",
+  "built_at": "2026-10-13T11:20:33+00:00",
+  "runtime_asset_sha256": {
+    "python-3.14.0-embed-amd64.zip": "8d4d3590c10449d78aa4375f534e6d5f3027d67fdc362dd1a882279db6f90fdf",
+    "pillow-12.3.0-cp314-cp314-win_amd64.whl": "fdafc9cce40277e0f7a0feabce0ee50dd2fa1800f3b38015e51296b5e814048d",
+    "numpy-2.4.2-cp314-cp314-win_amd64.whl": "068cdb2d0d644cdb45670810894f6a0600797a69c05f1ac478e8d31670b8ee75",
+    "scipy-1.17.1-cp314-cp314-win_amd64.whl": "3877ac408e14da24a6196de0ddcace62092bfc12a83823e92e49e40747e52c19",
+    "node-v22.22.2-win-x64.zip": "7c93e9d92bf68c07182b471aa187e35ee6cd08ef0f24ab060dfff605fcc1c57c",
+    "chrome-headless-shell-152.0.7977.30-win64.zip": "5d7df999a6e4a65a1b16b25b61064f7337b8aa8ee2ed1b4e07bfdd24f6e4275e",
+    "ffmpeg-7.1.1-essentials_build.zip": "04861d3339c5ebe38b56c19a15cf2c0cc97f5de4fa8910e4d47e5e6404e4a2d4",
+    "hyperframes-0.8.150-windows-npm.zip": "4a6875edfab5de5ac6568e3945749c8cc00247000e0b7aec18f79c5521ec9482"
+  },
+  "local_skill_sha256": {
+    "dbs": "b0290051cf5563047d5b0a5a3e55dcf046c2dff1a1b66e299825a4462c9507ce",
+    "dbs-action": "ae7d768eae00c12cdd880c29d025d37ceba2ba7baff337ddda2393c2a606b6d4",
+    "dbs-agent-migration": "fb5a9553b88420f0f81e09561b0fbf9c27d1fd90860344835e5170649f91e186",
+    "dbs-ai-check": "1f2703581914ae9bff5384196a08138fa55e64f70ad4427d95ee220c7ee5e2d9",
+    "dbs-benchmark": "d7042407d6e62544886ace4818559d28f873e369a73f5d5a18cd0db10b63ab9e",
+    "dbs-bridge": "698c317ef29aeb11c0a6b804a25683502d69c2b78c1d0aaafd6acfadff1fd66c",
+    "dbs-chatroom": "bde6138a0671f0e04e0872915bb362ad9962c55efba7eed26e86b5e353ccb223",
+    "dbs-chatroom-austrian": "6709d9b78e023f494b9337f50ce9b1550da893e17928a8a58c0fc14f7ead1ef8",
+    "dbs-content": "7c563a272d2d2e6715fba39441aee06acb4fec18dc88724e0236c05a815d1cac",
+    "dbs-content-system": "30c87addab5d0d5e3199f97694f49c27e35db6d05221abb4f61b2820325c7f3f",
+    "dbs-decision": "c3476e26d6af70c530eb67dd8b4c063fa38d7ce712df4dbf6e9ce6015ed4d878",
+    "dbs-deconstruct": "e16523251e01757bef5da2a3ac1eb56b7210162ff90958f98827f8a6357be050",
+    "dbs-diagnosis": "b346b7713511867c489734a673510e0b549ccadf06b5dfb36de68cf93c2bdf63",
+    "dbs-goal": "e01d1ad7c09dae1e6c194cdd0c9ab7cb375dcfc13555dbe46f69df5c69422c5c",
+    "dbs-good-question": "cd743a57f154d044c293b492685869fefc9ed7df4a6a86269bb007dae2e95573",
+    "dbs-hook": "fdba540a1a4116fdd8e947790bda40e8066c8ecd738ae4d7580ce0e4631592c0",
+    "dbs-knowledge": "1d3d34a07458da72393da2496f49b6cd3762f7910c873325a6e9d9602890c39b",
+    "dbs-learning": "1fb50452992eeb397e6c88c6ae4c86fd7f9582c4ecc4ce2b3b04c1987459d15e",
+    "dbs-report": "186ae86476126da3acd3a9f32f38ffe5f56e217754e941617f468e01f51538cb",
+    "dbs-resonate": "c441e1b6f443324e9fdb54266930642f704af6e95ee72a3fb72be91d2fa4001e",
+    "dbs-restore": "79e26d965a9b3303a4ec084451bd598b4993b5da4e622cb004edc05670cd89f7",
+    "dbs-save": "236c6c68b59f9c3ecf862495b228c69085ecb59c438055b7d070c2bf9c857aa4",
+    "dbs-script-flow": "694ae002dd3245516da465caf3b2850b3266d2d60a20fd5da3499fe9b072fcc8",
+    "dbs-skill-cleaner": "4dc5feccebdff3d50864ad3690186bbb2a2a54a6834c78b3f490fd9df0b2a15e",
+    "dbs-slowisfast": "1fdcaed440c59c221f85b5940babd22dc1c451d9a686128b2c577a6f1deb9e6c",
+    "dbs-spread": "84daa2f4cb15b0078bc46ace0b780e61528adf5c9d5416497a67ef17e2820c5f",
+    "dbs-standard-answer": "234ed286c18f3535b90510ec7db9ce5c56a8a74913e597274eb91828000c71b1",
+    "dbs-update": "9a2289c9f63748ebffc77928ee4cd98da7241ebe8bc31f00efa8bf08f8832319",
+    "dbs-wechat-html": "aea8c6eb1c0a866e6b2e177eef55c51f4f497235a79e48c7ce496e9e52db6ec2",
+    "dbs-xhs-title": "4474ad23c2a904215d146ab8093d72b1469fc7a96ab37d68d479590f07b0c793",
+    "design-taste-frontend": "eb6d1b2e9c86123ebd153123e1f12e16955c7d43a1ec28495c48f29f2641481e"
+  },
+  "root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\package\\harness-2026.10.0",
+  "managed_count": 12234
+}
+STEP=first-install
+{
+  "release": "harness-2026.10.0",
+  "backup": ".studio/.runtime/deploy-backups/cb1772591ad8472caced38178a12de27",
+  "retired_preserved": [],
+  "user_cards": {
+    "retired": [],
+    "failed": []
+  },
+  "changed_count": 12235,
+  "removed_count": 0,
+  "elapsed_seconds": 102.81975599999896,
+  "written_bytes": 1230470674,
+  "backup_bytes": 0,
+  "cleanup": {
+    "removed": [],
+    "retained": []
+  },
+  "root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed",
+  "managed_count": 12235
+}
+STEP=verify-root
+{
+  "release": "harness-2026.10.0",
+  "backup": ".studio/.runtime/deploy-backups/cb1772591ad8472caced38178a12de27",
+  "retired_preserved": [],
+  "root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed",
+  "managed_count": 12235
+}
+STEP=doctor
+'\\wsl.localhost\Ubuntu\home\jym\workspace\hyperframes+AI'
+CMD.EXE was started with the above path as the current directory.
+UNC paths are not supported.  Defaulting to Windows directory.
+{
+  "release": "harness-2026.10.0",
+  "backend": "windows-native",
+  "invocation": "windows-native",
+  "review": false,
+  "runtime": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed",
+  "rules_root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed\\AGENTS.md",
+  "skills_root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed\\.agents\\skills",
+  "runtime_lock": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed\\windows-runtime.lock.json",
+  "release_manifest_sha256": "bb08355c83bf8c5e10fb2282a30a5d72341ba8fba78e60e6200305a182a46dd3",
+  "config": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed\\.studio\\.runtime\\local.json",
+  "asset_config": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed\\.studio\\.runtime\\local.json",
+  "work_root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\data",
+  "asset_root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\data\\asset-library\\store",
+  "design_root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\data\\asset-library\\designs",
+  "asset_source_roots": [],
+  "asset_review_root": null,
+  "cache_root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed\\.studio\\.runtime\\cache",
+  "checks": {
+    "HYPERFRAMES_NODE": "available",
+    "HYPERFRAMES_CLI": "available",
+    "HYPERFRAMES_DIST": "available",
+    "HYPERFRAMES_BROWSER_PATH": "available",
+    "HYPERFRAMES_FFMPEG_PATH": "available",
+    "HYPERFRAMES_FFPROBE_PATH": "available",
+    "GSAP_FILE": "available",
+    "THREE_FILE": "available",
+    "runtime/node/node.exe": "available",
+    "runtime/npm/package-lock.json": "available",
+    "runtime/npm/node_modules/hyperframes/bin/hyperframes.mjs": "available",
+    "runtime/npm/node_modules/hyperframes/dist/hyperframes-player.global.js": "available",
+    "runtime/npm/node_modules/hyperframes/dist/hyperframe.runtime.iife.js": "available",
+    "runtime/npm/node_modules/gsap/dist/gsap.min.js": "available",
+    "runtime/npm/node_modules/three/build/three.min.js": "available",
+    "runtime/npm/node_modules/acorn/dist/acorn.js": "available",
+    "runtime/npm/node_modules/esbuild/lib/main.js": "available",
+    "runtime/npm/node_modules/@esbuild/win32-x64/esbuild.exe": "available",
+    "runtime/npm/node_modules/@img/sharp-win32-x64/lib/sharp-win32-x64-0.35.4.node": "available",
+    "runtime/npm/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node": "available",
+    "runtime/npm/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime.dll": "available",
+    "runtime/npm/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/DirectML.dll": "available",
+    "runtime/npm/node_modules/koffi/index.cjs": "available",
+    "runtime/npm/node_modules/@koromix/koffi-win32-x64/win32_x64/koffi.node": "available",
+    "runtime/chromium/chrome-headless-shell.exe": "available",
+    "runtime/ffmpeg/bin/ffmpeg.exe": "available",
+    "runtime/ffmpeg/bin/ffprobe.exe": "available",
+    "node": {
+      "status": "available",
+      "output": [
+        "v22.22.2"
+      ]
+    },
+    "hyperframes": {
+      "status": "available",
+      "output": [
+        "0.8.150"
+      ]
+    },
+    "chromium": {
+      "status": "available",
+      "output": [
+        "Google Chrome for Testing 152.0.7977.30"
+      ]
+    },
+    "ffmpeg": {
+      "status": "available",
+      "output": [
+        "ffmpeg version 7.1.1-essentials_build-www.gyan.dev Copyright (c) 2000-2025 the FFmpeg developers",
+        "built with gcc 14.2.0 (Rev1, Built by MSYS2 project)"
+      ]
+    },
+    "ffprobe": {
+      "status": "available",
+      "output": [
+        "ffprobe version 7.1.1-essentials_build-www.gyan.dev Copyright (c) 2007-2025 the FFmpeg developers",
+        "built with gcc 14.2.0 (Rev1, Built by MSYS2 project)"
+      ]
+    },
+    "native-modules": {
+      "status": "available",
+      "output": [
+        "available"
+      ]
+    },
+    "encoders": {
+      "status": "available",
+      "output": [
+        "libx264",
+        "aac"
+      ]
+    }
+  },
+  "gpu": "pending-native-render-verification",
+  "fonts": "system-fonts; validate actual Work line breaks and glyph coverage",
+  "asset_audit": {
+    "warning_count": 0,
+    "error_count": 0
+  },
+  "design_root_vcs": {
+    "design_root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\data\\asset-library\\designs",
+    "configured": true,
+    "exists": true,
+    "vcs": {
+      "path": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\data\\asset-library\\designs",
+      "vcs": "none",
+      "toplevel": null,
+      "nested": false,
+      "branch": null,
+      "dirty": null,
+      "untracked": null,
+      "remote": null,
+      "ahead": null,
+      "behind": null,
+      "error": null
+    },
+    "error": null
+  }
+}
+STEP=repeat-install
+{
+  "release": "harness-2026.10.0",
+  "backup": ".studio/.runtime/deploy-backups/cb1772591ad8472caced38178a12de27",
+  "retired_preserved": [],
+  "status": "unchanged",
+  "changed_count": 0,
+  "removed_count": 0,
+  "backup_bytes": 0,
+  "written_bytes": 0,
+  "elapsed_seconds": 17.063581700000213,
+  "cleanup": {
+    "unchanged": true
+  },
+  "user_cards": {
+    "retired": [],
+    "failed": []
+  },
+  "root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed",
+  "managed_count": 12235
+}
+{
+  "release": "harness-2026.10.0",
+  "backup": ".studio/.runtime/deploy-backups/cb1772591ad8472caced38178a12de27",
+  "retired_preserved": [],
+  "root": "C:\\Users\\Jym\\AppData\\Local\\Temp\\hf-check-7604bcef\\installed",
+  "managed_count": 12235
+}
+STEP=cleanup
+WINDOWS_INSTALL_CHECK=PASS
