@@ -49,22 +49,25 @@
 
 ### 舞台动作菜单
 
-「舞台动作」列只能从下表选择。本批只定义菜单与语义，积木实现随 v2 第二批交付；在此之前按菜单语义手写，但仍受本表约束。
+「舞台动作」列只能从下表选择。积木已交付：`assets/stage-kit/blocks/<name>.md` 是每个动作的参数合同；镜头表「做法」列写积木名 + 关键参数。
 
-| 舞台动作 | 语义 |
-|---|---|
-| `rig.build` | 展开搭景 |
-| `rig.rebuild` | 折叠重建换地点 |
-| `rig.recede` | 整台后退 |
-| `spot.sweep` | 焦点光扫过 |
-| `spot.split` | 光分两池 |
-| `tray.sort` | 物件归托盘 |
-| `prop.stand` | 道具脚立起 |
-| `slot.text` | 阅读窗口补位 |
-| `inset.broll` | 第 2 层纸框局部镜头 |
-| `sign.plate` | 字写在牌子上 |
-| `stack.explode` | 叠层剖切 |
-| `hold` | 停 |
+下表保留原有动作语义；标为「无独立积木」的项不是可传给 `kit.create` 的积木名。六个已交付积木的参数见对应文档。
+
+| 舞台动作 | 语义 | 文档 |
+|---|---|---|
+| `rig.build` | 展开搭景 | 无独立积木；见上方「铰链归属」 |
+| `rig.rebuild` | 折叠重建换地点 | [rig-rebuild.md](../assets/stage-kit/blocks/rig-rebuild.md) |
+| `rig.recede` | 整台后退 | 无独立积木；重建中的后退参数见 [rig-rebuild.md](../assets/stage-kit/blocks/rig-rebuild.md) |
+| `disc.scene` | 圆盘半周换景与逐件装配 | [disc-scene.md](../assets/stage-kit/blocks/disc-scene.md) |
+| `spot.sweep` | 焦点光扫过 | 无独立积木 |
+| `spot.split` | 光分两池 | 无独立积木 |
+| `tray.sort` | 物件归托盘 | 无独立积木 |
+| `prop.stand` | 道具脚立起 | [prop-stand.md](../assets/stage-kit/blocks/prop-stand.md) |
+| `slot.text` | 阅读窗口补位 | [slot-text.md](../assets/stage-kit/blocks/slot-text.md) |
+| `inset.broll` | 第 2 层纸框局部镜头 | [inset-broll.md](../assets/stage-kit/blocks/inset-broll.md) |
+| `sign.plate` | 字写在牌子上 | 无独立积木 |
+| `stack.explode` | 叠层剖切 | [stack-explode.md](../assets/stage-kit/blocks/stack-explode.md) |
+| `hold` | 停 | 无独立积木；见下方停顿合同 |
 
 ### 硬规则
 

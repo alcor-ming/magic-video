@@ -13,7 +13,7 @@
 - **开阔档**：执行模型为 Claude Opus 级或更强。全卡适用，§1–§8 是机制与自由度；仍建议先写 §4 的镜头表。
 - **轨道档**：其它模型，或无法判断。只走下面这一条路，只读本节、`stages/plan.md`、`stages/draft.md`；其余章节先不读：
   1. 写镜头表（`stages/plan.md`「轨道镜头表」合同），表前三行锁画风 / 色板 / 角色；
-  2. 逐镜只从「舞台动作菜单」选动作（rig、焦点光、托盘、道具脚、阅读窗口、纸框）；积木交付前按菜单语义手写，但不发明菜单之外的布局机制；
+  2. 逐镜只从舞台动作菜单选积木（`assets/stage-kit/`，接口见各 `blocks/*.md`），参数进、画面出，不手写布局；
   3. 登记前自检（`stages/draft.md`「轨道档自检」）：跑类名覆盖脚本 `tools/check-classes.mjs`、抽查计算样式；缺失先修正，修不了的逐项写进交付说明未处理项；
   4. 登记 Draft，用 `critic round` 产出 Scene 帧条与 ledger，逐 Scene 看三帧（段首、中段、段尾）：主物不在画里或只剩文字卡就回改、重新登记；
   5. 用 `critic record` 记录实际结论。自检与审片只定位问题，不新增审批门；三道人工门以 workflow 为准。
@@ -23,6 +23,7 @@
 | 来源 | 机制 | 本卡如何用 |
 |---|---|---|
 | 折叠装置机制 | `.set` perspective > slide > wall + floor + props：四块 480px 墙板铺满 1920；内对锚在中线 folding ±86°；外板挂在内板上、反向 ±172°；先内后外分级展开并锁定；地面桥绕上边从 -90° 立起；道具脚绕上边从 88° 立起。旧景道具先塌、外/内板再折、整台后退，新地点在视野里搭起。父级 rig 拥有铰链旋转，scene inner wrapper 拥有其他变换 | 共享机制全部落在卡内资产 `assets/stage-rig/stage-rig.js`，本卡 `example/scene.js` 只喂 `{inner, outer, floor, prop}` |
+| 圆盘换景与逐件装配机制 | 一个刚性 4400 px 圆盘、两半各载一景、每次整盘转 180°、转正后按件类型（地板立起 / 天幕落下 / 墙板立起 / 梁架下降 / 道具侧入 / 悬挂件下降）0.65 s 冲击 + 0.16 s 回弹逐件装配 | 卡内资产 `assets/stage-kit/blocks/disc-scene.js`，机制来自卡主人自己的 Work 59 背景装置（已授权提取），布景位图不随卡配送 |
 | 舞台方向 | 台口小、内容聚焦；幕布只做开场/收尾；无逐段整幕擦除、无常驻侧房；不拿整体淡出/平移替代折叠重建 | 幕布只在 0.80 开、15.40 合；重建是一次真实折叠 |
 | 分层舞台机制 | 微型分层舞台（后墙 / 布景 / 主体 / 前景 / 标牌 / 灯光）；幕布开场收尾；因果道具交接与引导光池；剪贴白边 + 偏移投影 | 第 1–4 层分层、`#spot-a/#spot-b` 两支光池、托盘因果指示线、纸盒白边 + `drop-shadow` + 偏移 `box-shadow` |
 | 交错入场机制 | 交错入场与空间对比，用实际动作完成转场 | 六个纸盒交错入场、两簇空间对比、重建由折叠动作完成 |
@@ -47,6 +48,8 @@
 - scene wrapper 拥有其他变换：`#rig` 只做后退 `y/scale`；纸盒、托盘、光池只做位移与缩放。
 - 展开顺序：内板先开 → 外板随后 → 地面落下 → 道具立起，逐级锁定在 0°。
 
+使用 `rig.rebuild` 积木时，重建区间内铰链角度与包装层位移都由该积木写，工程不得再对 `rig.root` 或 `wrapper` 写 `transform`。
+
 ## 4. Plan（详细）
 
 | 段 | 时间 | actor 主体 | object 对象 | audience view 观众看到 | hinge owner 铰链归属 | reading window 阅读窗口 | transition cause 转场原因 | cue | audio |
@@ -69,7 +72,7 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 - **Script**：本卡不产出；示例无口播、无字幕、无逐字对齐。
 - **Research**：本卡不产出；机制来自已授权的只读提取（§1）。
 - **Plan**：§4 表即 Plan；引用机制并声明铰链归属与阅读窗口。
-- **Draft**：`example/index.html` + `style.css` + `scene.js` + 卡内 `assets/stage-rig/stage-rig.js` 即 Draft 级示范。
+- **Draft**：`example/index.html` + `style.css` + `scene.js` + 卡内 `assets/stage-rig/stage-rig.js` 即 Draft 级示范；`example/kit-demo.html` + `kit-demo.js` 是六个积木的出场示范。
 - **Export**：由工作流与宿主渲染；本卡不持有成片、不导出、不做 Windows 验收。
 
 ## 7. 技术检查
@@ -99,3 +102,18 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 | **死背景 / 空画面**：常驻位图始终不动，或主物隐藏、离屏，只剩文字。 | 布景随叙事变化，每个 Scene 检查三帧主物与 rig 的实际可见性；第 2、3 层响应守住节奏，不靠第 1 层漂移充数。 |
 | **有真实素材却用代码画**：已有截图、照片或录像，仍造一个缺少证据细节的替身。 | 真实素材按 B-roll 放入第 2 层纸框，保留来源与证据细节；代码负责纸框、附着标注和动作，B 的独立解释仍放第 4 层。 |
 | **画风拼贴 + 贴图方块**：写实位图、纸艺、Q 版与毛玻璃同框；带背景的方图直接上台。 | 表前锁本卡纸艺画风、色板与角色状态；道具用带 alpha 的镂空图，方图只进纸框或作墙面贴纸，写实件避开阅读区上方。 |
+
+## 10. 积木清单
+
+积木由 `assets/stage-kit/stage-kit.js` 统一注册与组合，先加载核心，再加载所用积木；参数合同以各 `blocks/*.md` 为准。工程统一传入全片秒数，调用 `apply(t)` 重建画面，结束时调用 `dispose()`。
+
+| 积木名 | 层 | 一句话 | 文档路径 |
+|---|---|---|---|
+| `disc.scene` | 第 1 层 background | 刚性圆盘半周换景，按件类型逐件装配布景。 | [assets/stage-kit/blocks/disc-scene.md](assets/stage-kit/blocks/disc-scene.md) |
+| `rig.rebuild` | 第 2 层 stage | 依次折叠、后退、换皮肤并重新展开纸舞台。 | [assets/stage-kit/blocks/rig-rebuild.md](assets/stage-kit/blocks/rig-rebuild.md) |
+| `prop.stand` | 第 2 层 stage | 镂空道具沿顶部铰链立起，带纸边与偏移投影。 | [assets/stage-kit/blocks/prop-stand.md](assets/stage-kit/blocks/prop-stand.md) |
+| `inset.broll` | 第 2 层 stage | 纸框滑入局部镜头，支持缩放、平移与附着短标注。 | [assets/stage-kit/blocks/inset-broll.md](assets/stage-kit/blocks/inset-broll.md) |
+| `stack.explode` | 第 2 层 stage | 纸质薄板沿 Z 轴拉开、聚焦并收拢。 | [assets/stage-kit/blocks/stack-explode.md](assets/stage-kit/blocks/stack-explode.md) |
+| `slot.text` | 第 4 层 text | 固定阅读槽位补位，并在 B 接管时冻结和虚化。 | [assets/stage-kit/blocks/slot-text.md](assets/stage-kit/blocks/slot-text.md) |
+
+`inset.broll` 的 video 模式由积木自己写 `currentTime`，只用于本地预览；正式工程里的视频 B-roll 应走宿主的 `class="clip"` + `data-start` 时序。
