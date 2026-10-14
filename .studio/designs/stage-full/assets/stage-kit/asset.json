@@ -10,8 +10,12 @@
     "blocks/inset-broll.js",
     "blocks/rig-rebuild.js",
     "blocks/stack-explode.js",
-    "blocks/disc-scene.js"
+    "blocks/disc-scene.js",
+    "blocks/spot-sweep.js",
+    "blocks/spot-split.js",
+    "blocks/tray-sort.js",
+    "blocks/sign-plate.js"
   ],
-  "description": "Parameterised stage blocks for the stage-full track tier: reading-window text slots, prop stand-up on the rig hinge, paper-framed B-roll inset, fold-and-rebuild relocation, exploded layer stack, and the rotating picture-disc scenery change extracted from the owner's Work 59 background mechanism.",
+  "description": "Parameterised stage blocks for the stage-full track tier: reading-window text slots, prop stand-up on the rig hinge, paper-framed B-roll inset, fold-and-rebuild relocation, exploded layer stack, and the rotating picture-disc scenery change extracted from the owner's Work 59 background mechanism; plus focus-light sweep and split, tray sorting with causal leaders, and text written on a paper sign.",
   "rights": "Apache-2.0"
 }

@@ -70,7 +70,7 @@
     {
       "source": ".studio/designs/stage-full/GUIDE.md",
       "target": "GUIDE.md",
-      "sha256": "b975e0690be220f7a196bf1150593b18cd7f0f6f20e099e6b0f820d8f875937a",
+      "sha256": "eb5218773cf667dbec7f0188be0b9790642da397bf173d8a2127fd43ee2675e3",
       "origin": "Project authored source extraction guide",
       "version": "1",
       "license": "Apache-2.0",
@@ -109,7 +109,7 @@
     {
       "source": ".studio/designs/stage-full/stages/plan.md",
       "target": "stages/plan.md",
-      "sha256": "f382ddc45673ed9afb600a74b82b1237c54d969078e322b16e81e23768e5845e",
+      "sha256": "45a603d6ee31c3db1e075074c00a637c9db51330130469b523da9acdd418ed06",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -322,6 +322,58 @@
       "version": "1",
       "license": "Apache-2.0",
       "purpose": "Dynamic example source (stage block showcase)",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/assets/stage-kit/blocks/spot-sweep.js",
+      "target": "runtime/stage-kit/blocks/spot-sweep.js",
+      "sha256": "5845849387f759f71ac8d1562b3aa7216396d7d1634341b88c3f7b8d87acc029",
+      "origin": "Project authored stage block; metadata in the asset manifest",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Stage block spot-sweep",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/assets/stage-kit/blocks/spot-split.js",
+      "target": "runtime/stage-kit/blocks/spot-split.js",
+      "sha256": "849914df0aa88086ccba83f268766113009ba1ac70ed077b011ba48c8cc5904b",
+      "origin": "Project authored stage block; metadata in the asset manifest",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Stage block spot-split",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/assets/stage-kit/blocks/tray-sort.js",
+      "target": "runtime/stage-kit/blocks/tray-sort.js",
+      "sha256": "a83b0aae7bc254ece505702ba62b4454ec980077ddca65e8d2c1c80e2d6e3846",
+      "origin": "Project authored stage block; metadata in the asset manifest",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Stage block tray-sort",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/assets/stage-kit/blocks/sign-plate.js",
+      "target": "runtime/stage-kit/blocks/sign-plate.js",
+      "sha256": "563c8da4dc2ce06b7bf6a7531730d7290f174f1ccce8ff8f051636090ae9e3d3",
+      "origin": "Project authored stage block; metadata in the asset manifest",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Stage block sign-plate",
       "packages": [
         "public",
         "personal"

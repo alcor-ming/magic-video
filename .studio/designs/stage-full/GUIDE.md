@@ -115,5 +115,9 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 | `inset.broll` | 第 2 层 stage | 纸框滑入局部镜头，支持缩放、平移与附着短标注。 | [assets/stage-kit/blocks/inset-broll.md](assets/stage-kit/blocks/inset-broll.md) |
 | `stack.explode` | 第 2 层 stage | 纸质薄板沿 Z 轴拉开、聚焦并收拢。 | [assets/stage-kit/blocks/stack-explode.md](assets/stage-kit/blocks/stack-explode.md) |
 | `slot.text` | 第 4 层 text | 固定阅读槽位补位，并在 B 接管时冻结和虚化。 | [assets/stage-kit/blocks/slot-text.md](assets/stage-kit/blocks/slot-text.md) |
+| `spot.sweep` | 第 3 层 overlay | 焦点光沿关键帧扫过，可逐件脉冲点名。 | [assets/stage-kit/blocks/spot-sweep.md](assets/stage-kit/blocks/spot-sweep.md) |
+| `spot.split` | 第 3 层 overlay | 一束焦点光分成两池。 | [assets/stage-kit/blocks/spot-split.md](assets/stage-kit/blocks/spot-split.md) |
+| `tray.sort` | 第 2 层 stage | 托盘入场，物件沿因果指示线归位并轻点强调。 | [assets/stage-kit/blocks/tray-sort.md](assets/stage-kit/blocks/tray-sort.md) |
+| `sign.plate` | 第 2 层 stage | 纸牌沿铰链立起，字逐个写在牌子上。 | [assets/stage-kit/blocks/sign-plate.md](assets/stage-kit/blocks/sign-plate.md) |
 
 `inset.broll` 的 video 模式由积木自己写 `currentTime`，只用于本地预览；正式工程里的视频 B-roll 应走宿主的 `class="clip"` + `data-start` 时序。

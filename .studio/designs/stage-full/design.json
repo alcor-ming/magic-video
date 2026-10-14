@@ -1,6 +1,6 @@
 {
   "id": "stage-full",
-  "version": 3,
+  "version": 4,
   "type": "design",
   "compatibility": {
     "supersedes": [
@@ -137,7 +137,9 @@
     },
     "checks": [
       "director",
-      "reference-count"
+      "reference-count",
+      "css-contract",
+      "frame-blank"
     ],
     "research_template": "RESEARCH.template.md"
   }

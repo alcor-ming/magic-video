@@ -51,7 +51,7 @@
 
 「舞台动作」列只能从下表选择。积木已交付：`assets/stage-kit/blocks/<name>.md` 是每个动作的参数合同；镜头表「做法」列写积木名 + 关键参数。
 
-下表保留原有动作语义；标为「无独立积木」的项不是可传给 `kit.create` 的积木名。六个已交付积木的参数见对应文档。
+下表保留原有动作语义；标为「无独立积木」的 `rig.build`、`rig.recede`、`hold` 不是可传给 `kit.create` 的积木名（搭景由工程按 GUIDE §3 写 rig 状态，后退含在 `rig.rebuild` 里，停顿按停顿合同）。十个已交付积木的参数见对应文档。
 
 | 舞台动作 | 语义 | 文档 |
 |---|---|---|
@@ -59,13 +59,13 @@
 | `rig.rebuild` | 折叠重建换地点 | [rig-rebuild.md](../assets/stage-kit/blocks/rig-rebuild.md) |
 | `rig.recede` | 整台后退 | 无独立积木；重建中的后退参数见 [rig-rebuild.md](../assets/stage-kit/blocks/rig-rebuild.md) |
 | `disc.scene` | 圆盘半周换景与逐件装配 | [disc-scene.md](../assets/stage-kit/blocks/disc-scene.md) |
-| `spot.sweep` | 焦点光扫过 | 无独立积木 |
-| `spot.split` | 光分两池 | 无独立积木 |
-| `tray.sort` | 物件归托盘 | 无独立积木 |
+| `spot.sweep` | 焦点光扫过 | [spot-sweep.md](../assets/stage-kit/blocks/spot-sweep.md) |
+| `spot.split` | 光分两池 | [spot-split.md](../assets/stage-kit/blocks/spot-split.md) |
+| `tray.sort` | 物件归托盘 | [tray-sort.md](../assets/stage-kit/blocks/tray-sort.md) |
 | `prop.stand` | 道具脚立起 | [prop-stand.md](../assets/stage-kit/blocks/prop-stand.md) |
 | `slot.text` | 阅读窗口补位 | [slot-text.md](../assets/stage-kit/blocks/slot-text.md) |
 | `inset.broll` | 第 2 层纸框局部镜头 | [inset-broll.md](../assets/stage-kit/blocks/inset-broll.md) |
-| `sign.plate` | 字写在牌子上 | 无独立积木 |
+| `sign.plate` | 字写在牌子上 | [sign-plate.md](../assets/stage-kit/blocks/sign-plate.md) |
 | `stack.explode` | 叠层剖切 | [stack-explode.md](../assets/stage-kit/blocks/stack-explode.md) |
 | `hold` | 停 | 无独立积木；见下方停顿合同 |
 
