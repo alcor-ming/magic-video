@@ -14,9 +14,9 @@
 - **轨道档**：其它模型，或无法判断。只走下面这一条路，只读本节、`stages/plan.md`、`stages/draft.md`；其余章节先不读：
   1. 写镜头表（`stages/plan.md`「轨道镜头表」合同），表前三行锁画风 / 色板 / 角色；
   2. 逐镜只从「舞台动作菜单」选动作（rig、焦点光、托盘、道具脚、阅读窗口、纸框）；积木交付前按菜单语义手写，但不发明菜单之外的布局机制；
-  3. 每个 Scene 截 3 帧自检（`stages/draft.md`「轨道档自检」），任一帧主物不在画里就回改；
-  4. 跑类名覆盖检查 `tools/check-classes.mjs`，有缺失不得登记 Draft；
-  5. 交独立审片（critic round），ledger 无记录不登记。
+  3. 登记前自检（`stages/draft.md`「轨道档自检」）：跑类名覆盖脚本 `tools/check-classes.mjs`、抽查计算样式；缺失先修正，修不了的逐项写进交付说明未处理项；
+  4. 登记 Draft，用 `critic round` 产出 Scene 帧条与 ledger，逐 Scene 看三帧（段首、中段、段尾）：主物不在画里或只剩文字卡就回改、重新登记；
+  5. 用 `critic record` 记录实际结论。自检与审片只定位问题，不新增审批门；三道人工门以 workflow 为准。
 
 ## 1. 来源机制（授权提取）
 

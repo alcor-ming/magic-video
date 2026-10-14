@@ -22,9 +22,11 @@
 
 ## 轨道档自检（登记 Draft 前必做）
 
-- **截帧**：每个 Scene 用工程调试参数或 `window.__timelines` seek 到段首 +0.5 s、中段、段尾 −0.5 s，各截一帧。任一帧「主物不在画里」或「只剩文字卡」直接回改，不登记。截帧只贴进交付说明，不入卡仓。
+自检只定位问题、不判通过、不新增审批门；三道人工门以 workflow 为准。修不了的项逐条写进交付说明未处理项，与 `rhythm_gap` 的处理方式一致。
+
+- **三帧核对**：登记后用 `critic round` 的 Scene 帧条看每个 Scene 的段首 +0.5 s、中段、段尾 −0.5 s。任一帧「主物不在画里」或「只剩文字卡」就回改、重新登记。本地排查可用工程调试参数或 `window.__timelines` seek，但自己截的帧不作交付证据，不入卡仓。
 - **计算样式抽查**：镜头表里本镜应在画里的物，其第 2 层节点的 `visibility` 为 `visible`、`position` 为 `absolute`（被 B 接管而隐藏或虚化的 A 组不在此列）；`.hf-rig` 节点必须存在，确认折叠装置已 mount。用 `getComputedStyle` 核对实际值，不以代码存在代替。
 - **可见性归属**：`.scene` 这类容器若写 `visibility:hidden`，子节点必须由同一函数统一写回 `visible`；只改 `opacity` 的节点会被继承隐藏。
-- **类名覆盖**：JS 里创建的每个类名必须有样式契约：在工程 `style.css` 或 rig 注入的 CSS 中有规则，或在 JS 里被当作选择器引用；只在创建时写、谁也不引用的类名就是缺陷（位置会塌成 static）。跑 `node tools/check-classes.mjs <工程目录>`，退出码非 0 不得登记。
+- **类名覆盖**：JS 里创建的每个类名必须有样式契约：在工程 `style.css` 或 rig 注入的 CSS 中有规则，或在 JS 里被当作选择器引用；只在创建时写、谁也不引用的类名就是缺陷（位置会塌成 static）。跑 `node tools/check-classes.mjs <工程目录>`（Windows 侧用 runtime 自带的 node），退出码非 0 先修正。本脚本是卡内辅助，不进 `preview diagnose` 报告，结果写进交付说明。
 - **位图规则**：常驻位图只允许台口（幕布、台唇）；生图只接受带 alpha 的镂空道具。带背景的方图只能进 `inset.broll` 纸框或作墙面贴纸；写实件不得压在阅读区上方。
 - **声音**：只给 rig 落定、归位、盖章配音效；入场不配音；无 BGM，与 `GUIDE.md` §8 一致。

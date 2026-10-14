@@ -70,7 +70,7 @@
     {
       "source": ".studio/designs/stage-full/GUIDE.md",
       "target": "GUIDE.md",
-      "sha256": "03b31cf8240aa25213590a862728a0f0fca9f1bd1128981d695d9373738d474c",
+      "sha256": "d61eeb5efeea54c77068f38aa070e19a7b5d62e46dd97f91908f5c3418b8c2bb",
       "origin": "Project authored source extraction guide",
       "version": "1",
       "license": "Apache-2.0",
@@ -83,7 +83,7 @@
     {
       "source": ".studio/designs/stage-full/stages/draft.md",
       "target": "stages/draft.md",
-      "sha256": "42f812359f4acfd20967e46b82070588266fc8c0253c3e28ca8bb546d2b2441a",
+      "sha256": "7c80f0faef0bcf5d1fce5a994f7c1a10758dd8acb31f0b8023138f5042615235",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
