@@ -750,6 +750,9 @@ def command_plan_check(root: Path, args: argparse.Namespace) -> None:
         findings.extend(english_plan.check(text, read_json(cue_path) if cue_path.is_file() else None))
     diagnostic = visual_diagnostics.explainer_diagnostics(project, dependencies, state.get("appearance_lock"), text)
     findings.extend(diagnostic["findings"])
+    if lines.has_check(state, 'css-contract'):
+        import css_contract
+        findings.extend(css_contract.findings(project, dependencies))
     if lines.is_math(state):
         cues = explainer.validate_cues(read_json(project / "runtime/cues.json"))
         scenes = scene_projection(project, text)
@@ -3588,6 +3591,12 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
             project, dependencies, diagnostic_lock, contents['ANIMATION_PLAN.md'])
     import seek_check
     report['engineering'] = {'findings': seek_check.findings(project, dependencies)}
+    if lines.has_check(diagnostic_lock, 'css-contract'):
+        import css_contract
+        report['css_contract'] = {'findings': css_contract.findings(project, dependencies)}
+    if lines.has_check(diagnostic_lock, 'frame-blank'):
+        import stage_checks
+        report['stage'] = stage_checks.frame_blank(sampled['samples'], scenes)
     if lines.is_math(read_frontmatter(input_path(documents, 'ANIMATION_PLAN.md'))):
         import math_chain
         try:

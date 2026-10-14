@@ -65,7 +65,8 @@ _RUNTIME_KEYS = {"gsap", "plugins"}
 LAYERS = ("background", "stage", "overlay", "text")
 CHECKS = {"math": "math_chain.py", "math-complete": "visual_plan.py",
           "english": "english_plan.py", "director": "director_plan.py",
-          "reference-count": "director_plan.py"}
+          "reference-count": "director_plan.py",
+          "css-contract": "css_contract.py", "frame-blank": "stage_checks.py"}
 
 
 def legacy_capabilities(mode: str) -> dict:

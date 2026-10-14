@@ -358,7 +358,19 @@ export async function inspectFrame(scenes, time) {
     .map(element => ({reason: 'media_canvas_motion_unverified', target: selector(element), time}));
   const module_texts = [...(window.__hfTextSources || [])].flatMap(source => source());
   for (const item of module_texts) if (item.start <= time && time < item.end) texts.push(item);
-  return {texts, module_texts, unverified: [...unverified], timeline, icons, motion_unverified};
+  return {texts, module_texts, unverified: [...unverified], timeline, icons, motion_unverified,
+    stage_visible: [...document.querySelectorAll('[data-hf-layer="stage"] *')].filter(element => {
+      if (!visible(element) || element.closest('[data-hf-ambient]')) return false;
+      const rect = element.getBoundingClientRect();
+      if (!(rect.width > 2 && rect.height > 2)) return false;
+      // Transparent containers do not count: the element must paint pixels itself.
+      if (['IMG', 'SVG', 'VIDEO', 'CANVAS', 'PICTURE'].includes(element.tagName.toUpperCase())) return true;
+      const style = getComputedStyle(element);
+      const alpha = color => { const match = /rgba?\(([^)]+)\)/.exec(color || ''); if (!match) return color && color !== 'transparent' ? 1 : 0; const parts = match[1].split(/[\s,\/]+/).map(Number); return parts.length > 3 ? parts[3] : 1; };
+      if (alpha(style.backgroundColor) > 0 || style.backgroundImage !== 'none' || style.boxShadow !== 'none') return true;
+      if (['Top', 'Right', 'Bottom', 'Left'].some(side => parseFloat(style['border' + side + 'Width']) > 0 && alpha(style['border' + side + 'Color']) > 0)) return true;
+      return [...element.childNodes].some(node => node.nodeType === 3 && node.textContent.trim());
+    }).length};
 }
 
 export async function probe(input) {
@@ -482,6 +494,7 @@ export async function probe(input) {
           value.icons = info.icons;
           value.module_texts = info.module_texts;
           value.motion_unverified = info.motion_unverified;
+          value.stage_visible = info.stage_visible;
           if (before !== navigation || !await iframe.evaluate(element => getComputedStyle(element).visibility === 'visible'))
             throw new Error('Studio frame reloaded during sampling');
           value.texts.push(...info.texts);
