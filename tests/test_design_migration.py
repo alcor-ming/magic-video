@@ -49,7 +49,8 @@ class DesignMigrationTest(unittest.TestCase):
         package.write_text(json.dumps({'dependencies': {'remotion': '4.0.0'}}))
         before = (variant / 'variant.yaml').read_bytes()
         result = json.loads(self.invoke('--work', identity, '--variant', 'variant1', 'migrate', 'design',
-                                        '--design', 'stage-full', '--design-version', '1', '--no-account'))
+                                        '--design', 'stage-full', '--design-version',
+                                        str(cli.designs.get('stage-full')['version']), '--no-account'))
         self.assertEqual('needs-native-adaptation', result['status'])
         self.assertEqual(before, (variant / 'variant.yaml').read_bytes())
         self.invoke('--work', identity, '--variant', 'variant1', 'migrate', 'retire', '--note', 'Preserve history',

@@ -148,7 +148,7 @@ class LegacySnapshotTest(unittest.TestCase):
         result = designs.resolve('stage-full', card=legacy)
         self.assertEqual(True, result['values']['captions.enabled'])
         digest = lines.card_digest(legacy)
-        state = {'line': {'id': 'stage-full', 'version': 1},
+        state = {'line': {'id': 'stage-full', 'version': legacy['version']},
                  'design_snapshot': deepcopy(legacy), 'design_sha256': digest}
         with mock.patch.object(designs, 'catalog', side_effect=AssertionError('latest read')):
             self.assertEqual(legacy, lines.frozen(state))
