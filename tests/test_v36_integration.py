@@ -109,7 +109,8 @@ class V36IntegrationTest(unittest.TestCase):
             self.create("--mode", "card")
         # No implicit explainer default: an unset design resolves to stage-full.
         _, variant = self.create()
-        self.assertEqual(cli.read_json(variant / 'variant.yaml')['line'], {'id': 'stage-full', 'version': 1})
+        card = json.loads((Path(__file__).resolve().parents[1] / '.studio/designs/stage-full/design.json').read_text())
+        self.assertEqual(cli.read_json(variant / 'variant.yaml')['line'], {'id': 'stage-full', 'version': card['version']})
 
     @unittest.skipUnless((Path(__file__).resolve().parents[1] / '.studio/designs/math/design.json').is_file(), 'Personal card resources; checked in personal assembly')
     def test_plan_and_beats_cli_use_frozen_math_contract(self):
