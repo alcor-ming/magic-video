@@ -61,6 +61,26 @@ class StageChecksTests(unittest.TestCase):
         self.assertEqual([], frame_blank([self.sample(.3)],
                          [dict(id='short', start=0, duration=.6)])['findings'])
 
+    def test_sparse_foreground_reported_only_with_threshold(self):
+        samples = [dict(self.sample(time, 4), stage_coverage=cover)
+                   for time, cover in [(3.5, .30), (4, .08), (4.5, .12), (5, .25)]]
+        self.assertEqual([], frame_blank(samples, self.scenes)['findings'])
+        report = frame_blank(samples, self.scenes, coverage_min=.18)
+        self.assertEqual([dict(kind='stage_sparse', scene='S02', start=4, end=4.5, coverage=.08)],
+                         report['findings'])
+        self.assertEqual([], report['unverified'])
+
+    def test_empty_and_sparse_spans_do_not_merge(self):
+        samples = [self.sample(4), dict(self.sample(4.5, 2), stage_coverage=.05)]
+        self.assertEqual([self.empty('S02', 4, 4),
+                          dict(kind='stage_sparse', scene='S02', start=4.5, end=4.5, coverage=.05)],
+                         frame_blank(samples, self.scenes, coverage_min=.18)['findings'])
+
+    def test_missing_coverage_is_unverified_when_threshold_declared(self):
+        report = frame_blank([self.sample(4, 3)], self.scenes, coverage_min=.18)
+        self.assertEqual({'findings': [], 'unverified': [
+            {'reason': 'stage_coverage_not_sampled', 'time': 4}]}, report)
+
     def test_empty_inputs(self):
         self.assertEqual({'findings': [], 'unverified': []}, frame_blank([], self.scenes))
         self.assertEqual({'findings': [], 'unverified': []}, frame_blank([self.sample(4)], []))

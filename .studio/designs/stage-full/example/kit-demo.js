@@ -1,4 +1,4 @@
-/* 纸上灯塔 · 40s 无声编排。只抄积木结构，内容与几何由本例提供。
+/* 纸上灯塔 · 40s 无声编排。只抄积木结构，内容与几何由本例提供；帆船演示 prop.states 的本期专属道具写法。
  * 0–2 展台；2–10 港湾；10–14 转入夜海；14–19 光路局部；
  * 20–23.75 折叠换肤；28–36 灯室拉开、点名、收拢；36–40 留读。
  */
@@ -76,13 +76,37 @@
       '<path d="M60 450H240" stroke="#344d64" stroke-width="22"/>') },
     at: 2, dur: 0.6, out: 19.5, outDur: 0.5, rim: 6
   });
-  add("prop.stand", {
-    mount: rig.parts.propsLayer, box: { x: 1320, y: 610, w: 320, h: 230 },
-    media: { kind: "svg", markup: svg(320, 230,
-      '<path d="M25 155H295L250 205H75Z" fill="#486e83"/>' +
-      '<path d="M160 20V160" stroke="#69533e" stroke-width="10"/>' +
-      '<path d="M145 30L45 140H145Z" fill="#fff4d7"/><path d="M175 60L260 140H175Z" fill="#d29b69"/>') },
-    at: 4.5, dur: 0.55, out: 19.5, outDur: 0.5, rim: 6
+  // 本期专属的物用 prop.states 写：帆船分船身、桅杆、两面帆、旗五件，按命名状态切换。
+  add("prop.states", {
+    mount: rig.parts.propsLayer, box: { x: 1300, y: 470, w: 380, h: 390 },
+    parts: [
+      { id: "hull", box: { x: 20, y: 270, w: 340, h: 110 }, origin: "50% 0",
+        look: { kind: "svg", markup: svg(340, 110, '<path d="M0 20H340L285 100H55Z" fill="#486e83"/><path d="M30 40H310" stroke="#fff3da" stroke-width="8"/>') } },
+      { id: "mast", box: { x: 180, y: 20, w: 16, h: 260 }, origin: "50% 100%",
+        look: { kind: "paper", color: "#69533e", radius: 4 } },
+      { id: "main", box: { x: 60, y: 50, w: 120, h: 210 }, origin: "100% 100%",
+        look: { kind: "svg", markup: svg(120, 210, '<path d="M120 0L0 210H120Z" fill="#fff4d7" stroke="#9a5542" stroke-width="6"/>') } },
+      { id: "jib", box: { x: 196, y: 90, w: 110, h: 170 }, origin: "0 100%",
+        look: { kind: "svg", markup: svg(110, 170, '<path d="M0 0L110 170H0Z" fill="#d29b69"/>') } },
+      { id: "flag", box: { x: 196, y: 10, w: 70, h: 40 }, origin: "0 50%",
+        look: { kind: "label", text: "港", size: 24, paper: "#c5684e", ink: "#fff8e8" } }
+    ],
+    states: {
+      docked: { hull: { y: 60, o: 0 }, mast: { s: 0, o: 0 }, main: { s: 0, o: 0 }, jib: { s: 0, o: 0 }, flag: { ry: 90, o: 0 } },
+      afloat: { hull: { y: 0, o: 1 }, mast: { s: 1, o: 1 } },
+      sails: { main: { s: 1, o: 1 }, jib: { s: 1, o: 1 }, flag: { ry: 0, o: 1 } },
+      gust: { main: { r: -6 }, jib: { r: 5 }, hull: { r: -2 } },
+      calm: { main: { r: 0 }, jib: { r: 0 }, hull: { r: 0 } },
+      away: { hull: { y: 40, o: 0 }, mast: { o: 0 }, main: { o: 0 }, jib: { o: 0 }, flag: { o: 0 } }
+    },
+    start: "docked",
+    steps: [
+      { at: 4.5, to: "afloat", dur: 0.5, stagger: 0.15 },
+      { at: 5.4, to: "sails", dur: 0.45, stagger: 0.2, ease: "backOut" },
+      { at: 7.5, to: "gust", dur: 0.6, ease: "sineInOut" },
+      { at: 12.6, to: "calm", dur: 0.8, ease: "sineInOut" },
+      { at: 19.0, to: "away", dur: 0.4, ease: "inOut" }
+    ]
   });
 
   var diagram = document.createElement("div");

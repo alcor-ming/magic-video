@@ -458,6 +458,8 @@
     ".studio/designs/stage-full/assets/stage-kit/blocks/inset-broll.md",
     ".studio/designs/stage-full/assets/stage-kit/blocks/prop-stand.js",
     ".studio/designs/stage-full/assets/stage-kit/blocks/prop-stand.md",
+    ".studio/designs/stage-full/assets/stage-kit/blocks/prop-states.js",
+    ".studio/designs/stage-full/assets/stage-kit/blocks/prop-states.md",
     ".studio/designs/stage-full/assets/stage-kit/blocks/rig-rebuild.js",
     ".studio/designs/stage-full/assets/stage-kit/blocks/rig-rebuild.md",
     ".studio/designs/stage-full/assets/stage-kit/blocks/sign-plate.js",
@@ -480,6 +482,7 @@
     ".studio/stage_checks.py",
     "tests/test_card_asset_resolution.py",
     "tests/test_css_contract.py",
+    "tests/stage-kit-browser.mjs",
     "tests/test_stage_checks.py"
   ]
 }

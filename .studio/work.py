@@ -3596,7 +3596,9 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
         report['css_contract'] = {'findings': css_contract.findings(project, dependencies)}
     if lines.has_check(diagnostic_lock, 'frame-blank'):
         import stage_checks
-        report['stage'] = stage_checks.frame_blank(sampled['samples'], scenes)
+        report['stage'] = stage_checks.frame_blank(
+            sampled['samples'], scenes,
+            coverage_min=((line or {}).get('thresholds') or {}).get('stage_coverage_min'))
     if lines.is_math(read_frontmatter(input_path(documents, 'ANIMATION_PLAN.md'))):
         import math_chain
         try:

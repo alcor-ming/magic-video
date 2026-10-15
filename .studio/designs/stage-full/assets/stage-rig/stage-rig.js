@@ -93,6 +93,11 @@
     }
     if (withFloor) parts.floor = make("div", "hf-rig-floor", deck);
     if (withProps) parts.propsLayer = make("div", "hf-rig-props", deck);
+    // Walls and floor are scenery (background track). Diagnostics measure foreground
+    // coverage without them; outer walls inherit the mark through their inner parent.
+    parts.walls.concat(parts.floor ? [parts.floor] : []).forEach(function (node) {
+      node.setAttribute("data-hf-set", "");
+    });
 
     function propFeet() {
       return root.querySelectorAll("[data-hf-prop-foot]");

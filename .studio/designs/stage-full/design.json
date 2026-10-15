@@ -1,6 +1,6 @@
 {
   "id": "stage-full",
-  "version": 4,
+  "version": 5,
   "type": "design",
   "compatibility": {
     "supersedes": [
@@ -57,7 +57,8 @@
   "thresholds": {
     "event_gap_seconds": 2,
     "still_seconds": 0.6,
-    "pixel_mean_delta": 0.5
+    "pixel_mean_delta": 0.5,
+    "stage_coverage_min": 0.18
   },
   "critic_checks": [
     "主体与次级响应",
@@ -116,7 +117,7 @@
   "settings_defaults": {
     "direction_approval": true,
     "critic.provider": "external",
-    "critic.model": "",
+    "critic.model": "gpt-6.1-sol",
     "critic.max_rounds": 1
   },
   "capabilities": {

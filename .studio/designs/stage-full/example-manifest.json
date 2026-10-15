@@ -70,7 +70,7 @@
     {
       "source": ".studio/designs/stage-full/GUIDE.md",
       "target": "GUIDE.md",
-      "sha256": "eb5218773cf667dbec7f0188be0b9790642da397bf173d8a2127fd43ee2675e3",
+      "sha256": "118ac36f77dacd28770b07e7a28f0f9c313547596c9da44d2d0c6540515de696",
       "origin": "Project authored source extraction guide",
       "version": "1",
       "license": "Apache-2.0",
@@ -83,7 +83,7 @@
     {
       "source": ".studio/designs/stage-full/stages/draft.md",
       "target": "stages/draft.md",
-      "sha256": "ff76dcf78da896297f7f3ca2761e218005f372134b3226f406c700eccad7e665",
+      "sha256": "d25dcc00f90bb2e30c065651cd2744d5e0e854f9223cbda2bf1e60574605766e",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -109,7 +109,7 @@
     {
       "source": ".studio/designs/stage-full/stages/plan.md",
       "target": "stages/plan.md",
-      "sha256": "45a603d6ee31c3db1e075074c00a637c9db51330130469b523da9acdd418ed06",
+      "sha256": "74ba6028f0bf814ceeea8d4e5f9fc5227c526e3d66d5adb7339e7c8ea9a7736d",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -200,7 +200,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-rig/stage-rig.js",
       "target": "runtime/stage-rig.js",
-      "sha256": "772802d3d12157638cc0070f04d88e6a11c34f774438cf9d2a008731e5b1c3eb",
+      "sha256": "a6bd08f7552f7ef4f4d9fe4db006394aca2846bd684acca63e0ab8ea047850ce",
       "origin": "Project authored stage folding mechanism; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",
@@ -213,7 +213,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-kit/stage-kit.js",
       "target": "runtime/stage-kit.js",
-      "sha256": "8fd68878df2723801e21795df7389c232a2ecef6628dac3309fa3730e238382a",
+      "sha256": "a2d7f5b4d5a5d5332da6baf7e324ce765987613d75f6caa719d3fe5d3f89ef72",
       "origin": "Project authored stage block core; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",
@@ -244,6 +244,19 @@
       "version": "1",
       "license": "Apache-2.0",
       "purpose": "Stage block prop-stand",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/assets/stage-kit/blocks/prop-states.js",
+      "target": "runtime/stage-kit/blocks/prop-states.js",
+      "sha256": "34f6c561c7c9a97926677370a457d9af93b5d7fbae83dc97c3a13b5d2454c5a8",
+      "origin": "Project authored stage block; metadata in the asset manifest",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Stage block prop-states",
       "packages": [
         "public",
         "personal"
@@ -304,7 +317,7 @@
     {
       "source": ".studio/designs/stage-full/example/kit-demo.html",
       "target": "kit-demo.html",
-      "sha256": "c5487f1f2d0fb38ce86dacc7a40b060677f0b8b2fbcd6a44f26e8fd793293f6f",
+      "sha256": "41095a4c2cb1f1876fa4b5257d30e9eb2fb547d05ea48b03ccdcb2de3bb231c4",
       "origin": "Project authored editable stage-full example",
       "version": "1",
       "license": "Apache-2.0",
@@ -317,7 +330,7 @@
     {
       "source": ".studio/designs/stage-full/example/kit-demo.js",
       "target": "kit-demo.js",
-      "sha256": "da1a7e977faf6a7d2263dc0726d321d64c21d6cc1eb69f0d117787813d5d10d1",
+      "sha256": "6154b1301d74720bd13682442f19999730b4e217f216112051a683937e9238be",
       "origin": "Project authored editable stage-full example",
       "version": "1",
       "license": "Apache-2.0",

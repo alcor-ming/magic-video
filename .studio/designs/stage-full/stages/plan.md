@@ -31,59 +31,61 @@
 - **transition ownership（交接归属）**：铰链旋转归 rig，其他变换归 scene wrapper；A/B 或跨 Scene 交接写明由谁恢复。
 - **limits（显式限制）**：未在 Windows 锁定 Studio 连续播放；声音/字幕未验证；示例静音不代表有声验收。
 
-## 轨道镜头表（轨道档必填；开阔档建议）
+## 轨道镜头表（前景轨必填）
 
-表前三行缺一不可：
+表前四行锁定全片：
 
 画风：纸艺微缩舞台（本卡皮肤唯一画法；位图只作镂空道具、纸框内容、台口与墙面贴纸，不作常驻页框）
 色板：本卡纸艺色板（暗夜蓝黑底、暖纸、墨、卡纸橙红、X 光冷蓝；语义绿只给放行）
 角色：无 ／ 只出手和背影 ／ 帧库 <系列立牌状态集>（同一角色至少 2 个姿势状态）
+背景：默认（stage-rig 纸舞台 + rig.rebuild 换地点）／ 定制 <由高级模型交付的背景与换景时刻>
 
-角色行按实际方案选一项。每行一镜，cue 对应正式口播的实际语义起点。下面以「修补一把雨伞」示范填写，角色选无；不沿用题材与秒数作为生产依据。
+### 先写每个 Scene 的一句话画面
 
-| cue 口播词 | 画面里的物（名词） | 它在做什么（动词） | 舞台动作 | 屏上字 ≤8 | 层 | 做法 |
-|---|---|---|---|---|---|---|
-| 这把伞撑不住了 | 断骨雨伞、修伞台 | 修伞台展开，雨伞随道具脚立起 | rig.build | 断在这里 | 2；附着标注 2 | rig + 墙板与地面展开，雨伞镂空道具 + 道具脚立起 |
-| 裂口就在接头旁 | 伞骨接头 | 接头在局部镜头中转向裂口 | inset.broll | 接头裂口 | 2；附着标注 2 | 纸框 + 真实接头近照，局部转向裂口 |
-| 修好的伞又撑起来 | 修复后的雨伞 | 雨伞随道具脚立起并锁定 | prop.stand | 可以挡雨了 | 2；附着标注 2 | 镂空雨伞道具 + 道具脚从折下到立起 |
+格式：`S0n：<主物>在<做什么>，结束时<是什么样>。` 一个 Scene 一个主物，后面的逐镜都是这句话的展开。
 
-### 舞台动作菜单
+例（「修补一把雨伞」，只示范写法）：`S01：一把断骨的雨伞被立上修伞台，接头裂口被拉近看清，结束时伞重新撑开、挡住落下的纸雨。`
 
-「舞台动作」列只能从下表选择。积木已交付：`assets/stage-kit/blocks/<name>.md` 是每个动作的参数合同；镜头表「做法」列写积木名 + 关键参数。
+### 再逐镜填表
 
-下表保留原有动作语义；标为「无独立积木」的 `rig.build`、`rig.recede`、`hold` 不是可传给 `kit.create` 的积木名（搭景由工程按 GUIDE §3 写 rig 状态，后退含在 `rig.rebuild` 里，停顿按停顿合同）。十个已交付积木的参数见对应文档。
+每行一镜，cue 对应正式口播的实际语义起点。
 
-| 舞台动作 | 语义 | 文档 |
+| cue 口播词 | 主物（名词） | 它在做什么（动词） | 结束状态 | 屏上字 ≤8 | 做法 |
+|---|---|---|---|---|---|
+| 这把伞撑不住了 | 断骨雨伞 | 随道具脚立上修伞台，伞骨垂着 | 伞立在台面中央，占台面区约一半 | 断在这里 | prop.states：start=folded，step stand（伞面、伞骨、伞柄三件） |
+| 裂口就在接头旁 | 伞骨接头 | 在纸框里被拉近，转向裂口 | 纸框占台面区约 2/3，伞虚化 | 接头裂口 | inset.broll：大纸框 + 真实接头近照，move.zoom [1,1.25] |
+| 修好的伞又撑起来 | 修复后的雨伞 | 伞骨一根根撑开，纸雨落在伞面上弹开 | 伞撑开，雨滴停在伞沿 | 可以挡雨了 | prop.states：step open（伞骨 stagger 0.12）+ step rain |
+
+做法列写积木名、状态名与关键参数。本期专属的物用 `prop.states` 描述部件和状态；通用动作直接用积木。
+
+### 规则
+
+1. 每镜写具体的物和它的动作；物是本期内容里的东西（伞、闸门、抽屉），不是卡片、文字或图标。
+2. 主物约占台面区 40% 以上；B 接管时纸框或素材约占台面区 60% 以上，A 虚化或退场。小纸框只作附着证据。
+3. Scene 之间由背景轨换景：默认 `rig.rebuild`，或 `disc.scene`、定制背景提供的换景。
+4. 第一镜和最后一镜落在物上；文字主导镜占全片 30% 以内；屏上字每镜 8 字以内，口播交给字幕。
+5. 单镜 2–8 秒；同一做法连用不超过两次。聚光扫过只作强调，不当一镜的主要动作。
+6. 表前四行写全。
+
+单镜时长不替代 2 秒节奏合同；刻意停顿仍在 Plan 写明原因与区间。五层分工与 A/B-roll 以 visual-design 为准，积木已守住各自所在的层，表里不必逐条复述。
+
+### 积木速查
+
+积木是可选工具，参数合同见各 `blocks/*.md`。
+
+| 用途 | 积木 | 轨 |
 |---|---|---|
-| `rig.build` | 展开搭景 | 无独立积木；见上方「铰链归属」 |
-| `rig.rebuild` | 折叠重建换地点 | [rig-rebuild.md](../assets/stage-kit/blocks/rig-rebuild.md) |
-| `rig.recede` | 整台后退 | 无独立积木；重建中的后退参数见 [rig-rebuild.md](../assets/stage-kit/blocks/rig-rebuild.md) |
-| `disc.scene` | 圆盘半周换景与逐件装配 | [disc-scene.md](../assets/stage-kit/blocks/disc-scene.md) |
-| `spot.sweep` | 焦点光扫过 | [spot-sweep.md](../assets/stage-kit/blocks/spot-sweep.md) |
-| `spot.split` | 光分两池 | [spot-split.md](../assets/stage-kit/blocks/spot-split.md) |
-| `tray.sort` | 物件归托盘 | [tray-sort.md](../assets/stage-kit/blocks/tray-sort.md) |
-| `prop.stand` | 道具脚立起 | [prop-stand.md](../assets/stage-kit/blocks/prop-stand.md) |
-| `slot.text` | 阅读窗口补位 | [slot-text.md](../assets/stage-kit/blocks/slot-text.md) |
-| `inset.broll` | 第 2 层纸框局部镜头 | [inset-broll.md](../assets/stage-kit/blocks/inset-broll.md) |
-| `sign.plate` | 字写在牌子上 | [sign-plate.md](../assets/stage-kit/blocks/sign-plate.md) |
-| `stack.explode` | 叠层剖切 | [stack-explode.md](../assets/stage-kit/blocks/stack-explode.md) |
-| `hold` | 停 | 无独立积木；见下方停顿合同 |
-
-### 硬规则
-
-- 物列不能是「卡片 / 标题 / 文字 / 图标 / 背景 / 画面」，须写具体的物。
-- 动作列不能是「出现 / 显示 / 淡入 / 展示」，须写物在做什么。
-- 第一镜与最后一镜不是字卡。
-- 文字主导镜占全片镜数 ≤30%。
-- 单镜 2–8 s，超 8 s 拆镜；结合正式口播对齐核对镜头区间。
-- 同一舞台动作连续使用不超过 2 次。
-- 每个 Scene 至少一次 rig 或道具动作。
-- B 段必须有物，不能只是方块贴图。
-- 屏上字每镜 ≤8 字，口播交给第 5 层字幕。
-- 表前三行画风、色板、角色缺一不可。
-
-单镜时长不替代 2 秒节奏合同；`hold` 不自动构成有效事件，刻意停顿仍在 Plan 写明原因与区间。五层分工与 A/B-roll 正交：B 接管时 A 隐藏或虚化并冻结，返回时已读内容直接就位；B 的独立解释放第 4 层 B 文字组。新增独立文字仍按 A1 提炼（第 4 层文字提炼口播、保留结论与必要数值单位，不整段照搬；定义见 visual-design「第 4 层文字与阅读」），在实际语义 cue 揭示并遵守阅读保护；第 2 层只承载物与附着短标注，第 3 层只做强调与转场，第 5 层字幕始终在最上方。
+| 折叠重建换地点 | [rig.rebuild](../assets/stage-kit/blocks/rig-rebuild.md) | 背景 |
+| 圆盘换景、逐件装配布景 | [disc.scene](../assets/stage-kit/blocks/disc-scene.md) | 背景 |
+| 本期专属的多部件道具 | [prop.states](../assets/stage-kit/blocks/prop-states.md) | 前景 |
+| 单件镂空道具立起 | [prop.stand](../assets/stage-kit/blocks/prop-stand.md) | 前景 |
+| 字写在牌子上 | [sign.plate](../assets/stage-kit/blocks/sign-plate.md) | 前景 |
+| 物件归托盘 | [tray.sort](../assets/stage-kit/blocks/tray-sort.md) | 前景 |
+| 叠层剖切 | [stack.explode](../assets/stage-kit/blocks/stack-explode.md) | 前景 |
+| B 接管的纸框镜头 | [inset.broll](../assets/stage-kit/blocks/inset-broll.md) | 前景 |
+| 焦点光扫过 / 分两池 | [spot.sweep](../assets/stage-kit/blocks/spot-sweep.md) / [spot.split](../assets/stage-kit/blocks/spot-split.md) | 前景（第 3 层） |
+| 阅读窗口补位 | [slot.text](../assets/stage-kit/blocks/slot-text.md) | 前景（第 4 层） |
 
 ### 与现行 Plan 的关系
 
-轨道镜头表写在 Plan 的 `## 轨道镜头表` 节，不替代 `## 导演 Brief` 与 `## 分镜表`；director 检查仍读那两节。分镜表的「观众看到什么」一列必须能在轨道镜头表里找到对应镜。上方详表保留为机制示例，真实制作按本节合同逐镜填写。
+轨道镜头表写在 Plan 的 `## 轨道镜头表` 节，不替代 `## 导演 Brief` 与 `## 分镜表`；director 检查仍读那两节。分镜表的「观众看到什么」一列必须能在轨道镜头表里找到对应镜。上方详表保留为机制示例，真实制作按本节逐镜填写。

@@ -358,19 +358,34 @@ export async function inspectFrame(scenes, time) {
     .map(element => ({reason: 'media_canvas_motion_unverified', target: selector(element), time}));
   const module_texts = [...(window.__hfTextSources || [])].flatMap(source => source());
   for (const item of module_texts) if (item.start <= time && time < item.end) texts.push(item);
+  const stagePainted = [...document.querySelectorAll('[data-hf-layer="stage"] *')].filter(element => {
+    if (!visible(element) || element.closest('[data-hf-ambient]')) return false;
+    const rect = element.getBoundingClientRect();
+    if (!(rect.width > 2 && rect.height > 2)) return false;
+    // Transparent containers do not count: the element must paint pixels itself.
+    if (['IMG', 'SVG', 'VIDEO', 'CANVAS', 'PICTURE'].includes(element.tagName.toUpperCase())) return true;
+    const style = getComputedStyle(element);
+    const alpha = color => { const match = /rgba?\(([^)]+)\)/.exec(color || ''); if (!match) return color && color !== 'transparent' ? 1 : 0; const parts = match[1].split(/[\s,\/]+/).map(Number); return parts.length > 3 ? parts[3] : 1; };
+    if (alpha(style.backgroundColor) > 0 || style.backgroundImage !== 'none' || style.boxShadow !== 'none') return true;
+    if (['Top', 'Right', 'Bottom', 'Left'].some(side => parseFloat(style['border' + side + 'Width']) > 0 && alpha(style['border' + side + 'Color']) > 0)) return true;
+    return [...element.childNodes].some(node => node.nodeType === 3 && node.textContent.trim());
+  });
+  // Foreground coverage: share of a 64x36 grid over the composition whose cell centres fall inside a
+  // painted stage element. Scenery marked data-hf-set (rig walls, floor) is background, not foreground.
+  const frameBox = document.querySelector('[data-width][data-height]')?.getBoundingClientRect()
+    || {x: 0, y: 0, width: innerWidth, height: innerHeight};
+  const columns = 64, rows = 36, covered = new Set();
+  for (const element of stagePainted) {
+    if (element.closest('[data-hf-set]')) continue;
+    const rect = element.getBoundingClientRect();
+    const first = value => Math.max(0, Math.ceil(value - .5)), last = (value, size) => Math.min(size - 1, Math.floor(value - .5));
+    const c0 = first((rect.left - frameBox.x) / frameBox.width * columns), c1 = last((rect.right - frameBox.x) / frameBox.width * columns, columns);
+    const r0 = first((rect.top - frameBox.y) / frameBox.height * rows), r1 = last((rect.bottom - frameBox.y) / frameBox.height * rows, rows);
+    for (let row = r0; row <= r1; row++) for (let column = c0; column <= c1; column++) covered.add(row * columns + column);
+  }
   return {texts, module_texts, unverified: [...unverified], timeline, icons, motion_unverified,
-    stage_visible: [...document.querySelectorAll('[data-hf-layer="stage"] *')].filter(element => {
-      if (!visible(element) || element.closest('[data-hf-ambient]')) return false;
-      const rect = element.getBoundingClientRect();
-      if (!(rect.width > 2 && rect.height > 2)) return false;
-      // Transparent containers do not count: the element must paint pixels itself.
-      if (['IMG', 'SVG', 'VIDEO', 'CANVAS', 'PICTURE'].includes(element.tagName.toUpperCase())) return true;
-      const style = getComputedStyle(element);
-      const alpha = color => { const match = /rgba?\(([^)]+)\)/.exec(color || ''); if (!match) return color && color !== 'transparent' ? 1 : 0; const parts = match[1].split(/[\s,\/]+/).map(Number); return parts.length > 3 ? parts[3] : 1; };
-      if (alpha(style.backgroundColor) > 0 || style.backgroundImage !== 'none' || style.boxShadow !== 'none') return true;
-      if (['Top', 'Right', 'Bottom', 'Left'].some(side => parseFloat(style['border' + side + 'Width']) > 0 && alpha(style['border' + side + 'Color']) > 0)) return true;
-      return [...element.childNodes].some(node => node.nodeType === 3 && node.textContent.trim());
-    }).length};
+    stage_visible: stagePainted.length,
+    stage_coverage: frameBox.width > 0 && frameBox.height > 0 ? +(covered.size / (columns * rows)).toFixed(4) : null};
 }
 
 export async function probe(input) {
@@ -495,6 +510,7 @@ export async function probe(input) {
           value.module_texts = info.module_texts;
           value.motion_unverified = info.motion_unverified;
           value.stage_visible = info.stage_visible;
+          value.stage_coverage = info.stage_coverage;
           if (before !== navigation || !await iframe.evaluate(element => getComputedStyle(element).visibility === 'visible'))
             throw new Error('Studio frame reloaded during sampling');
           value.texts.push(...info.texts);

@@ -200,7 +200,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-rig/stage-rig.js",
       "target": "runtime/stage-rig.js",
-      "sha256": "772802d3d12157638cc0070f04d88e6a11c34f774438cf9d2a008731e5b1c3eb",
+      "sha256": "a6bd08f7552f7ef4f4d9fe4db006394aca2846bd684acca63e0ab8ea047850ce",
       "origin": "Project authored stage folding mechanism; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",

@@ -8,14 +8,19 @@
 `../shared/stage-rig.js`）。宿主在运行目录放入 `runtime/gsap.min.js`、`runtime/scene-binding.js`、
 `runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`，示例不联网、不带位图与音频。
 
-## 0. 分档：按执行模型选路
+## 0. 分轨：背景轨与前景轨
 
-- **开阔档**：执行模型为 Claude Opus 级或更强。全卡适用，§1–§8 是机制与自由度；仍建议先写 §4 的镜头表。
-- **轨道档**：其它模型，或无法判断。只走下面这一条路，只读本节、`stages/plan.md`、`stages/draft.md`；其余章节先不读：
-  1. 写镜头表（`stages/plan.md`「轨道镜头表」合同），表前三行锁画风 / 色板 / 角色；
-  2. 逐镜只从舞台动作菜单选积木（`assets/stage-kit/`，接口见各 `blocks/*.md`），参数进、画面出，不手写布局；
-  3. 登记前自检（`stages/draft.md`「轨道档自检」）：跑类名覆盖脚本 `tools/check-classes.mjs`、抽查计算样式；缺失先修正，修不了的逐项写进交付说明未处理项；
-  4. 登记 Draft，用 `critic round` 产出 Scene 帧条与 ledger，逐 Scene 看三帧（段首、中段、段尾）：主物不在画里或只剩文字卡就回改、重新登记；
+本卡按层分工，不按模型分档。
+
+- **背景轨**：第 1 层、rig 布景件（墙板、地面）与换景动作。
+  - **默认背景**：直接用卡内简单积木的现有设定：`stage-rig` 纸舞台（皮肤见 `example/style.css`），Scene 之间用 `rig.rebuild` 折叠重建换地点；有自备布景位图时可改用 `disc.scene`。任何模型都可以按默认使用，不需要另做设计。
+  - **定制背景**：由高级模型（Claude Opus 级）按 Work 设计，可以整体替换默认背景，只要守住下面的接口。普通模型不改背景。
+  - **背景给前景的接口**：台面区（默认 x 120–1800、y 200–900，字幕安全带以上）；换景时刻清单（前景在换景开始前退场，换景完成后入场）；布景件带 `data-hf-set`（stage-rig 的墙板与地面已自带），诊断据此把布景与前景分开。
+- **前景轨**：第 2 层的物与道具、第 3 层强调、第 4 层文字。普通模型（含 DeepSeek）也能做，按下面的顺序走，只读本节、`stages/plan.md`、`stages/draft.md`，用到哪个积木再读它的 `blocks/*.md`：
+  1. 写画面表（`stages/plan.md`「轨道镜头表」）：每个 Scene 先用一句话说清主物、它做什么、结束时什么样，再逐镜填表；
+  2. 本期专属的物（闸门、卡纸堆、抽屉……）用 `prop.states` 写成多部件、多状态的道具，通用动作（立起、纸框、写牌、光、托盘、剖切、阅读窗）用对应积木；
+  3. 先静后动：先让每个 Scene 停在结束状态，登记一次 Draft，用 `critic round` 帧条给能看图的一方（用户或 critic）看构图，再补动作；
+  4. 登记前自检（`stages/draft.md`「前景自检」），修不了的逐项写进交付说明未处理项；
   5. 用 `critic record` 记录实际结论。自检与审片只定位问题，不新增审批门；三道人工门以 workflow 为准。
 
 ## 1. 来源机制（授权提取）
@@ -105,13 +110,14 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 
 ## 10. 积木清单
 
-积木由 `assets/stage-kit/stage-kit.js` 统一注册与组合，先加载核心，再加载所用积木；参数合同以各 `blocks/*.md` 为准。工程统一传入全片秒数，调用 `apply(t)` 重建画面，结束时调用 `dispose()`。
+积木是可选工具，不是菜单：物由本期内容决定，积木只省掉定位、显隐、皮肤与确定性插值的工程活。积木由 `assets/stage-kit/stage-kit.js` 统一注册与组合，先加载核心，再加载所用积木；参数合同以各 `blocks/*.md` 为准。工程统一传入全片秒数，调用 `apply(t)` 重建画面，结束时调用 `dispose()`。
 
 | 积木名 | 层 | 一句话 | 文档路径 |
 |---|---|---|---|
 | `disc.scene` | 第 1 层 background | 刚性圆盘半周换景，按件类型逐件装配布景。 | [assets/stage-kit/blocks/disc-scene.md](assets/stage-kit/blocks/disc-scene.md) |
 | `rig.rebuild` | 第 2 层 stage | 依次折叠、后退、换皮肤并重新展开纸舞台。 | [assets/stage-kit/blocks/rig-rebuild.md](assets/stage-kit/blocks/rig-rebuild.md) |
 | `prop.stand` | 第 2 层 stage | 镂空道具沿顶部铰链立起，带纸边与偏移投影。 | [assets/stage-kit/blocks/prop-stand.md](assets/stage-kit/blocks/prop-stand.md) |
+| `prop.states` | 第 2 层 stage | 本期专属的多部件道具：命名状态、按时刻切换，物长什么样由工程决定。 | [assets/stage-kit/blocks/prop-states.md](assets/stage-kit/blocks/prop-states.md) |
 | `inset.broll` | 第 2 层 stage | 纸框滑入局部镜头，支持缩放、平移与附着短标注。 | [assets/stage-kit/blocks/inset-broll.md](assets/stage-kit/blocks/inset-broll.md) |
 | `stack.explode` | 第 2 层 stage | 纸质薄板沿 Z 轴拉开、聚焦并收拢。 | [assets/stage-kit/blocks/stack-explode.md](assets/stage-kit/blocks/stack-explode.md) |
 | `slot.text` | 第 4 层 text | 固定阅读槽位补位，并在 B 接管时冻结和虚化。 | [assets/stage-kit/blocks/slot-text.md](assets/stage-kit/blocks/slot-text.md) |
