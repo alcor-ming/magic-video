@@ -32,6 +32,110 @@ class AppearanceRebindTest(unittest.TestCase):
         return json.loads(self.invoke("--work", self.work_id, "--variant", "main", "appearance", "rebind",
                                       "--background", "green@v1", *args))
 
+    def drift_checks(self):
+        state = cli.read_json(self.variant / "variant.yaml")
+        lock = state["appearance_lock"]
+        lock.pop("mode", None)
+        lock["capabilities"] = cli.designs.legacy_capabilities("explainer")
+        lock["capabilities"]["checks"] = []
+        self.seal(lock)
+        cli.write_json(self.variant / "project/appearance-lock.json", lock)
+        lock["capabilities"]["checks"] = ["css-contract", "frame-blank"]
+        self.seal(lock)
+        state["capabilities"] = lock["capabilities"]
+        cli.write_variant(self.variant, state)
+        return state
+
+    def seal(self, lock):
+        lock["capabilities_sha256"] = appearance.digest(lock["capabilities"])
+        lock["sha256"] = appearance.digest({k: v for k, v in lock.items() if k != "sha256"})
+
+    def recover_checks(self):
+        return json.loads(self.invoke("--work", self.work_id, "--variant", "main",
+                                      "appearance", "recover", "--sync-checks"))
+
+    def test_sync_checks_preserves_every_other_file_and_is_idempotent(self):
+        state = self.drift_checks()
+        state.update(accepted_visual_plan="plan-v006", accepted_plan_revision=6,
+                     accepted_preview="draft-v001", current_final="final.mp4")
+        cli.write_variant(self.variant, state)
+        for name in ("audio/voice.wav", "captions/subtitles.srt", "previews/draft-v001/source-snapshot/index.html"):
+            path = self.variant / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"preserved fixture")
+        before = self.contents()
+        with self.assertRaisesRegex(appearance.AppearanceError, "differs from Variant"):
+            appearance.verify(self.variant / "project", state["appearance_lock"])
+        result = self.recover_checks()
+        self.assertEqual("checks-synced", result["status"])
+        appearance.verify(self.variant / "project", state["appearance_lock"])
+        for name, content in before.items():
+            if name != "project/appearance-lock.json":
+                self.assertEqual(content, (self.variant / name).read_bytes(), name)
+        self.assertEqual(before["project/appearance-lock.json"],
+                         (Path(result["history"]) / "appearance-lock.json").read_bytes())
+        self.assertEqual("unchanged", self.recover_checks()["status"])
+
+    def test_registration_passes_lock_gate_after_sync(self):
+        self.drift_checks()
+        # Stop at the next gate: this fixture has no complete video project.
+        with patch.object(cli, "assert_preview_ready"), patch.object(cli, "assert_snapshot_source",
+                side_effect=cli.HarnessError("reached source validation")):
+            with self.assertRaisesRegex(appearance.AppearanceError, "differs from Variant"):
+                self.invoke("--work", self.work_id, "--variant", "main", "preview", "register")
+            self.recover_checks()
+            with self.assertRaisesRegex(cli.HarnessError, "reached source validation"):
+                self.invoke("--work", self.work_id, "--variant", "main", "preview", "register")
+
+    def test_sync_write_failure_and_removed_checks_preserve_original(self):
+        state = self.drift_checks()
+        before = self.contents()
+        with patch.object(cli.os, "replace", side_effect=OSError("injected atomic replace failure")):
+            with self.assertRaisesRegex(OSError, "injected"):
+                self.recover_checks()
+        self.assertEqual(before, self.contents())
+
+        self.recover_checks()
+        state["appearance_lock"]["capabilities"]["checks"] = []
+        self.seal(state["appearance_lock"])
+        cli.write_variant(self.variant, state)
+        before = self.contents()
+        with self.assertRaisesRegex(appearance.AppearanceError, "only permits added checks"):
+            self.recover_checks()
+        self.assertEqual(before, self.contents())
+
+    def test_sync_checks_requires_pending_rebind_recovery_first(self):
+        self.drift_checks()
+        cli.write_json(appearance_rebind.journal_path(self.variant), {})
+        before = self.contents()
+        with self.assertRaisesRegex(appearance.AppearanceError, "without --sync-checks first"):
+            self.recover_checks()
+        self.assertEqual(before, self.contents())
+
+    def test_sync_checks_rejects_other_drift_corruption_and_running_studio(self):
+        state = self.drift_checks()
+        state["appearance_lock"]["seed"] += 1
+        self.seal(state["appearance_lock"])
+        cli.write_variant(self.variant, state)
+        before = self.contents()
+        with self.assertRaisesRegex(appearance.AppearanceError, "only permits added checks"):
+            self.recover_checks()
+        self.assertEqual(before, self.contents())
+        state["appearance_lock"]["seed"] -= 1
+        self.seal(state["appearance_lock"])
+        cli.write_variant(self.variant, state)
+        cli.write_json(cli.studio_record(self.variant, "current"), {"pid": os.getpid()})
+        before = self.contents()
+        with self.assertRaisesRegex(appearance.AppearanceError, "Stop"):
+            self.recover_checks()
+        self.assertEqual(before, self.contents())
+        state["appearance_lock"]["sha256"] = "0" * 64
+        cli.write_variant(self.variant, state)
+        before = self.contents()
+        with self.assertRaisesRegex(appearance.AppearanceError, "hash mismatch"):
+            self.recover_checks()
+        self.assertEqual(before, self.contents())
+
     def test_preview_apply_history_acceptance_and_idempotency(self):
         state = cli.read_json(self.variant / "variant.yaml")
         state.update(accepted_visual_plan="plan-v001", accepted_preview="draft-v001", current_final="final.mp4")

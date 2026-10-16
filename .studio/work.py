@@ -4825,7 +4825,9 @@ def build_parser() -> argparse.ArgumentParser:
     rebind.add_argument("--apply", action="store_true")
     rebind.add_argument("--upgrade-runtime", action="store_true", help="Upgrade a known old runtime in the editable project only")
     rebind.set_defaults(handler=command_appearance_update)
-    appearance_commands.add_parser("recover", help="Recover a pending update of the explicit Work/Variant").set_defaults(handler=command_appearance_update)
+    recover = appearance_commands.add_parser("recover", help="Recover a pending update of the explicit Work/Variant")
+    recover.add_argument("--sync-checks", action="store_true", help="Repair added-check-only lock drift from Variant, preserving appearance and acceptance")
+    recover.set_defaults(handler=command_appearance_update)
     for kind in ("account", "series", "theme"):
         config_parser = commands.add_parser(kind)
         operations = config_parser.add_subparsers(dest="operation", required=True)

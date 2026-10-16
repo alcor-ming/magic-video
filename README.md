@@ -145,6 +145,8 @@ TTS 读取已批准或无需批准的当前 Script 正文与稳定 Anchor，排�
 
 同一 Variant 可显式原位换配，不必新建版本身份。先检查差异，再用 `--apply` 提交；已知旧 runtime 另加 `--upgrade-runtime`，未知或用户修改的 runtime 不覆盖。中断遗留 journal 时用同目标 `appearance recover` 恢复，不手删记录。账号默认、正文与历史 preview/Final 保留，变化后的外观清空当前接受及 Final 关联，不能沿用旧交付作为新外观接受。
 
+若升级后没有 pending rebind，但 Variant 外观锁相对工程锁仅增加了 `capabilities.checks`（及相应摘要），停止该 Variant 的 Studio 后运行 `./work --work <work-id> --variant <variant-id> appearance recover --sync-checks`。命令校验两锁和已安装资产，备份旧工程锁后原子同步至 Variant 锁；保留工程其他文件、vendor、历史快照及现有接受记录。删减检查项、其他外观差异或损坏的锁均拒绝同步；有 pending rebind 时先运行不带此选项的 `appearance recover`。
+
 ```bash
 ./work --work <work-id> --variant <variant-id> appearance rebind --theme <theme-id>@vN
 ./work --work <work-id> --variant <variant-id> appearance rebind --theme <theme-id>@vN --apply
