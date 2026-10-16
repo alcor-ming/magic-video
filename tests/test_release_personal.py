@@ -8,6 +8,27 @@ sys.path.insert(0,str(Path(__file__).parent))
 from test_release_cli import RELEASE
 
 class PersonalPackageTest(unittest.TestCase):
+    def test_card_validation_cleans_expected_locks_and_rejects_other_writes(self):
+        for locks in [('operations.lock',), ('operations.lock', 'catalog.lock'),
+                      ('operations.lock', 'catalog.lock', 'unexpected.json')]:
+            with self.subTest(locks=locks), tempfile.TemporaryDirectory() as tmp, \
+                    patch.object(RELEASE, 'check_env', return_value={}):
+                root = Path(tmp)
+                (root / '.studio').mkdir()
+                (root / '.studio/work.py').write_text(
+                    'from pathlib import Path\n'
+                    'root = Path(".studio/.runtime")\n'
+                    'root.mkdir()\n'
+                    f'for name in {locks!r}: (root / name).touch()\n'
+                    'print(\'{"ok": true}\')\n')
+                if 'unexpected.json' in locks:
+                    with self.assertRaisesRegex(RELEASE.ReleaseError, 'Card validation wrote'):
+                        RELEASE.validate_cards(root)
+                    self.assertTrue((root / '.studio/.runtime/unexpected.json').exists())
+                else:
+                    RELEASE.validate_cards(root)
+                    self.assertFalse((root / '.studio/.runtime').exists())
+
     def test_personal_skill_exclusions_filter_files_and_lock_without_changing_public(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

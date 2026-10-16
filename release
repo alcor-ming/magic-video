@@ -586,9 +586,11 @@ def validate_cards(staging: Path) -> None:
         failed = {card: value['errors'] for card, value in report.get('cards', {}).items() if value.get('errors')}
         raise ReleaseError(f'Packaged cards fail design validate: {failed or result.stderr.strip()[-2000:]}')
     added = sorted({p.relative_to(staging).as_posix() for p in staging.rglob('*')} - set(before))
-    if added == ['.studio/.runtime', '.studio/.runtime/operations.lock']:
-        # The CLI's command lock is the only expected side effect; the package never carries runtime state.
-        (staging / added[1]).unlink()
+    if added in (['.studio/.runtime', '.studio/.runtime/operations.lock'],
+                 ['.studio/.runtime', '.studio/.runtime/catalog.lock', '.studio/.runtime/operations.lock']):
+        # CLI command/catalog locks are expected; the package never carries runtime state.
+        for name in added[1:]:
+            (staging / name).unlink()
         (staging / added[0]).rmdir()
         added = []
     if added:
