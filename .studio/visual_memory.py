@@ -248,6 +248,35 @@ def frozen(directory, expected_hash=None):
     return manifest
 
 
+def located(variant, revision, expected_hash):
+    """The Plan revision's freeze, else the newest identical earlier freeze a revision bump left behind."""
+    directory = scoped_path(variant, f'reference-memory/{revision}')
+    base = directory.parent
+    if directory.is_dir() or not expected_hash or not base.is_dir():
+        return directory
+    earlier = sorted((int(path.name) for path in base.iterdir() if path.name.isdigit() and int(path.name) < int(revision)), reverse=True)
+    for number in earlier:
+        candidate = scoped_path(variant, f'reference-memory/{number}')
+        manifest = candidate / 'references.json'
+        if manifest.is_file() and not manifest.is_symlink() and digest(manifest) == expected_hash:
+            return candidate
+    return directory
+
+
+def carry(variant, source_revision, revision, expected_hash):
+    """Re-freeze unchanged reference evidence under a CLI-owned Plan revision bump."""
+    destination = scoped_path(variant, f'reference-memory/{revision}')
+    if destination.exists():
+        frozen(destination, expected_hash)
+        return None
+    source = located(variant, source_revision, expected_hash)
+    with tempfile.TemporaryDirectory(prefix='.pending-', dir=destination.parent) as temp:
+        stage = Path(temp) / 'references'
+        copy_frozen(source, stage, expected_hash)
+        stage.rename(destination)
+    return destination
+
+
 def copy_frozen(source, destination, expected_hash):
     manifest = frozen(source, expected_hash)
     destination.mkdir()

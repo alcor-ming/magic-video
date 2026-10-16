@@ -3,6 +3,7 @@ from html import escape
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 
 import explainer
@@ -140,6 +141,7 @@ def command(root, args, api):
         before = {path: path.read_bytes() if path.exists() else None for path in paths}
         if tts.digest(api.script_text(script).encode()) != script_hash:
             raise ValueError('Script changed before speech adoption')
+        carried = None
         try:
             for name, data in names.items():
                 target = storage.scoped_path(project, name)
@@ -153,15 +155,21 @@ def command(root, args, api):
                          alignment={'path': 'runtime/voice-alignment.json', 'sha256': tts.digest(alignment_bytes),
                                     'derived': {name: tts.digest(names[name]) for name in ('runtime/cues.json', 'runtime/section_map.json')}},
                          accepted_preview=None, current_final=None)
-            metadata = {**api.read_frontmatter(plan), **api.plan_metadata(variant, state)}
+            original = api.read_frontmatter(plan)
+            metadata = {**original, **api.plan_metadata(variant, state)}
             metadata['revision'] = max(metadata.get('revision', 1), state.get('plan_revision', 1)) + 1
             metadata['status'] = 'draft'
             state['plan_revision'] = metadata['revision']
+            if metadata.get('reference_memory_sha256'):
+                carried = api.visual_memory.carry(variant, original.get('revision', 1), metadata['revision'],
+                                                  metadata['reference_memory_sha256'])
             api.atomic_write(plan, '---\n' + json.dumps(metadata, ensure_ascii=False) + '\n---\n'
                              + api.plan_metadata_body(api.document_body(plan), metadata))
             api.write_variant(variant, state)
             verify(variant, api)
         except Exception:
+            if carried is not None:
+                shutil.rmtree(carried)
             for path, data in before.items():
                 if data is None:
                     path.unlink(missing_ok=True)

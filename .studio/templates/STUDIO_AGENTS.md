@@ -21,7 +21,7 @@
 
 ## 会话、阶段与报告
 
-- `--context <name>`（或环境变量 `HYPERFRAMES_CONTEXT`）为每个会话绑定一对 Work/Variant；不同对象可并行，同一准确对象同时只允许一个执行者，更新类命令等待该对象全部在跑命令结束后执行。
+- `--context <name>`（或环境变量 `HYPERFRAMES_CONTEXT`）为每个会话绑定一对 Work/Variant；不同对象可并行，同一准确对象同时只允许一个执行者，更新类命令等待该对象全部在跑命令结束后执行。只有移动、删除或重新标识 Work 的仓库级命令（`migrate`、`successor`、`browser rebuild`、`root set`、`storage cleanup`、`series move/delete`）要求其它命令全部结束；卡片、资产和请求包等仓库目录写入只彼此互斥，不阻塞其它 Work。
 - 设计卡在首次 Draft 前实时读取，Draft 后使用快照；status/预览提示变化，显式更新只作用于选定 Variant，保留工程副本并报告待重新安装资产，不读最新 `lines.yaml` 覆盖旧快照；阶段只加载当前阶段必要文件；账号身份、声线与执行模型分别配置，账号不能修改文案、流程门或设计身份。
 - 只报告实际产物、检查结果与真实未验证项。
 

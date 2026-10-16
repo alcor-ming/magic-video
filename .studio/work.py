@@ -701,11 +701,15 @@ def command_plan_refresh(root: Path, args: argparse.Namespace) -> None:
     memory_needed = bool(visual_memory.references(text) or original.get('reference_memory_sha256'))
     old_memory = None
     if original.get('reference_memory_sha256'):
-        old_memory = visual_memory.frozen(storage.scoped_path(variant, f"reference-memory/{original['revision']}"), original['reference_memory_sha256'])
+        old_memory = visual_memory.frozen(visual_memory.located(variant, original['revision'], original['reference_memory_sha256']),
+                                          original['reference_memory_sha256'])
     changed = changed or (memory_needed and (old_memory is None or old_memory['input'] != reference_input))
     revision = max(state.get("plan_revision", 1), original.get("revision", 1)) + int(changed)
     if memory_needed:
         try:
+            if old_memory is not None and revision == original['revision']:
+                # Restore a freeze an earlier CLI revision bump skipped; unchanged inputs keep identical evidence.
+                visual_memory.carry(variant, original['revision'], revision, original['reference_memory_sha256'])
             metadata['reference_memory_sha256'] = visual_memory.freeze(configured_work_root(root) or root, variant, revision, text, state, effective)
         except ValueError as error:
             raise HarnessError(str(error)) from error
@@ -2975,11 +2979,12 @@ def command_preview_register(root: Path, args: argparse.Namespace) -> None:
     plan_text = plan_with_card((variant / "ANIMATION_PLAN.md").read_text(encoding="utf-8"), state)
     plan_meta = read_frontmatter(variant / 'ANIMATION_PLAN.md')
     reference_hash = plan_meta.get('reference_memory_sha256')
+    reference_dir = visual_memory.located(variant, plan_meta.get('revision', 1), reference_hash)
     if any('·' in ref for ref in visual_memory.references(plan_text)) and not reference_hash:
         raise HarnessError('Reference Plan requires plan refresh before registration')
     if reference_hash:
         try:
-            manifest = visual_memory.frozen(storage.scoped_path(variant, f"reference-memory/{plan_meta['revision']}"), reference_hash)
+            manifest = visual_memory.frozen(reference_dir, reference_hash)
             if manifest['input']['references'] != visual_memory.references(plan_text):
                 raise ValueError('References changed; run plan refresh')
         except ValueError as error:
@@ -3088,7 +3093,7 @@ def command_preview_register(root: Path, args: argparse.Namespace) -> None:
             design_snapshot.verify(staging / 'design-snapshot', receipt)
             metadata['design_files'] = receipt
         if reference_hash:
-            visual_memory.copy_frozen(storage.scoped_path(variant, f"reference-memory/{plan_meta['revision']}"), staging / 'reference-memory', reference_hash)
+            visual_memory.copy_frozen(reference_dir, staging / 'reference-memory', reference_hash)
             metadata['reference_memory_sha256'] = reference_hash
         if input_hashes is not None:
             metadata["input_sha256"] = input_hashes
@@ -5215,8 +5220,17 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+# Store-wide changes that move, delete or re-identify Works, or retarget the store, need every other operation idle.
+def store_exclusive(args: argparse.Namespace) -> bool:
+    return (args.command in {'migrate', 'successor', 'browser'}
+            or args.command == 'root' and args.root_command == 'set'
+            or args.command == 'storage' and args.storage_command == 'cleanup'
+            or args.command == 'series' and args.operation in {'move', 'delete'})
+
+
 @contextmanager
 def operation_lock(root: Path, args: argparse.Namespace):
+    """Parallel Works: the store lock is shared except for store-wide changes; writers exclude per Work/Variant."""
     from windows_runtime import file_lock
     if (args.command in {'list', 'current', 'find', 'status'}
             or args.command == 'preview' and args.preview_command in {'diagnose', 'list', 'diff', 'context'}
@@ -5224,15 +5238,23 @@ def operation_lock(root: Path, args: argparse.Namespace):
         yield
         return
     variant_commands = {'preview', 'finalize', 'tts', 'math', 'showcase', 'cues', 'sound',
-                        'beats', 'plan', 'critic', 'wait', 'cover'}
+                        'beats', 'plan', 'critic', 'wait', 'cover', 'appearance'}
+    if args.command == 'request' and args.request_command in {'freeze', 'accept'}:
+        variant_commands.add('request')
+    if (args.command == 'component' and args.component_command == 'install'
+            or args.command == 'icons' and args.icon_command == 'use' and args.work_override):
+        variant_commands.add(args.command)
     work_commands = variant_commands | {'name', 'archive', 'reopen', 'park', 'resume', 'variant', 'script', 'status', 'workflow'}
     if getattr(args, 'project', None):
         work_commands.discard(args.command)
-    # New identities and versioned catalog writes already hold the short naming lock.
-    catalog = args.command in {'series', 'account', 'theme'} and args.operation in {'put', 'get', 'list'}
+    # Catalogs, assets and request packages are outside any Work: they exclude only one another.
+    catalog = args.command not in work_commands | {'new'} and not (
+        args.command in {'series', 'account', 'theme'} and args.operation in {'put', 'get', 'list'})
     with ExitStack() as locks:
-        locks.enter_context(file_lock(runtime_root(root) / 'operations.lock',
-                                      shared=catalog or args.command in work_commands | {'new', 'list', 'current', 'find'}))
+        exclusive = store_exclusive(args)
+        locks.enter_context(file_lock(runtime_root(root) / 'operations.lock', shared=not exclusive))
+        if catalog and not exclusive:
+            locks.enter_context(file_lock(runtime_root(root) / 'catalog.lock'))
         if args.command in work_commands:
             if args.command == 'reopen':
                 work, _ = locate_work(root, args.work_id)
@@ -5242,7 +5264,8 @@ def operation_lock(root: Path, args: argparse.Namespace):
             locks.enter_context(file_lock(work / '.runtime/operation.lock', shared=variant_operation))
             if variant_operation:
                 variant, _ = selected_variant(root, work, args)
-                locks.enter_context(file_lock(variant / '.runtime/operation.lock'))
+                locks.enter_context(file_lock(variant / '.runtime/operation.lock',
+                                              shared=args.command == 'request' and args.request_command == 'freeze'))
         yield
 
 
