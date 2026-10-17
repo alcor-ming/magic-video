@@ -550,6 +550,54 @@ def parameters(args):
     return values
 
 
+MAX_EXPLICIT_TIMES = 120
+
+
+def sample_times(raw):
+    """Parse --times; None when absent. Validation happens before any browser launch."""
+    if raw is None:
+        return None
+    try:
+        times = sorted({round(float(item), 6) for item in raw.split(',') if item.strip()})
+    except ValueError:
+        times = []
+    if not times or len(times) > MAX_EXPLICIT_TIMES or any(not math.isfinite(time) or time < 0 for time in times):
+        raise VisualPlanError(f'Invalid --times: 1..{MAX_EXPLICIT_TIMES} comma-separated non-negative seconds')
+    return times
+
+
+def sample_scope(scenes, span=None, times=None):
+    """Limit sampling to a span or explicit times; None keeps the whole project.
+
+    Return {'range': [start, end], 'times': [...] or None, 'scenes': overlapping scenes}.
+    """
+    if span is None and times is None:
+        return None
+    total = max((scene['start'] + scene['duration'] for scene in scenes), default=0)
+    if span is not None:
+        start, end = span
+        if not (math.isfinite(start) and math.isfinite(end)) or start < 0 or end <= start or start >= total:
+            raise VisualPlanError(f'Invalid --range: need 0 <= START < END and START before the project end {total:g}s')
+        end = min(end, total)
+    else:
+        start, end = times[0], times[-1]
+    if times is not None and any(time < start or time > end or time > total for time in times):
+        raise VisualPlanError('--times must lie inside --range and the project duration')
+    selected = [scene for scene in scenes if scene['start'] <= end and scene['start'] + scene['duration'] > start]
+    if not selected:
+        raise VisualPlanError('Sampling scope does not overlap any Scene')
+    return {'range': [start, end], 'times': times, 'scenes': selected}
+
+
+def sampling_summary(samples):
+    """Count verified samples so an empty or stale run is never mistaken for a clean one."""
+    ready = sum(1 for sample in samples if sample.get('ready'))
+    summary = {'samples': len(samples), 'ready': ready}
+    if not ready:
+        summary['hint'] = 'No sample was verified: run preview stop, then preview open, and rerun this command once'
+    return summary
+
+
 def probe(request, node='node'):
     try:
         result = subprocess.run([node, str(Path(__file__).with_name('visual_probe.mjs'))],

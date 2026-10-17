@@ -479,6 +479,7 @@
     ".studio/designs/stage-full/example/kit-demo.js",
     ".studio/designs/stage-full/tools/README.md",
     ".studio/designs/stage-full/tools/check-classes.mjs",
+    ".studio/designs/stage-full/tools/sample-frames.mjs",
     ".studio/stage_checks.py",
     "tests/test_card_asset_resolution.py",
     "tests/test_css_contract.py",

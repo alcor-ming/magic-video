@@ -103,7 +103,7 @@ try {
       {env: {...process.env, HOME: root, XDG_CONFIG_HOME: root, XDG_CACHE_HOME: root, DO_NOT_TRACK: '1', HYPERFRAMES_NO_TELEMETRY: '1'}});
     server.stdout.on('data', data => { log += data; }); server.stderr.on('data', data => { log += data; });
     let ready = false;
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 300; i++) {
       try { if ((await fetch(url)).ok) { ready = true; break; } } catch {}
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -143,6 +143,20 @@ try {
           assert(report.samples.every(item => item.rhythm_candidates.every(event => event.layer === 'stage')));
         }
       }
+    }
+    if (mode === 'transition') {
+      const scenes = [{id: 'S02', start: 2, duration: 2}];
+      const ranged = await probe({cli, browser: CHROME_PATH, url, scenes, range: [2, 4], parameters: {timeout_ms: 10000}});
+      assert(ranged.samples.length > 0 && ranged.samples.every(item => item.ready && item.time >= 2), 'range limits sampling');
+      const evidence = path.join(root, 'scoped-frames');
+      const exact = await probe({cli, browser: CHROME_PATH, url, scenes, range: [2, 4], times: [2.5, 3.25],
+        measurements: true, fps: 60, evidence_dir: evidence, parameters: {timeout_ms: 10000}});
+      assert.deepEqual(exact.samples.map(item => item.time), [2.5, 3.25], 'explicit times replace the grid');
+      assert(exact.samples.every(item => item.screenshot), 'explicit samples are saved as frames');
+      for (const item of exact.samples) await fs.access(path.join(evidence, item.screenshot));
+      assert.deepEqual(exact.determinism.map(item => [item.time, item.identical]), [[2.5, true], [3.25, true]],
+        'every explicit time is re-seeked through both ends and compared');
+      checks.push({mode: 'transition-scoped', samples: ranged.samples.length + exact.samples.length});
     }
     checks.push({mode, samples: report.samples.length});
     server.kill('SIGTERM'); await once(server, 'exit'); server = null;

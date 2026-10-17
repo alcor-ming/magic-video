@@ -11,7 +11,7 @@
     var slots = kit.requireBox(options, ['slots'], 'slot.text').slots;
     var gap = options.gap === undefined ? 18 : kit.requireBox(options, ['gap'], 'slot.text').gap;
     var style = options.style || {};
-    var size = style.size === undefined ? 28 : kit.requireBox(style, ['size'], 'slot.text.style').size;
+    var size = style.size === undefined ? 40 : kit.requireBox(style, ['size'], 'slot.text.style').size;
     var entries = [];
     var dims = [];
     var root;

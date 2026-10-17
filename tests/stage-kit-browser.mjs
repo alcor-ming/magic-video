@@ -68,6 +68,18 @@ try {
   const info = await page.evaluate(`(${inspectFrame})([], 4)`);
   assert(info.stage_visible > 3, 'scenery still counts as painted stage content');
   assert(info.stage_coverage > 0.05 && info.stage_coverage < 0.2, 'coverage reflects only the prop: ' + info.stage_coverage);
+  // Full-screen layer hosts above the stage must not swallow hit tests; their own content still occludes.
+  const hit = await page.evaluate(() => {
+    const overlay = document.createElement('section'), card = document.createElement('div');
+    overlay.setAttribute('data-hf-layer', 'overlay');
+    overlay.style.cssText = 'position:absolute;inset:0;z-index:5';
+    card.style.cssText = 'position:absolute;left:1500px;top:900px;width:200px;height:100px;background:#fff';
+    overlay.appendChild(card); document.querySelector('main').appendChild(overlay);
+    const top = document.elementsFromPoint(950, 550)[0];
+    return {host: getComputedStyle(overlay).pointerEvents, child: getComputedStyle(card).pointerEvents,
+      overlayOnTop: !!top?.closest('[data-hf-layer="overlay"]'), cardOccludes: document.elementsFromPoint(1550, 950)[0] === card};
+  });
+  assert.deepEqual(hit, {host: 'none', child: 'auto', overlayOnTop: false, cardOccludes: true}, JSON.stringify(hit));
   console.log('stage kit prop.states and coverage checks passed');
 } finally {
   await browser.close();
