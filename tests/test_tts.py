@@ -358,7 +358,7 @@ class TTSTests(unittest.TestCase):
         (historical / 'accepted.txt').write_text('frozen history')
         text = work_api.script_text(self.variant / 'SCRIPT.md')
         result = tts.generate(self.variant, self.rows, self.config, tts.digest(text.encode()))
-        evidence = {**json.loads(alignment(text)), 'method': 'manual-measured',
+        evidence = {**json.loads(alignment(text)), 'method': 'forced-alignment', 'engine': 'fixture-aligner 1',
                     'audio_sha256': result['files']['audio.wav']}
         (self.work / 'alignment.json').write_bytes(tts.json_bytes(evidence))
         api = SimpleNamespace(**vars(work_api))
@@ -412,7 +412,12 @@ class TTSTests(unittest.TestCase):
         for changes in ({'audio_sha256': '0' * 64}, {'method': 'estimated-per-character'},
                         {'audio_sha256': None}, {'method': None}):
             evidence_path.write_bytes(tts.json_bytes({**json.loads(evidence_bytes), **changes}))
-            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, 'candidate audio SHA-256'):
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, 'candidate audio SHA-256|Alignment method'):
+                work_tts.command(self.root, args, api)
+            self.assertEqual(snapshot(), before)
+        for changes, message in (({'method': 'manual-measured'}, 'no longer accepted'), ({'engine': ''}, 'engine')):
+            evidence_path.write_bytes(tts.json_bytes({**json.loads(evidence_bytes), **changes}))
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, message):
                 work_tts.command(self.root, args, api)
             self.assertEqual(snapshot(), before)
         evidence_path.write_bytes(evidence_bytes)

@@ -22,7 +22,6 @@ LINE_REFERENCE = re.compile(r'[a-z][a-z0-9-]*(?:/[a-z0-9-]+)?')
 HISTORICAL_META = {
     'explainer': ('stage-full', 'explainer', {'direction_approval': True, 'critic.provider': 'external', 'critic.model': '', 'critic.max_rounds': 1}),
     'explainer/math-rap': ('math', 'explainer', {'direction_approval': True, 'critic.provider': 'external', 'critic.model': '', 'critic.max_rounds': 1}),
-    'showcase/pdoom': ('pdoom', 'showcase', {'direction_approval': True, 'critic.provider': 'off', 'critic.model': '', 'critic.max_rounds': 1}),
     'showcase/science': ('collage', 'showcase', {'direction_approval': True, 'critic.provider': 'off', 'critic.model': '', 'critic.max_rounds': 1}),
 }
 

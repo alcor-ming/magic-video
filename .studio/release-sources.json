@@ -483,6 +483,8 @@
     "tests/test_card_asset_resolution.py",
     "tests/test_css_contract.py",
     "tests/stage-kit-browser.mjs",
-    "tests/test_stage_checks.py"
+    "tests/test_stage_checks.py",
+    ".studio/alignment_audit.py",
+    "tests/test_alignment_audit.py"
   ]
 }

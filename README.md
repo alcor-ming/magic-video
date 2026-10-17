@@ -132,6 +132,7 @@ v3.x 生命周期与旧资产库合同、v4.0 设计身份及 v4.1 增量见 [PR
 ./work --work <work-id> --variant <variant-id> showcase cast --input materials/actor.png --kind sheet --output assets/cast/actor
 ./work --work <work-id> --variant <variant-id> tts generate
 ./work --work <work-id> --variant <variant-id> tts generate --config <provider.json> --anchor P001
+./work --work <work-id> --variant <variant-id> tts audit <candidate-sha256> --alignment materials/alignment.json
 ./work --work <work-id> --variant <variant-id> tts adopt <candidate-sha256> --alignment materials/alignment.json
 ```
 
@@ -139,7 +140,7 @@ TTS 读取已批准或无需批准的当前 Script 正文与稳定 Anchor，排�
 
 替代提供方配置示例：`{"provider":"script","model":"your-model","command":["/absolute/python","/absolute/adapter.py"],"options":{}}`。命令为程序或解释器＋脚本的参数数组；宿主追加 `--request <json> --result <json>`，不经过 shell。请求含 `schema_version:1`、`anchor`、`text`、`model`、`options`、`output:"audio.wav"`，工作目录为本次临时段目录；脚本写入 PCM WAV，并在结果文件返回 `{"audio":"audio.wav","model":"your-model","options":{}}`，实际模型与参数须等于请求（不同则拒绝采用）。越界路径、软／硬链接、坏音频、混合采样格式或非零退出都失败，不切换其他服务。凭据由脚本从环境读取；本期不安装其他语音引擎。
 
-候选仅保存在 Variant 的 `materials/tts/<hash>/`，按提供方、模型、正文与生效参数区分。单 Anchor 可试听；正式采用须覆盖当前全稿，并提供实测对齐 JSON，顶层 `audio_sha256` 必须等于候选音频 hash，`method` 为 `provider-native`、`forced-alignment` 或 `manual-measured`，缺少提供方原生时间证据时明确报告缺失、不以估时补齐；`characters[]` 含单字符 `text`/`char`、以全片秒数记录的 `start`、`end`；不能均分时长伪造。采用会接入 voice 音轨、cues 与 section_map，将 Plan 退回待检查状态并清空当前接受关联；旧快照不变。Script、正式音频或时间数据变化须重新采用和检查。坏请求、合成失败与采用失败保留已有结果。
+候选仅保存在 Variant 的 `materials/tts/<hash>/`，按提供方、模型、正文与生效参数区分。单 Anchor 可试听；正式采用须覆盖当前全稿，并提供由工具测得的对齐 JSON，顶层 `audio_sha256` 必须等于候选音频 hash，`method` 为 `provider-native` 或 `forced-alignment`（须带 `engine` 记录对齐引擎与版本）；手工测量的 `manual-measured` 不再接受，缺少提供方原生时间证据时明确报告缺失、不以估时补齐；`characters[]` 含单字符 `text`/`char`、以全片秒数记录的 `start`、`end`。采用前对照候选音频做机械审计：字时长呈均分特征直接拒绝；落在静音里的字、无字覆盖的长语音段、过短或过长的字列为可疑项，写入 `project/runtime/alignment-report.json`，逐字核对只处理这些可疑项。`tts audit` 只读输出同一份审计结果，供采用前自查。采用会接入 voice 音轨、cues 与 section_map，将 Plan 退回待检查状态并清空当前接受关联；旧快照不变。Script、正式音频或时间数据变化须重新采用和检查。坏请求、合成失败与采用失败保留已有结果。
 
 ## 外观、资产与研究入口
 

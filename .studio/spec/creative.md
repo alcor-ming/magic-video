@@ -5,6 +5,7 @@
 - `source.md` 保存主要原始基线，任何改写不得覆盖它。
 - `SCRIPT.md` 保存当前 Variant 引用的唯一口播正文；正文只来自用户提供的文稿或用户撰写，不提供下载或转录提取。新视频 Work 默认通过 `shared_inputs` 引用 Work 的 `shared/`，显式内容分支使用 CLI 定位的文件。正文可附明确排除出口播的简短 Scene 索引，使用 `<!-- P001 -->` 形式的稳定 Anchor；批准后新增 Anchor，不重排全部编号。索引用成对的 `<!-- scene-index:start -->` / `<!-- scene-index:end -->` 包围，只记录 `Scene | Anchor 范围 | 时间预算 | 本段内容 / 观众重点`，不进入纯文本阅读、字数统计、配音或语音对齐。
 - `hyperframes_video` 的 `PACKAGE.md` 仅在交付要求包含发布包装时生成，保存最终标题、封面文字、一句话简介和内容概括，不进入口播正文，也不作为视频前置。
+- 封面由账号决定的四部分组成：**风格**（账号 `cover.layout` 版式、字体、颜色与背景）、**角色**（账号 `cover.characters` 角色库中的一张）、**标题**（`PACKAGE.md` 封面文字）与**一句话**（`PACKAGE.md` 一句话简介）。每个账号配置不同；不再是"图片加写字"。用 `work cover render --title <封面文字> --tagline <一句话> [--character <角色名>]` 渲染，角色库只有一张时可省略 `--character`。未配置 `cover.layout` 的旧账号仍按标题 + Logo 渲染；已冻结的封面不迁移。账号配置写在账号 `overrides.cover`：`layout`（`character-left` / `character-right` / `character-bottom`）、`font`、`color`、`background_color` 或 `background_image`、`characters`（`{角色名: {path, sha256}}`）、可选 `logo`、`width`/`height`、`font_size`、`tagline_font_size`；渲染检查标题与一句话不溢出、不压角色和 Logo。
 - 已要求的包装标题基于实际交付需求生成候选并选择 Top 1；封面文字、一句话简介与内容概括基于最终 Script 和 Research，不编造正文没有支撑的承诺。内容概括按主要对象或主题简短分项；介绍多个 Skill、工具、功能或案例时逐项单独说明。
 
 ## Research 与信息归属

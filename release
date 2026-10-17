@@ -1029,6 +1029,8 @@ def parser() -> argparse.ArgumentParser:
     candidate_parser.add_argument("--runtime-cache", type=Path, required=True)
     candidate_parser.add_argument("--include", action="append", default=[], help="Explicit new public file; repeat for each untracked addition")
     candidate_parser.add_argument('--personal-source', type=Path, help='Assemble exact private release-sources.json; omitted builds public content')
+    check_parser = subcommands.add_parser("check-personal", help="Check a private source (files, bases, card lock) without building")
+    check_parser.add_argument("--personal-source", type=Path, required=True)
     verify_parser = subcommands.add_parser("verify")
     verify_parser.add_argument("archive", type=Path)
     deploy_parser = subcommands.add_parser("deploy", help="Build and deploy from WSL to a Windows root")
@@ -1057,6 +1059,9 @@ def main(arguments: list[str] | None = None) -> int:
         elif args.command in {"candidate", "local"}:
             candidate(args.build_id, args.output_dir.resolve(), args.runtime_cache.resolve(), args.include, channel=args.command,
                       personal_source=args.personal_source.resolve() if args.personal_source else None)
+        elif args.command == "check-personal":
+            with tempfile.TemporaryDirectory(prefix="personal-check-") as temporary:
+                print(json.dumps(stage_personal(Path(temporary), args.personal_source.resolve()), indent=2))
         elif args.command == "deploy":
             print(json.dumps(deploy_windows(args), indent=2))
         elif args.command == "_install":

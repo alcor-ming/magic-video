@@ -53,8 +53,7 @@ class IndependentLinesTest(unittest.TestCase):
 
     def test_math_and_english_default_captions_off(self):
         expected = {'math': False, 'english': False, 'stage-full': True,
-                    'stage-light': True, 'collage': True, 'pdoom': False,
-                    'starline': True}
+                    'stage-light': True, 'collage': True}
         for identity, enabled in expected.items():
             with self.subTest(identity=identity):
                 self.assertEqual(enabled, designs.defaults(identity)['captions.enabled'])

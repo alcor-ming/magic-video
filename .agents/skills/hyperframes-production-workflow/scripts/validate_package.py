@@ -37,7 +37,6 @@ REQUIRED_HARNESS = [
     ".studio/seek_check.py",
     ".studio/seek_check.cjs",
     ".studio/spec/showcase.md",
-    ".studio/spec/showcase-pdoom.md",
     ".studio/spec/showcase-science.md",
     ".studio/spec/math-rap.md",
     ".studio/templates/CLAUDE.template.md",

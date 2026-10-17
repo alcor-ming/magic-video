@@ -141,10 +141,15 @@ class IndependentLinesCliTest(unittest.TestCase):
             characters.append({'text': char, 'start': start, 'end': end, 'aligned': start is not None})
         # All timing and PCM are synthetic fixtures; this only exercises the measured-evidence contract.
         cli.write_json(work / 'materials/fixture-chars.json', {'characters': characters,
-                       'audio_sha256': audio_hash, 'method': 'manual-measured'})
+                       'audio_sha256': audio_hash, 'method': 'forced-alignment', 'engine': 'fixture-aligner 1'})
         adopted = json.loads(self.invoke('--work', identity, '--variant', 'main', 'tts', 'adopt', generated['id'],
                                          '--alignment', 'materials/fixture-chars.json'))
         self.assertEqual(adopted['status'], 'aligned')
+        audited = json.loads(self.invoke('--work', identity, '--variant', 'main', 'tts', 'audit', generated['id'],
+                                         '--alignment', 'materials/fixture-chars.json'))
+        recorded = cli.read_json(project / 'runtime/alignment-report.json')
+        self.assertEqual((recorded['ok'], recorded['engine'], recorded['suspects']),
+                         (audited['ok'], 'fixture-aligner 1', audited['suspects']))
         work_tts.verify(variant, cli.SimpleNamespace(**vars(cli)))
         cues = cli.read_json(project / 'runtime/cues.json')
         self.assertEqual(cues['sources']['audio_sha256'], audio_hash)

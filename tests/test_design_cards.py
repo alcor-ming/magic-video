@@ -16,11 +16,9 @@ import designs
 EXPECTED_DEFAULTS = {
     "math": {"captions": False, "sfx": False},
     "english": {"captions": False, "sfx": False},
-    "pdoom": {"captions": False, "sfx": True},
     "stage-full": {"captions": True, "sfx": True},
     "stage-light": {"captions": True, "sfx": True},
     "collage": {"captions": True, "sfx": True},
-    "starline": {"captions": True, "sfx": True},
 }
 
 
@@ -67,8 +65,8 @@ class DesignCatalogTest(unittest.TestCase):
             designs.resolve("stage-full", account={"design": "math"})
 
     def test_retired_identities_reselect_and_history_locates(self):
-        for identity, hint in (("explainer", "stage-full"), ("showcase", "pdoom"),
-                               ("showcase/pdoom", "pdoom"), ("science", "collage")):
+        for identity, hint in (("explainer", "stage-full"), ("showcase", None),
+                               ("showcase/pdoom", None), ("science", "collage")):
             with self.subTest(identity=identity), self.assertRaisesRegex(designs.DesignError, "retired"):
                 designs.require(identity)
         with self.assertRaisesRegex(designs.DesignError, "reselect"):

@@ -46,8 +46,8 @@ REFERENCE = re.compile(r"(?P<card>[a-z][a-z0-9-]*)/(?P<asset>[a-z0-9]+(?:-[a-z0-
 RETIRED = {
     "explainer": "stage-full",
     "explainer/math-rap": "math",
-    "showcase": "pdoom",
-    "showcase/pdoom": "pdoom",
+    "showcase": None,
+    "showcase/pdoom": None,
     "showcase/science": "collage",
     "science": "collage",
     "card": None,
@@ -129,7 +129,9 @@ SCHEMA = {
               "width": {"type": "integer", "minimum": 64}, "height": {"type": "integer", "minimum": 64},
               "font": {"type": "file"}, "logo": {"type": "file"}, "background_image": {"type": "file"},
               "font_size": {"type": "number", "positive": True},
-              "color": {"type": "string"}, "background_color": {"type": "string"}},
+              "color": {"type": "string"}, "background_color": {"type": "string"},
+              "layout": {"type": "string"}, "characters": {"type": "file-map"},
+              "tagline_font_size": {"type": "number", "positive": True}},
     "voice": {"ref": {"type": "string", "nullable": True},
               "duration_factor": {"type": "number", "positive": True}},
     "ratio": {"type": "string"},
@@ -147,6 +149,11 @@ def _is_group(spec: dict) -> bool:
 FIELDS = tuple(f"{group}.{leaf}" if _is_group(spec) else group
                for group, spec in SCHEMA.items()
                for leaf in (spec if _is_group(spec) else ("",)))
+
+
+# Cover identity belongs to the account, not the design: any card with a cover accepts these.
+COVER_IDENTITY_FIELDS = frozenset({"cover.layout", "cover.characters", "cover.tagline_font_size"})
+FILE_MAP_KEY = re.compile(r"[\w-]{1,40}")
 
 
 class DesignError(ValueError):
@@ -423,6 +430,11 @@ def _leaf(value: object, spec: dict, path: str) -> object:
                 or not isinstance(value['path'], str) or not value['path']
                 or not isinstance(value['sha256'], str) or not re.fullmatch(r'[a-f0-9]{64}', value['sha256'])):
             raise DesignError(f'{path} requires an exact path/sha256 file reference')
+    elif kind == "file-map":
+        if not isinstance(value, dict) or not value or any(not isinstance(key, str) or not FILE_MAP_KEY.fullmatch(key) for key in value):
+            raise DesignError(f'{path} requires named exact path/sha256 file references')
+        for key, ref in value.items():
+            _leaf(ref, {"type": "file"}, f"{path}.{key}")
     elif kind == "resource":
         if value is None:
             return None
@@ -644,6 +656,12 @@ def require_choice(state: object, root=None, config=None) -> dict:
     return require(identity, root, config)
 
 
+def override_fields(card: dict) -> set:
+    """Fields a layer may override: the card's declaration plus account cover identity when it has a cover."""
+    allowed = set(card["fields"])
+    return allowed | COVER_IDENTITY_FIELDS if "cover.enabled" in allowed else allowed
+
+
 def defaults(identity: str, root=None, config=None) -> dict:
     return layer_values(require(identity, root, config)["defaults"], "Design")
 
@@ -652,7 +670,7 @@ def resolve(identity: str, *, series=None, work=None, account=None, variant=None
             root=None, config=None) -> dict:
     """Merge the five layers with per-field source tracking."""
     card = require(identity, root, config) if card is None else _validate_card(identity, deepcopy(card))
-    allowed = set(card["fields"])
+    allowed = override_fields(card)
     values = layer_values(card["defaults"], "Design")
     sources = {path: "design" for path in values}
     for name, layer in (("series", series), ("work", work), ("account", account), ("variant", variant)):

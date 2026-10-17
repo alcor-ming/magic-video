@@ -274,6 +274,25 @@ class PersonalPackageTest(unittest.TestCase):
             with self.assertRaises(RELEASE.ReleaseError): RELEASE.stage_personal(root/'other',root/'missing')
             self.assertEqual(RELEASE.stage_personal(stage,None),{})
 
+    def test_check_personal_reports_without_writing_the_source(self):
+        import contextlib, io
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp)
+            (source / 'personal').mkdir()
+            tool = source / 'personal/tool.py'; tool.write_text('print("fixture")')
+            manifest = {'version': '1.0.0', 'compatibility': {'product': RELEASE.PRODUCT_VERSION},
+                        'files': {'personal/tool.py': RELEASE.sha256(tool)}}
+            (source / 'release-sources.json').write_text(json.dumps(manifest))
+            before = sorted(p.relative_to(source).as_posix() for p in source.rglob('*'))
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(0, RELEASE.main(['check-personal', '--personal-source', str(source)]))
+            self.assertEqual(manifest['files'], json.loads(output.getvalue())['files'])
+            self.assertEqual(before, sorted(p.relative_to(source).as_posix() for p in source.rglob('*')))
+            tool.write_text('changed')
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(1, RELEASE.main(['check-personal', '--personal-source', str(source)]))
+
     def test_private_root_files_pin_their_public_base_and_product_version(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp)

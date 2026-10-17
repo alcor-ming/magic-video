@@ -2042,7 +2042,7 @@ def refresh_card_values(state, card):
     sources = {key: 'design' for key in values}
     for key, source in state.get('design_sources', {}).items():
         if source != 'design':
-            if key not in card['fields']:
+            if key not in designs.override_fields(card):
                 raise HarnessError('Updated card no longer supports override: ' + key)
             values[key] = state['design_values'][key]
             sources[key] = source
@@ -2573,7 +2573,7 @@ def command_variant_reselect(root: Path, args: argparse.Namespace) -> None:
                    current_preview=None, current_final=None, current_cover=None, accepted_cover=None,
                    status='waiting_user', wait_for='plan_approval',
                    next_action='Refresh and review Plan, rebuild Draft against the selected configuration')
-    for key in ('cover_recipe', 'cover_id', 'cover_issue'):
+    for key in ('cover_recipe', 'cover_id', 'cover_issue', 'cover_character'):
         updated.pop(key, None)
     if getattr(args, '_migration_record', None):
         updated['design_migration'] = args._migration_record
@@ -4321,7 +4321,7 @@ def add_variant_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--seed", type=int)
     parser.add_argument("--design", help="Design card id: " + ", ".join(designs.DESIGN_IDS))
     parser.add_argument("--mode", help="Legacy design alias; retired identities reselect")
-    parser.add_argument("--submodule", help="Showcase submodule; fixed to pdoom for the pdoom design")
+    parser.add_argument("--submodule", help="Legacy showcase submodule")
     parser.add_argument("--captions", choices=("on", "off"), help="Variant captions frozen in the appearance lock")
     parser.add_argument("--template", choices=sorted(TEMPLATES))
     parser.add_argument("--profile", choices=sorted(PROFILES))
@@ -4563,24 +4563,44 @@ def command_settings(root, args):
     print_result(root, args, result)
 
 
-def cover_recipe(state: dict, explicit: dict | None = None) -> dict:
+def cover_recipe(state: dict, explicit: dict | None = None, character: str | None = None) -> dict:
     if not state.get('account') and explicit is None and not state.get('cover_recipe'):
         raise HarnessError('Cover requires an account recipe or an explicit task recipe')
     values = state.get('design_values', {})
     recipe = {key.removeprefix('cover.'): value for key, value in values.items()
               if key.startswith('cover.') and key.removeprefix('cover.') in
-              {'width', 'height', 'font', 'logo', 'background_image', 'font_size', 'color', 'background_color'}}
+              {'width', 'height', 'font', 'logo', 'background_image', 'font_size', 'color', 'background_color',
+               'layout', 'tagline_font_size'}}
     if 'background_image' in recipe:
         recipe['background'] = recipe.pop('background_image')
-    return {**recipe, **state.get('cover_recipe', {}), **(explicit or {})}
+    recipe = {**recipe, **state.get('cover_recipe', {})}
+    # The account's character library is a live choice; the chosen file is frozen into the recipe.
+    library = values.get('cover.characters') or {}
+    character = character or state.get('cover_character')
+    if character is not None:
+        if character not in library:
+            raise HarnessError('Unknown cover character; account library has: ' + ', '.join(sorted(library)))
+        recipe['character'] = library[character]
+    elif 'character' not in recipe and recipe.get('layout') and len(library) == 1:
+        character, recipe['character'] = next(iter(library.items()))
+    elif 'character' not in recipe and recipe.get('layout') and library:
+        raise HarnessError('Choose a cover character with --character: ' + ', '.join(sorted(library)))
+    if character is not None:
+        state['cover_character'] = character
+    return {**recipe, **(explicit or {})}
 
 
-def render_variant_cover(variant: Path, state: dict, title: str, explicit=None, browser=None) -> dict:
+def render_variant_cover(variant: Path, state: dict, title: str, explicit=None, browser=None,
+                         tagline: str | None = None, character: str | None = None) -> dict:
     import cover
-    recipe = cover_recipe(state, explicit)
-    result = cover.render(variant, title, recipe, node=os.environ.get('HYPERFRAMES_NODE', 'node'), browser=browser)
+    recipe = cover_recipe(state, explicit, character)
+    tagline = tagline if tagline is not None else state.get('cover_tagline')
+    result = cover.render(variant, title, recipe, tagline=tagline if recipe.get('layout') else None,
+                          node=os.environ.get('HYPERFRAMES_NODE', 'node'), browser=browser)
     state.update(current_cover=(Path(result['path']) / 'cover.png').relative_to(variant).as_posix(),
                  cover_title=title, cover_recipe=recipe, cover_id=result['id'])
+    if recipe.get('layout'):
+        state['cover_tagline'] = tagline
     state.pop('cover_issue', None)
     write_variant(variant, state)
     return result
@@ -4593,7 +4613,7 @@ def prepare_draft_cover(variant: Path, state: dict) -> None:
     try:
         title = state.get('cover_title')
         if not title:
-            raise HarnessError('Cover title is not adopted; use cover render --title with the chosen packaging text')
+            raise HarnessError('Cover title is not adopted; use cover render --title (and --tagline) with the chosen packaging text')
         render_variant_cover(variant, state, title)
     except (HarnessError, ValueError, OSError, subprocess.SubprocessError) as error:
         state['cover_issue'] = str(error)
@@ -4610,7 +4630,7 @@ def command_cover(root: Path, args: argparse.Namespace) -> None:
     ensure_mutable_work(root, work)
     if args.cover_command == 'render':
         explicit = read_json(Path(args.recipe)) if args.recipe else None
-        result = render_variant_cover(variant, state, args.title, explicit, args.browser)
+        result = render_variant_cover(variant, state, args.title, explicit, args.browser, args.tagline, args.character)
         print_result(root, args, result)
     else:
         import exports
@@ -4729,6 +4749,8 @@ def build_parser() -> argparse.ArgumentParser:
     cover_commands = cover.add_subparsers(dest='cover_command', required=True)
     cover_render = cover_commands.add_parser('render')
     cover_render.add_argument('--title', required=True)
+    cover_render.add_argument('--tagline', help='One-line tagline for layout covers (from PACKAGE.md)')
+    cover_render.add_argument('--character', help="Character name from the account's cover.characters library")
     cover_render.add_argument('--recipe', help='Explicit recipe field overrides for this Variant')
     cover_render.add_argument('--browser')
     cover_render.set_defaults(handler=command_cover)
@@ -4913,8 +4935,12 @@ def build_parser() -> argparse.ArgumentParser:
     batch.set_defaults(handler=command_tts)
     adopt = speech_commands.add_parser('adopt')
     adopt.add_argument('candidate', help='Full candidate SHA-256 returned by generate')
-    adopt.add_argument('--alignment', required=True, help='Measured characters[] JSON relative to this Work')
+    adopt.add_argument('--alignment', required=True, help='Tool-produced characters[] JSON relative to this Work')
     adopt.set_defaults(handler=command_tts)
+    audit = speech_commands.add_parser('audit', help='Read-only alignment audit with the suspect list adopt would record')
+    audit.add_argument('candidate', help='Full candidate SHA-256 returned by generate')
+    audit.add_argument('--alignment', required=True, help='Tool-produced characters[] JSON relative to this Work')
+    audit.set_defaults(handler=command_tts)
 
     script = commands.add_parser("script")
     script_commands = script.add_subparsers(dest="script_command", required=True)

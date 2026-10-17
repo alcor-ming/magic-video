@@ -42,9 +42,9 @@ class V370Test(unittest.TestCase):
         for value in ({'unknown': True}, {'direction_approval': 1}, {'critic.max_rounds': True}, {'critic.model': '   '}):
             with self.assertRaises(ValueError):
                 settings.validate(value, 'user')
-        for mode, suffix in (('explainer', None), ('explainer', 'math-rap'), ('showcase', 'pdoom'), ('showcase', 'science')):
+        for mode, suffix in (('explainer', None), ('explainer', 'math-rap'), ('showcase', 'science')):
             state = {'mode': mode, 'submodule': suffix, 'series_binding': {'spec': suffix} if mode == 'explainer' and suffix else {}}
-            if mode == 'showcase' and not (Path(lines.__file__).with_name('designs') / 'pdoom/design.json').is_file():
+            if mode == 'showcase' and not (Path(lines.__file__).with_name('designs') / 'collage/design.json').is_file():
                 continue
             values = settings.effective({'line': lines.bind(state)})
             self.assertTrue(values['direction_approval']['value'])

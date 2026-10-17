@@ -155,6 +155,6 @@ Background 的 `renderer:"module"` 供受支持链路共用，声明包内 JS `e
 
 ## Work 语音与 showcase 素材工具
 
-`tts generate` 从当前 Script 生成候选；`tts adopt <hash> --alignment <Work-relative.json>` 只采用全稿及真实字符对齐，接入已有 voice / cues / section_map。提供方配置、替代脚本请求／结果和失败边界见 [README](../../README.md#showcase-补充工具与正式配音)。
+`tts generate` 从当前 Script 生成候选；`tts adopt <hash> --alignment <Work-relative.json>` 只采用全稿及工具测得的字符对齐（`provider-native` 或带 `engine` 的 `forced-alignment`），接入已有 voice / cues / section_map，并写入 `runtime/alignment-report.json`（硬错误拒绝采用，可疑项供逐字核对）；`tts audit` 只读预检。提供方配置、替代脚本请求／结果和失败边界见 [README](../../README.md#showcase-补充工具与正式配音)。
 
 `showcase stage --output <project-relative-dir>` 与 `showcase cast --input <Work-relative-image> --output <project-relative-dir>` 生成可选素材；返回 manifest 含工具版本、参数与文件 hash。生成后将使用的 PNG 作为普通本地媒体接入 Scene，按既有闭包冻结；不自动改 Plan 或接受状态。
