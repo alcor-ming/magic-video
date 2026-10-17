@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local lifecycle CLI for HyperFrames AI works."""
+"""Local lifecycle CLI for Magic Video works."""
 
 from __future__ import annotations
 

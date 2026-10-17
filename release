@@ -712,7 +712,7 @@ def candidate(build_id: str, output_dir: Path, runtime_cache: Path, includes: li
         raise ReleaseError("Unsupported local build channel")
     identity = f"{channel}-{build_id}"
     output_dir.mkdir(parents=True, exist_ok=True)
-    archive = output_dir / f"hyperframes-ai-{identity}-windows-x64.zip"
+    archive = output_dir / f"magic-video-{identity}-windows-x64.zip"
     checksum = archive.with_suffix(archive.suffix + ".sha256")
     fingerprint = candidate_fingerprint(includes, channel, runtime_files, personal_source)
     if archive.exists() or checksum.exists():
@@ -787,7 +787,7 @@ def build(version_value: str, output_dir: Path, runtime_cache: Path) -> Path:
         raise ReleaseError("Refusing to build from a branch that is not synchronized with upstream")
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    archive = output_dir / f"hyperframes-ai-harness-{version}-windows-x64.zip"
+    archive = output_dir / f"magic-video-harness-{version}-windows-x64.zip"
     checksum = archive.with_suffix(archive.suffix + ".sha256")
     if archive.exists() or checksum.exists():
         raise ReleaseError(f"Release artifact already exists: {archive}")

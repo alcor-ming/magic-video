@@ -1,4 +1,4 @@
-# HyperFrames AI Harness
+# Magic Video Harness
 
 v4.2 开放设计卡脚手架：一张设计卡包含设计指导、阶段配方、范例和自己的资产库；素材卡只提供资产，不进入制作设计选择。公共包内置 `stage-full`、`stage-light` 两张只读卡；用户卡保存在工具之外的 `design_root`，由使用者直接编辑。
 
@@ -213,13 +213,13 @@ work --work <Work-ID> --variant <Variant-ID> variant design-update
 
 ## Windows 安装与升级（GitHub Release）
 
-公共安装包以 GitHub Release 发布：每个 `harness-YYYY.MM.PATCH` 版本附带 `hyperframes-ai-harness-<版本>-windows-x64.zip` 与同名 `.sha256`。这是带锁定运行时的完整包，在纯 Windows 上即可安装和升级，不需要 WSL。以下用 `D:\HyperFrames` 作安装根、`D:\HyperFrames-Data` 作作品与用户卡目录、`D:\hf-packages` 作解包目录，可换成任意本地路径；解包目录必须在安装根之外，并尽量取短路径。
+公共安装包以 GitHub Release 发布：每个 `harness-YYYY.MM.PATCH` 版本附带 `magic-video-harness-<版本>-windows-x64.zip` 与同名 `.sha256`。这是带锁定运行时的完整包，在纯 Windows 上即可安装和升级，不需要 WSL。以下用 `D:\HyperFrames` 作安装根、`D:\HyperFrames-Data` 作作品与用户卡目录、`D:\hf-packages` 作解包目录，可换成任意本地路径；解包目录必须在安装根之外，并尽量取短路径。
 
 ```powershell
 # 1. 下载两个附件后核对摘要：输出须等于 .sha256 文件的第一列
-(Get-FileHash .\hyperframes-ai-harness-2026.10.0-windows-x64.zip -Algorithm SHA256).Hash.ToLower()
-Unblock-File .\hyperframes-ai-harness-2026.10.0-windows-x64.zip   # 去掉下载标记，避免包内程序被拦截
-Expand-Archive .\hyperframes-ai-harness-2026.10.0-windows-x64.zip -DestinationPath D:\hf-packages
+(Get-FileHash .\magic-video-harness-2026.10.0-windows-x64.zip -Algorithm SHA256).Hash.ToLower()
+Unblock-File .\magic-video-harness-2026.10.0-windows-x64.zip   # 去掉下载标记，避免包内程序被拦截
+Expand-Archive .\magic-video-harness-2026.10.0-windows-x64.zip -DestinationPath D:\hf-packages
 
 # 2. 仅首次安装：先建 WorkStore 与用户卡目录，再写根配置（work_root、asset_root 必填，均为绝对路径）
 New-Item -ItemType Directory -Force D:\HyperFrames-Data\works\active, D:\HyperFrames-Data\asset-library\designs
@@ -247,9 +247,9 @@ git tag harness-2026.10.0
 git push origin main harness-2026.10.0
 python3 release build harness-2026.10.0 --runtime-cache .studio/.runtime/windows-runtime-cache
 gh release create harness-2026.10.0 \
-  dist/hyperframes-ai-harness-2026.10.0-windows-x64.zip \
-  dist/hyperframes-ai-harness-2026.10.0-windows-x64.zip.sha256 \
-  --title "HyperFrames AI harness 2026.10.0" --notes "<本版变化>"
+  dist/magic-video-harness-2026.10.0-windows-x64.zip \
+  dist/magic-video-harness-2026.10.0-windows-x64.zip.sha256 \
+  --title "Magic Video harness 2026.10.0" --notes "<本版变化>"
 ```
 
 正式构建总是 public 内容，不接受 `--personal-source`；GitHub 单个附件上限 2 GiB。

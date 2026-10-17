@@ -1,4 +1,4 @@
-# HyperFrames AI v4.2 PRD Master
+# Magic Video v4.2 PRD Master
 
 状态：v4.2 开放设计卡与卡内资产脚手架；开发实现与验证以当前任务记录为准，未打包、未部署，Windows 原生和生产验收另记。
 

@@ -1,4 +1,4 @@
-# HyperFrames AI 仓库开发（Claude Code）
+# Magic Video 仓库开发（Claude Code）
 
 ## 知识索引
 

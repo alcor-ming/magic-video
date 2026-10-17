@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-HyperFrames AI Harness depends on the third-party components below. Versions,
+Magic Video Harness depends on the third-party components below. Versions,
 licenses and hashes are taken from the manifests, lock files and license files
 listed for each entry. Where a component is installed
 by the locked host runtime rather than redistributed in this repository, that is

@@ -1,4 +1,4 @@
-# HyperFrames AI 仓库开发
+# Magic Video 仓库开发
 
 ## 知识索引
 
