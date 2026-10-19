@@ -69,6 +69,34 @@ class WindowsRootTest(unittest.TestCase):
             self.assertEqual('pending-native-render-verification', forwarded['gpu'])
             self.assertEqual({'warning_count': 0, 'error_count': 0}, forwarded['asset_audit'])
 
+    def test_doctor_design_root_uses_resolved_environment(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root, _, _ = self.make_root(Path(temporary))
+            cards = root / 'asset-library/designs'
+            cards.mkdir()
+            env = runtime.environment(root)
+            for inherited_context in ({}, {'HYPERFRAMES_AI_HOME': str(root)}):
+                with self.subTest(context=inherited_context), patch.dict(os.environ, inherited_context, clear=True):
+                    inherited = dict(os.environ)
+                    with patch.object(runtime.subprocess, 'run', return_value=CompletedProcess([], 0, 'libx264 aac', '')):
+                        report = runtime.doctor(root, env)['design_root_vcs']
+                    self.assertEqual(inherited, dict(os.environ))
+                    self.assertIsNone(report['error'])
+                    self.assertTrue(report['exists'])
+                    self.assertEqual(str(cards), report['design_root'])
+
+    def test_doctor_restores_environment_when_design_audit_fails(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root, _, _ = self.make_root(Path(temporary))
+            env = runtime.environment(root)
+            inherited = dict(os.environ)
+            with patch.object(runtime.subprocess, 'run', return_value=CompletedProcess([], 0, 'libx264 aac', '')), \
+                    patch('designs.root_report', side_effect=OSError('audit failed')):
+                report = runtime.doctor(root, env)
+            self.assertEqual(inherited, dict(os.environ))
+            self.assertEqual({'status': 'unavailable', 'error': 'audit failed'}, report['design_root_vcs'])
+            self.assertEqual({'warning_count': 0, 'error_count': 0}, report['asset_audit'])
+
     def test_design_root_defaults_and_protected_locations(self):
         with tempfile.TemporaryDirectory() as temporary:
             root, config, path = self.make_root(Path(temporary))

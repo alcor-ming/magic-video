@@ -269,27 +269,28 @@ def doctor(root: Path, env: dict[str, str]) -> dict:
             result["checks"][name] = {"status": "unavailable", "error": str(error)}
     result["gpu"] = "pending-native-render-verification"
     result["fonts"] = "system-fonts; validate actual Work line breaks and glyph coverage"
-    if config.get("asset_root"):
-        from asset_store import ComponentError, discover_components
-        inherited = os.environ.copy()
-        try:
-            # In-process audit must use the same resolved context as Work subprocesses.
-            os.environ.clear()
-            os.environ.update(env)
-            audit = discover_components(root, audit=True, config=config)["audit"]
-            result["asset_audit"] = {key: audit[key] for key in ("warning_count", "error_count")}
-        except (ComponentError, OSError, ValueError) as error:
-            result["asset_audit"] = {"status": "unavailable", "error": str(error)}
-        finally:
-            os.environ.clear()
-            os.environ.update(inherited)
-    else:
-        result["asset_audit"] = {"status": "not-configured"}
+    inherited = os.environ.copy()
     try:
-        import designs
-        result["design_root_vcs"] = designs.root_report(root, config=config)
-    except Exception as error:  # doctor must keep reporting the rest
-        result["design_root_vcs"] = {"status": "unavailable", "error": str(error)}
+        # In-process audits must use the same resolved context as Work subprocesses.
+        os.environ.clear()
+        os.environ.update(env)
+        if config.get("asset_root"):
+            from asset_store import ComponentError, discover_components
+            try:
+                audit = discover_components(root, audit=True, config=config)["audit"]
+                result["asset_audit"] = {key: audit[key] for key in ("warning_count", "error_count")}
+            except (ComponentError, OSError, ValueError) as error:
+                result["asset_audit"] = {"status": "unavailable", "error": str(error)}
+        else:
+            result["asset_audit"] = {"status": "not-configured"}
+        try:
+            import designs
+            result["design_root_vcs"] = designs.root_report(root, config=config)
+        except Exception as error:  # doctor must keep reporting the rest
+            result["design_root_vcs"] = {"status": "unavailable", "error": str(error)}
+    finally:
+        os.environ.clear()
+        os.environ.update(inherited)
     return result
 
 
