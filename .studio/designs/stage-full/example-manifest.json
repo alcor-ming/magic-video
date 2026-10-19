@@ -57,7 +57,7 @@
     {
       "source": ".studio/designs/stage-full/example/style.css",
       "target": "style.css",
-      "sha256": "b1fbe67be1e8a10b9c4aef960631a34bf48e754d11f98d6586312fe54d1ed812",
+      "sha256": "2d95b031a6503113cf702cdd2515c43bbbee8a8e7106ee89da68d7bec0ca0dd8",
       "origin": "Project authored editable stage-full example",
       "version": "1",
       "license": "Apache-2.0",
@@ -70,7 +70,7 @@
     {
       "source": ".studio/designs/stage-full/GUIDE.md",
       "target": "GUIDE.md",
-      "sha256": "118ac36f77dacd28770b07e7a28f0f9c313547596c9da44d2d0c6540515de696",
+      "sha256": "4794f49f6782fc6cfc1cbb989ca5bd992771c959cadcd9897ba119caefdf7d1d",
       "origin": "Project authored source extraction guide",
       "version": "1",
       "license": "Apache-2.0",
@@ -83,7 +83,7 @@
     {
       "source": ".studio/designs/stage-full/stages/draft.md",
       "target": "stages/draft.md",
-      "sha256": "d25dcc00f90bb2e30c065651cd2744d5e0e854f9223cbda2bf1e60574605766e",
+      "sha256": "7500f7ed9655116ae3729c4d0d255b7a2ec02ed87a0072165043ac8a986b14ef",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -109,7 +109,7 @@
     {
       "source": ".studio/designs/stage-full/stages/plan.md",
       "target": "stages/plan.md",
-      "sha256": "74ba6028f0bf814ceeea8d4e5f9fc5227c526e3d66d5adb7339e7c8ea9a7736d",
+      "sha256": "dd73828af77331d93862ed83d21431c5023ba7cbfec615b0fd23bcfadeafadb6",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -213,7 +213,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-kit/stage-kit.js",
       "target": "runtime/stage-kit.js",
-      "sha256": "a2d7f5b4d5a5d5332da6baf7e324ce765987613d75f6caa719d3fe5d3f89ef72",
+      "sha256": "8e076b744ba6b60a5592e1bcaee27fd7307b5b304a6f9f60d3b457639b2ededd",
       "origin": "Project authored stage block core; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",
@@ -226,7 +226,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-kit/blocks/slot-text.js",
       "target": "runtime/stage-kit/blocks/slot-text.js",
-      "sha256": "bb775d17ec31880ee7fcc87558a7e7ee050089824cececc8a30bb125c61a33a7",
+      "sha256": "c1a47cf730b1dc57db3074af49dada86f3cac85c5886350f51a2f332e08a1aa7",
       "origin": "Project authored stage block; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",
@@ -265,7 +265,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-kit/blocks/inset-broll.js",
       "target": "runtime/stage-kit/blocks/inset-broll.js",
-      "sha256": "d697f2a16365c64eb9e21a708458f0da69907f988f199c78c09aa0f42d03fab2",
+      "sha256": "83459c3c8b8a5dbb2dd1d2110db6114ca40c8f8e7ca8579489ae0d3c3322ef75",
       "origin": "Project authored stage block; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",

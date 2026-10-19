@@ -20,7 +20,7 @@
 (function (global) {
   "use strict";
 
-  var VERSION = 1;
+  var VERSION = 2;
   var registry = {};
   var styleIds = {};
 
@@ -127,7 +127,11 @@
     if (registry[name]) throw new Error("stage-kit: block already defined: " + name);
     registry[name] = factory;
   }
+  // 全屏的层宿主不吃命中测试：否则第 3、4 层宿主盖住整个画面，诊断把台上的物判成被遮挡。
+  // :where 零特异性，宿主直接子节点恢复 auto，正常遮挡照算，工程 CSS 仍可覆盖。
+  var LAYER_CSS = ":where([data-hf-layer]){pointer-events:none}:where([data-hf-layer])>*{pointer-events:auto}";
   function create(name, options) {
+    ensureCss("hf-kit-layer-hosts", LAYER_CSS);
     var factory = registry[name];
     if (!factory) throw new Error("stage-kit: unknown block '" + name + "'; loaded: " + Object.keys(registry).sort().join(", "));
     var block = factory(options || {}, api);

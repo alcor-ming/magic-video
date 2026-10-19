@@ -455,9 +455,33 @@ export async function probe(input) {
     result.viewport = {...size};
     const duration = await page.evaluate(() => document.querySelector('hyperframes-player').duration);
     if (!Number.isFinite(duration) || duration <= 0) throw new Error('Invalid Studio duration');
-    if (duration / parameters.step > 2000) throw new Error('Sampling budget exceeded; increase step (maximum 2000 baseline samples)');
+    const last = Math.max(0, duration - 0.001);
+    const span = Array.isArray(input.range) ? [Math.min(last, Math.max(0, +input.range[0])), Math.min(last, Math.max(0, +input.range[1]))] : [0, last];
+    if (!span.every(Number.isFinite) || span[1] < span[0]) throw new Error('Invalid sampling range');
+    const inSpan = time => time >= span[0] - 1e-6 && time <= span[1] + 1e-6;
+    const explicit = Array.isArray(input.times) ? input.times.map(Number).filter(time => Number.isFinite(time) && time >= 0) : null;
+    if ((span[1] - span[0]) / parameters.step > 2000) throw new Error('Sampling budget exceeded; increase step (maximum 2000 baseline samples)');
     const samples = new Map();
     let previousPixels = null;
+    const settle = async (time, remaining) => {
+      await page.waitForFunction(() => {
+        const player = document.querySelector('hyperframes-player'), win = player?.iframeElement?.contentWindow;
+        return player?.ready && win?.document.body && getComputedStyle(player.iframeElement).visibility === 'visible' &&
+          (win.__player || Object.keys(win.__timelines || {}).length);
+      }, remaining());
+      await page.evaluate(time => document.querySelector('hyperframes-player').seek(time), time);
+      await page.waitForFunction(time => {
+        const player = document.querySelector('hyperframes-player');
+        const win = player.iframeElement.contentWindow;
+        const root = win.document.querySelector('[data-composition-id]');
+        const timeline = win.__timelines?.[root?.dataset.compositionId];
+        const actual = win.__player?.getTime?.() ?? timeline?.time?.();
+        return player.ready && Math.abs(player.currentTime - time) < 0.04 &&
+          typeof actual === 'number' && Math.abs(actual - time) < 0.04;
+      }, remaining(), time);
+      await frame.waitForFunction(frameResourcesReady, remaining(), time);
+      await frame.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    };
     const sample = async (requested, measurePixels = false) => {
       if (Date.now() >= deadline) throw new Error('Diagnostic time budget exceeded; browser closed before outer command timeout');
       const time = Math.round(Math.min(duration - 0.001, Math.max(0, requested)) * 1e6) / 1e6;
@@ -470,27 +494,11 @@ export async function probe(input) {
       for (;;) {
         const before = navigation;
         try {
-          await page.waitForFunction(() => {
-            const player = document.querySelector('hyperframes-player'), win = player?.iframeElement?.contentWindow;
-            return player?.ready && win?.document.body && getComputedStyle(player.iframeElement).visibility === 'visible' &&
-              (win.__player || Object.keys(win.__timelines || {}).length);
-          }, remaining());
-          await page.evaluate(time => document.querySelector('hyperframes-player').seek(time), time);
-          await page.waitForFunction(time => {
-            const player = document.querySelector('hyperframes-player');
-            const win = player.iframeElement.contentWindow;
-            const root = win.document.querySelector('[data-composition-id]');
-            const timeline = win.__timelines?.[root?.dataset.compositionId];
-            const actual = win.__player?.getTime?.() ?? timeline?.time?.();
-            return player.ready && Math.abs(player.currentTime - time) < 0.04 &&
-              typeof actual === 'number' && Math.abs(actual - time) < 0.04;
-          }, remaining(), time);
+          await settle(time, remaining);
           value.actual_time = await frame.evaluate(() => {
             const root = document.querySelector('[data-composition-id]');
             return window.__player?.getTime?.() ?? window.__timelines?.[root?.dataset.compositionId]?.time?.();
           });
-          await frame.waitForFunction(frameResourcesReady, remaining(), time);
-          await frame.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
           const box = await iframe.boundingBox();
           if (!box || Math.abs(box.width - size.width) > 1 || Math.abs(box.height - size.height) > 1)
             throw new Error('Composition viewport is clipped or changed');
@@ -547,14 +555,40 @@ export async function probe(input) {
       }
       return value;
     };
-    const times = new Set([0, Math.max(0, duration - 0.001)]);
-    for (let time = parameters.step; time < duration; time += parameters.step) times.add(time);
-    for (const scene of input.scenes || []) if (scene.start >= 0 && scene.start < duration) times.add(scene.start);
+    const times = new Set(explicit || [span[0], span[1]]);
+    if (!explicit) {
+      for (let time = Math.ceil(span[0] / parameters.step - 1e-9) * parameters.step; time < span[1]; time += parameters.step)
+        if (inSpan(time)) times.add(time);
+      for (const scene of input.scenes || []) if (scene.start >= 0 && scene.start < duration && inSpan(scene.start)) times.add(scene.start);
+    }
     for (const time of [...times].sort((a, b) => a - b)) await sample(time, !!input.measurements);
-    if (input.measurements) {
+    if (explicit) result.unverified.push('Explicit sample times: boundary and helper samples skipped.');
+    if (input.measurements && explicit && input.evidence_dir) {
+      // Re-seek each explicit time through both ends of the film and compare pixels with the first capture.
+      result.determinism = [];
+      for (const time of [...times].sort((a, b) => a - b)) {
+        const value = samples.get(Math.round(Math.min(duration - 0.001, Math.max(0, time)) * 1e6) / 1e6);
+        if (!value?.screenshot) continue;
+        const via = [0, last];
+        try {
+          const recheckDeadline = Date.now() + parameters.timeout_ms * 3;
+          const remaining = () => ({timeout: Math.max(1, recheckDeadline - Date.now())});
+          for (const stop of [...via, value.time]) await settle(stop, remaining);
+          const box = await iframe.boundingBox();
+          const again = Buffer.from(await page.screenshot({type: 'png', clip: box}));
+          const first = await fs.readFile(path.join(input.evidence_dir, value.screenshot));
+          const identical = first.equals(again);
+          if (!identical) await fs.writeFile(path.join(input.evidence_dir, value.screenshot.replace(/\.png$/, '-reseek.png')), again);
+          result.determinism.push({time: value.time, via, identical});
+        } catch (error) {
+          result.determinism.push({time: value.time, via, identical: null, detail: error.message});
+        }
+      }
+    }
+    if (input.measurements && !explicit) {
       const boundaries = new Set([...(input.scenes || []).map(scene => scene.start), ...(input.boundaries || [])]);
       for (const time of await frame.evaluate(() => [...(window.__hfRollBoundaries || [])].flatMap(read => read()))) boundaries.add(time);
-      result.boundaries = [...boundaries].filter(time => time >= 0 && time < duration).sort((a, b) => a - b);
+      result.boundaries = [...boundaries].filter(time => time >= 0 && time < duration && inSpan(time)).sort((a, b) => a - b);
       const fps = await page.evaluate(() => window.__hfProbeFps) || input.fps || 60;
       result.fps = fps;
       if (input.fps && input.fps !== fps) result.unverified.push(`Studio sampling fps ${fps} differs from Plan fps ${input.fps}; boundary pairs use Studio frames.`);
@@ -566,8 +600,8 @@ export async function probe(input) {
       }
     }
     // Sample exact helper boundaries, including short actions lost by the baseline grid.
-    for (const value of [...samples.values()]) for (const event of value.rhythm_candidates) {
-      if (event.time < 0 || event.time >= duration) continue;
+    if (!explicit) for (const value of [...samples.values()]) for (const event of value.rhythm_candidates) {
+      if (event.time < 0 || event.time >= duration || !inSpan(event.time)) continue;
       await sample(event.before ?? Math.max(0, event.time - 0.001));
       await sample(event.after ?? event.time + (event.duration > 0 ? event.duration / 2 : 0.001));
     }

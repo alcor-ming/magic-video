@@ -3459,10 +3459,27 @@ def command_preview_studio(root: Path, args: argparse.Namespace) -> None:
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
+DIAGNOSE_FRAME_RUNS = 3
+
+
+def diagnose_frames_directory(variant: Path) -> Path:
+    """Create a fresh self-review frame folder and keep only the newest tool-owned runs."""
+    base = variant / '.runtime' / 'diagnose-frames'
+    base.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().astimezone().strftime('%Y%m%dT%H%M%S%f')
+    target = base / stamp
+    target.mkdir()
+    runs = sorted(path for path in base.iterdir() if path.is_dir() and re.fullmatch(r'\d{8}T\d{12}', path.name))
+    for old in runs[:-DIAGNOSE_FRAME_RUNS]:
+        shutil.rmtree(old)
+    return target
+
+
 def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     if not args.work_override or not args.variant_override:
         raise HarnessError('Diagnostics require explicit --work and --variant; no Current fallback')
     parameters = visual_diagnostics.parameters(args)
+    explicit_times = visual_diagnostics.sample_times(getattr(args, 'times', None))
     work, _ = selected_work(root, args, allow_archive=True)
     require_workflow(work, 'hyperframes_video')
     variant, state = selected_variant(root, work, args)
@@ -3496,6 +3513,9 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     card_state = preview_metadata(documents).get('adopted_settings', state) if (documents / 'preview.md').is_file() else state
     contents['ANIMATION_PLAN.md'] = plan_with_card(contents['ANIMATION_PLAN.md'], card_state)
     scenes = scene_projection(project, contents['ANIMATION_PLAN.md'], sample_scenes)
+    scope = visual_diagnostics.sample_scope(scenes, getattr(args, 'range', None), explicit_times)
+    scoped_scenes = scope['scenes'] if scope else scenes
+    scoped_ids = sample_scenes if sample_scenes is not None or not scope else [scene['id'] for scene in scoped_scenes]
     dependencies = validate_dependencies(project)
     math_build.verify_generated(project, contents['ANIMATION_PLAN.md'], sample_scenes, closure=dependencies)
     inventory = visual_diagnostics.static_inventory(project, dependencies)
@@ -3517,7 +3537,13 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     studio_preview.context(cli, project, record['port'], 'server')
     browser = args.browser or os.environ.get('HYPERFRAMES_BROWSER_PATH') or str(studio_preview.browser_path())
     request = {'cli': str(cli), 'url': record['url'], 'browser': browser,
-               'scenes': scenes, 'parameters': parameters}
+               'scenes': scoped_scenes, 'parameters': parameters}
+    if scope:
+        request['range'] = scope['range']
+        if scope['times']:
+            request['times'] = scope['times']
+    if getattr(args, 'frames', False) and not getattr(args, '_evidence_dir', None):
+        args._evidence_dir = diagnose_frames_directory(variant)
     plan_meta = read_frontmatter(input_path(documents, 'ANIMATION_PLAN.md'))
     line = lines.frozen(card_state)
     if line or getattr(args, '_evidence_dir', None):
@@ -3561,7 +3587,7 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     text = visual_diagnostics.text_diagnostics(text_samples, contents['SCRIPT.md'], contents['RESEARCH.md'],
                                                contents['ANIMATION_PLAN.md'], minimum=args.minimum,
                                                similarity=args.similarity, exceptions=exceptions, scenes=scenes,
-                                               scene_ids=sample_scenes, mode=diagnostic_lock.get('mode'),
+                                               scene_ids=scoped_ids, mode=diagnostic_lock.get('mode'),
                                                capabilities=diagnostic_lock.get('capabilities'))
     observed = visual_diagnostics.normalize(''.join(
         item['text'] for sample in sampled['samples'] if sample.get('ready') for item in sample.get('texts', [])))
@@ -3575,7 +3601,7 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
               'parameters': {**parameters, 'minimum': args.minimum, 'similarity': args.similarity},
               'd1': text, 'module_texts': {**module_texts.diagnostics(list(declared_texts.values())), 'unverified': font_unverified},
               'timeline': sampled.get('timeline', []),
-              'rhythm': visual_diagnostics.rhythm_diagnostics(sampled['samples'], scenes,
+              'rhythm': visual_diagnostics.rhythm_diagnostics(sampled['samples'], scoped_scenes,
                   plan=contents['ANIMATION_PLAN.md'],
                   cues=read_json(project / 'runtime/cues.json') if (project / 'runtime/cues.json').is_file() else None,
                   mode='talking_head' if state.get('template') == 'talking_head' else diagnostic_lock.get('mode')),
@@ -3586,6 +3612,16 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
                    'files': [name for name in dependencies if Path(name).suffix in {'.js', '.mjs'}]},
                   {'reason': 'static_candidates_not_observed_not_screen_text', 'entries': static_unverified}],
               'cross_version_differences': []}
+    report['sampling'] = visual_diagnostics.sampling_summary(sampled['samples'])
+    if scope:
+        report['scope'] = {'range': scope['range'], 'times': scope['times'], 'scenes': [scene['id'] for scene in scoped_scenes]}
+        report['unverified'].append({'reason': 'range_limited_sampling', 'range': scope['range']})
+    if sampled.get('determinism') is not None:
+        report['determinism'] = sampled['determinism']
+    if getattr(args, 'frames', False):
+        report['frames'] = {'directory': str(args._evidence_dir), 'files': [
+            {'time': sample['time'], 'file': sample['screenshot']} for sample in sampled['samples'] if sample.get('screenshot')],
+            'note': 'self-review only; not delivery or critic evidence'}
     if line:
         report['fps'] = sampled.get('fps') or plan_meta.get('fps') or 60
         report['still'] = visual_diagnostics.still_diagnostics(sampled['samples'], report['rhythm'], line['thresholds'])
@@ -3602,7 +3638,7 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     if lines.has_check(diagnostic_lock, 'frame-blank'):
         import stage_checks
         report['stage'] = stage_checks.frame_blank(
-            sampled['samples'], scenes,
+            sampled['samples'], scoped_scenes,
             coverage_min=((line or {}).get('thresholds') or {}).get('stage_coverage_min'))
     if lines.is_math(read_frontmatter(input_path(documents, 'ANIMATION_PLAN.md'))):
         import math_chain
@@ -5194,6 +5230,11 @@ def build_parser() -> argparse.ArgumentParser:
     diagnose.add_argument('--width', type=int, default=960, help='Target sampled display width (160..4096; default: 960)')
     diagnose.add_argument('--timeout-ms', type=int, default=5000, help='Readiness timeout per sample (100..30000; default: 5000)')
     diagnose.add_argument('--exceptions', help='JSON array of confirmed {scene,text,source,reason}; source e.g. SCRIPT.md#P001; no automatic exemptions')
+    diagnose.add_argument('--range', nargs=2, type=float, metavar=('START', 'END'),
+                          help='Sample only this span in seconds; findings cover the overlapping Scenes')
+    diagnose.add_argument('--times', help='Comma-separated exact sample times in seconds; replaces the step grid')
+    diagnose.add_argument('--frames', action='store_true',
+                          help='Save each sample as PNG under Variant .runtime/diagnose-frames/ for self-review; not delivery or critic evidence')
     diagnose.set_defaults(handler=command_preview_diagnose)
     for name in ("context", "stop"):
         studio_command = preview_commands.add_parser(name)

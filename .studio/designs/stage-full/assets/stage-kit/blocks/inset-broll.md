@@ -22,9 +22,10 @@
 | move.zoom | [number,number] | 提供 move 时必填 | 起止正数缩放，例如 `[1,1.12]` |
 | move.pan | [[number,number],[number,number]] | 提供 move 时必填 | 起止像素平移，例如 `[[0,0],[20,-10]]` |
 | move.dur | number | 无 exit 且有 move 时必填 | 正数，从入场完成起算的运动时长 |
-| label | {text,side} | 否 | 第 2 层图形附着标注，不承载独立解释正文 |
+| label | {text,side,size} | 否 | 第 2 层图形附着标注，不承载独立解释正文 |
 | label.text | string | 提供 label 时必填 | 至多八个 Unicode 码点，超出抛 TypeError |
 | label.side | string | 提供 label 时必填 | `top` 或 `bottom`；贴在框边内侧 |
+| label.size | number | 否 | 标注字号 px，正数；省略时继承宿主字号。纸框推到台面区 60% 以上时建议 ≥ 32 |
 
 缺少必填几何或时刻、非有限数值、非法媒体类型或方向都会抛 TypeError。字体继承宿主。几何与字幕安全带使用同一坐标系；底部滑入途中的位移由宿主舞台边界及上层字幕遮罩处理，安全检查针对静止框边界。
 

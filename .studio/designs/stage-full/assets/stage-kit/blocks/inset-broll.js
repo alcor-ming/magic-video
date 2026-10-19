@@ -67,6 +67,9 @@
     if (label && (typeof label.text !== 'string' || label.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '_').length > 8 || ['top', 'bottom'].indexOf(label.side) < 0)) {
       throw new TypeError('inset.broll: label requires at most eight characters and top/bottom side');
     }
+    if (label && label.size !== undefined && !(Number.isFinite(label.size) && label.size > 0)) {
+      throw new TypeError('inset.broll: label.size must be a positive number of px');
+    }
 
     kit.ensureCss('hf-kit-inset-broll', CSS_TEXT);
     root = kit.abs(kit.make('div', 'hf-kit-inset-broll-root', mount), box);
@@ -92,6 +95,7 @@
       tag = kit.abs(kit.make('div', 'hf-kit-inset-broll-label', root));
       tag.textContent = label.text;
       tag.style[label.side] = '0px';
+      if (label.size !== undefined) tag.style.fontSize = label.size + 'px';
     }
 
     function apply(t) {
