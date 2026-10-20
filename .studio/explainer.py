@@ -189,7 +189,7 @@ def installed_assets(project, *, check_mounts=True):
     return result
 
 
-def sound_elements(plan, cues, assets):
+def sound_elements(plan, cues, assets, *, library_bgm=False):
     if not isinstance(plan, dict) or set(plan) - {"bgm", "sfx"} or not isinstance(plan.get("sfx", []), list):
         raise ExplainerError("Invalid sound table")
     output, tracks = [], []
@@ -219,6 +219,8 @@ def sound_elements(plan, cues, assets):
     if bgm is not None:
         if not isinstance(bgm, dict) or set(bgm) != {"ref", "start_cue", "end_cue", "gain"}:
             raise ExplainerError("BGM needs ref, start_cue, end_cue and gain")
+        if library_bgm and asset_for(bgm)["metadata"].get("audio_role") != "bgm":
+            raise ExplainerError("BGM must be an open-source library track imported with component import-bgm")
         start, end = find_cue(cues, bgm["start_cue"]), find_cue(cues, bgm["end_cue"])
         if end <= start:
             raise ExplainerError("BGM end must follow start")

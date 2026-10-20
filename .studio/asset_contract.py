@@ -342,11 +342,28 @@ def _motion2(payload, version=2):
                         raise COMPONENT.ComponentError("Reduced Motion must replace new entrance/exit effects with fade")
 
 
+def _audio_role(metadata):
+    """A BGM track records the open library it came from and its license, so NC/SA use stays filterable."""
+    if metadata["audio_role"] not in {"bgm", "sfx"} or metadata["kind"] != "media":
+        raise COMPONENT.ComponentError("audio_role must be bgm or sfx on a media asset")
+    if metadata["audio_role"] != "bgm":
+        return
+    rights = metadata.get("rights")
+    if (not isinstance(rights, dict) or set(rights) != {"library", "license", "attribution", "non_commercial", "share_alike"}
+            or any(not isinstance(rights[key], str) or not rights[key].strip() for key in ("library", "license", "attribution"))
+            or any(type(rights[key]) is not bool for key in ("non_commercial", "share_alike"))
+            or not isinstance(metadata.get("source_url"), str) or not metadata["source_url"].strip()):
+        raise COMPONENT.ComponentError("BGM requires source_url and rights library/license/attribution/non_commercial/share_alike")
+
+
 def _schema2(directory, metadata):
     _fields(metadata, {"schema_version", "id", "version", "kind", "entry", "contract_version", "parameters",
                       "compatibility", "dependencies", "asset_dependencies", "runtime", "usage", "example", "license",
-                      "files", "description", "source_url", "rights", "purpose", "tags", "hit_offset", "hit_offset_estimated", "asset_layer", "broll", "text_ownership"},
+                      "files", "description", "source_url", "rights", "purpose", "tags", "hit_offset", "hit_offset_estimated", "asset_layer", "broll", "text_ownership",
+                      "audio_role"},
             {"contract_version", "parameters", "compatibility"}, "schema 2 manifest")
+    if "audio_role" in metadata:
+        _audio_role(metadata)
     if "hit_offset" in metadata and (type(metadata["hit_offset"]) not in {int, float} or not math.isfinite(metadata["hit_offset"]) or metadata["hit_offset"] < 0):
         raise COMPONENT.ComponentError("hit_offset must be finite nonnegative seconds")
     if "hit_offset_estimated" in metadata and type(metadata["hit_offset_estimated"]) is not bool:

@@ -126,6 +126,7 @@ def validate_capabilities(value: object) -> None:
 SCHEMA = {
     "captions": {"enabled": {"type": "boolean"}},
     "sfx": {"enabled": {"type": "boolean"}, "policy": {"type": "string"}},
+    "bgm": {"enabled": {"type": "boolean"}, "policy": {"type": "string"}},
     "cover": {"enabled": {"type": "boolean"}, "template": {"type": "resource"},
               "theme": {"type": "resource"}, "background": {"type": "resource"},
               "width": {"type": "integer", "minimum": 64}, "height": {"type": "integer", "minimum": 64},
@@ -133,7 +134,8 @@ SCHEMA = {
               "font_size": {"type": "number", "positive": True},
               "color": {"type": "string"}, "background_color": {"type": "string"},
               "layout": {"type": "string"}, "characters": {"type": "file-map"},
-              "tagline_font_size": {"type": "number", "positive": True}},
+              "tagline_font_size": {"type": "number", "positive": True},
+              "character_style": {"type": "string"}},
     "voice": {"ref": {"type": "string", "nullable": True},
               "duration_factor": {"type": "number", "positive": True}},
     "ratio": {"type": "string"},
@@ -154,7 +156,7 @@ FIELDS = tuple(f"{group}.{leaf}" if _is_group(spec) else group
 
 
 # Cover identity belongs to the account, not the design: any card with a cover accepts these.
-COVER_IDENTITY_FIELDS = frozenset({"cover.layout", "cover.characters", "cover.tagline_font_size"})
+COVER_IDENTITY_FIELDS = frozenset({"cover.layout", "cover.characters", "cover.tagline_font_size", "cover.character_style"})
 FILE_MAP_KEY = re.compile(r"[\w-]{1,40}")
 
 

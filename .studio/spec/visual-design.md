@@ -2,7 +2,7 @@
 
 Plan 与 Draft 共用本指南。来源与修订见 [creative.md](creative.md)，阶段治理见 [workflow.md](../workflow.md)，权限见根 [AGENTS.md](../../AGENTS.md)。公共包提供 `stage-full`、`stage-light`，用户设计卡独立保存在用户卡目录，工具包不再装配这些自用卡；旧入口 `explainer`、`showcase`、`science`、`card` 不再可新建，显式旧身份要求重选，历史对象仍可定位。本指南的通用导演 Brief、主体和 A/B 要求适用于舞台叙事与创意拼贴，其他设计按专属规则取用，不继承角色、生图或 A/B 配额。
 
-能力、系列差异、豁免、主体默认值及可用资产范围以设计卡（`.studio/designs/<id>/design.json`）为准；表现配置按 **设计 → 系列 → Work → 账号 → Variant** 合并，省略继承、显式 `false`/合法 `0` 有效、删除恢复继承，未知或类型不符的字段明确报错，`bgm` 本轮不实现并作为未知字段报告。按卡片 stages 加载规则，仍支持链路的旧 Variant 沿用冻结合同。
+能力、系列差异、豁免、主体默认值及可用资产范围以设计卡（`.studio/designs/<id>/design.json`）为准；表现配置按 **设计 → 系列 → Work → 账号 → Variant** 合并，省略继承、显式 `false`/合法 `0` 有效、删除恢复继承，未知或类型不符的字段明确报错。`bgm.enabled` / `bgm.policy` 只在声明它们的卡上可用（舞台卡默认关闭，由账号开启并写曲库与情绪偏好）。按卡片 stages 加载规则，仍支持链路的旧 Variant 沿用冻结合同。
 设计卡用 `capabilities.layers.required/optional` 声明所需层；五层诊断只按 required 报缺失。`rolls: false` 不要求 A/B 分镜与 subjects，也不安装 rolls/broll 运行时；字幕默认值只认 `defaults.captions.enabled`。`checks` 使用已注册检查 ID：`director`（导演 Brief/分镜）、`reference-count`（参考数量）、`math`（数学链路）、`math-complete`（完整数学 Plan）、`english`（英语教学 Plan）；未知检查或缺失的 `research_template` 模板在校验中报错。旧 mode 的读取只用于兼容，不限制新卡组合。
 
 ## 全片方向
@@ -82,6 +82,8 @@ A1 约束第 4 层及资产明确声明的 embedded 独立文字：新增解释�
 ## 声音层与字幕
 
 Plan 列 BGM 精确资产引用、情绪、起止 cue 与 gain；音效列资产、cue、画面事件、层级与 gain。
+
+BGM 只用开源曲库的现成曲目：按账号 `bgm.policy` 选曲，下载后用 `work component import-bgm` 带来源、许可与署名导入（禁演绎 ND 拒收，NC/SA 单独记录）；不用音乐模型或代码合成 BGM，Plan 未写 BGM 时缺 BGM 不阻塞。音效来源：earshot 音效库渲染（`work component generate-sfx --engine earshot`，按动作调时长与峰值时刻）、SuperCollider / jsfxr 配方，或 HyperFrames 自带音效导入。
 
 1. 每个音效对应同帧可见事件；允许服务于接触感的微偏移，保持可见事件与声音因果一致。
 2. 类别与含义一致，错误音不配正面结论。
