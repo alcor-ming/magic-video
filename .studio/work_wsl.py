@@ -67,7 +67,7 @@ def command(root, arguments):
     relative_options = RELATIVE_OPTIONS | ({"--file"} if "request" in arguments and "freeze" in arguments else set())
     if parsed is not None and parsed.command == "showcase":
         relative_options |= {"--input", "--output"}
-    if parsed is not None and parsed.command == "tts" and parsed.tts_command == "adopt":
+    if parsed is not None and parsed.command == "tts" and parsed.tts_command in {"adopt", "audit"}:
         relative_options |= {"--alignment"}
     for argument in arguments:
         if not argument or any(c in argument for c in '\"%!?^&|<>\r\n\x00'):
