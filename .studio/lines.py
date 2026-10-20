@@ -21,7 +21,6 @@ LINE_REFERENCE = re.compile(r'[a-z][a-z0-9-]*(?:/[a-z0-9-]+)?')
 # Retired identity -> (successor design, legacy appearance mode, legacy settings).
 HISTORICAL_META = {
     'explainer': ('stage-full', 'explainer', {'direction_approval': True, 'critic.provider': 'external', 'critic.model': '', 'critic.max_rounds': 1}),
-    'explainer/math-rap': ('math', 'explainer', {'direction_approval': True, 'critic.provider': 'external', 'critic.model': '', 'critic.max_rounds': 1}),
     'showcase/science': ('collage', 'showcase', {'direction_approval': True, 'critic.provider': 'off', 'critic.model': '', 'critic.max_rounds': 1}),
 }
 
@@ -40,9 +39,6 @@ def historical() -> dict:
         card = deepcopy(found[successor])
         card.update(id=identity, version=1, mode=mode, settings_defaults=settings_defaults)
         card['capabilities'] = designs.legacy_capabilities(mode)
-        if identity == 'explainer/math-rap':
-            card['capabilities']['checks'].append('math')
-            card['capabilities']['research_template'] = 'MATH_RESEARCH.template.md'
         out[identity] = card
     return out
 
@@ -84,16 +80,28 @@ def select(state):
     return deepcopy(designs.require(identity))
 
 
-def _legacy_math(state):
+RETIRED_MATH = ('math', 'explainer/math-rap')
+MATH_RETIRED = ("The math card is retired; this Work stays read-only. "
+                "To keep producing it, choose another card with variant reselect")
+
+
+def retired_math(state):
+    """Old mathematics Works (any record shape) stay readable; production commands refuse them."""
+    if not isinstance(state, dict):
+        return False
     identity = _identity(state)
-    if identity in ('math', 'explainer/math-rap'):
+    if identity in RETIRED_MATH:
         return True
-    binding = state.get('series_binding') if isinstance(state, dict) else None
+    if identity is not None and identity in designs.DESIGN_IDS:
+        return False  # reselected onto a live card; leftover math fields are history
+    records = [state, state.get('design_snapshot'), state.get('appearance_lock')]
+    if any(isinstance(record, dict) and (record.get('mode') == 'math' or 'math' in
+           ((record.get('capabilities') or {}).get('checks') or [])) for record in records):
+        return True
+    binding = state.get('series_binding')
     has_math_binding = isinstance(binding, dict) and (
         binding.get('design') == 'math' or binding.get('spec') == 'math-rap' or binding.get('mode') == 'math')
-    if not has_math_binding:
-        return False
-    return identity is None or identity not in designs.DESIGN_IDS or identity == 'math'
+    return has_math_binding
 
 
 def capabilities(state):
@@ -110,11 +118,6 @@ def capabilities(state):
         if 'capabilities' in lock:
             return designs.capabilities(lock)
         caps = designs.legacy_capabilities(state.get('mode', 'explainer'))
-    if _legacy_math(state):
-        for check in ['math'] + (['math-complete'] if _identity(state) == 'math' else []):
-            if check not in caps['checks']:
-                caps['checks'].append(check)
-        caps['research_template'] = 'MATH_RESEARCH.template.md'
     return caps
 
 
@@ -122,12 +125,8 @@ def has_check(state, check):
     if (not any(state.get(key) for key in ('capabilities', 'design_snapshot', 'design_live'))
             and not (state.get('appearance_lock') or {}).get('capabilities')
             and state.get('mode') not in (None, *designs.MODES)):
-        return check == 'math' and _legacy_math(state)
+        return False
     return check in capabilities(state)['checks']
-
-
-def is_math(state):
-    return has_check(state, 'math')
 
 
 def frozen(state):

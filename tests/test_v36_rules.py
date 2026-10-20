@@ -7,11 +7,10 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / '.studio'))
-from math_chain import parse_plan
 from visual_plan import plan_scene_rows
 
 
-@unittest.skipUnless((Path(__file__).resolve().parents[1] / '.studio/designs/math/design.json').is_file(), 'Personal card contract; checked in personal assembly')
+@unittest.skipUnless((Path(__file__).resolve().parents[1] / '.studio/spec/showcase.md').is_file(), 'Personal rule files; checked in personal assembly')
 class V36RulesTest(unittest.TestCase):
     def test_templates_and_production_boundaries(self):
         template = (ROOT / '.studio/templates/SHOWCASE_PLAN.template.md').read_text()
@@ -42,9 +41,9 @@ class V36RulesTest(unittest.TestCase):
         for term in ('积木', '动作配方或规则', '内容资产', '仅属于本片', 'pack / validate / accept'):
             self.assertIn(term, refinement)
 
-    def test_new_rule_links_and_math_example(self):
+    def test_new_rule_links(self):
         paths = ['.studio/spec/showcase.md', '.studio/spec/showcase-pdoom.md',
-                 '.studio/spec/showcase-science.md', '.studio/spec/math-rap.md',
+                 '.studio/spec/showcase-science.md',
                  '.studio/templates/CLAUDE.template.md']
         for name in paths:
             path = ROOT / name
@@ -52,12 +51,6 @@ class V36RulesTest(unittest.TestCase):
             for target in re.findall(r'\]\(([^)]+)\)', path.read_text()):
                 resolved = (base / target.split('#')[0]).resolve()
                 self.assertTrue(resolved.is_relative_to(ROOT) and resolved.is_file(), target)
-        math_rules = (ROOT / '.studio/spec/math-rap.md').read_text()
-        example = re.search(r'```math-plan\n(.*?)\n```', math_rules, re.S)[0]
-        parsed = parse_plan('## S01\n\n' + example)
-        self.assertEqual(parsed['S01']['cues'][0]['reveal'], ['U01'])
-        for term in ('【图】', '【码】', '【未实现】', '严重度', '推荐分镜', '首个强拍', '不新增音频门禁'):
-            self.assertIn(term, math_rules)
 
 
 if __name__ == '__main__':

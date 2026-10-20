@@ -38,7 +38,7 @@
 画风：纸艺微缩舞台（本卡皮肤唯一画法；位图只作镂空道具、纸框内容、台口与墙面贴纸，不作常驻页框）
 色板：本卡纸艺色板（暗夜蓝黑底、暖纸、墨、卡纸橙红、X 光冷蓝；语义绿只给放行）
 角色：无 ／ 只出手和背影 ／ 帧库 <系列立牌状态集>（同一角色至少 2 个姿势状态）
-背景：默认（stage-rig 纸舞台 + rig.rebuild 换地点）／ 定制 <背景做法、小样路径与换景时刻>
+背景：默认（全屏纸板：展开 / 换景 / 收起）／ 进阶（disc.scene + board：圆盘半周 + 纸板展开 + 小素材堆叠）／ 定制 <背景做法、小样路径与换景时刻>
 
 ### 先写每个 Scene 的一句话画面
 
@@ -62,7 +62,7 @@
 
 1. 每镜写具体的物和它的动作；物是本期内容里的东西（伞、闸门、抽屉），不是卡片、文字或图标。
 2. 主物约占台面区 40% 以上；B 接管时纸框或素材约占台面区 60% 以上，A 虚化或退场。小纸框只作附着证据。
-3. Scene 之间由背景轨换景：默认 `rig.rebuild`，或 `disc.scene`、定制背景提供的换景。
+3. Scene 之间由背景轨换景：默认背景动作 `refold`，进阶 `disc.scene` 圆盘半周，或定制背景提供的换景。
 4. 第一镜和最后一镜落在物上；文字主导镜占全片 30% 以内；屏上字每镜 8 字以内，口播交给字幕。
 5. 单镜 2–8 秒；同一做法连用不超过两次。聚光扫过只作强调，不当一镜的主要动作。
 6. 表前四行写全。
@@ -75,8 +75,10 @@
 
 | 用途 | 积木 | 轨 |
 |---|---|---|
-| 折叠重建换地点 | [rig.rebuild](../assets/stage-kit/blocks/rig-rebuild.md) | 背景 |
-| 圆盘换景、逐件装配布景 | [disc.scene](../assets/stage-kit/blocks/disc-scene.md) | 背景 |
+| 全屏纸板展开 / 换景 / 收起（默认背景） | [背景动作](../MOTION.md#背景动作两张舞台卡共用) | 背景 |
+| 圆盘换景、纸板展开、逐件装配布景（进阶） | [disc.scene](../assets/stage-kit/blocks/disc-scene.md) | 背景 |
+| 舞台式折叠重建、整台后退 | [rig.rebuild](../assets/stage-kit/blocks/rig-rebuild.md) | 背景 |
+| 物体出现、退场、强调、移动、落定、换场、归位 | [动作清单](../MOTION.md) | 前景 |
 | 本期专属的多部件道具 | [prop.states](../assets/stage-kit/blocks/prop-states.md) | 前景 |
 | 单件镂空道具立起 | [prop.stand](../assets/stage-kit/blocks/prop-stand.md) | 前景 |
 | 字写在牌子上 | [sign.plate](../assets/stage-kit/blocks/sign-plate.md) | 前景 |

@@ -8,6 +8,8 @@ import designs
 from pathlib import Path
 
 SLOTS = ("reveal", "emphasis", "exit", "transition")
+MOTION_RETIRED = ("Account-level Motion is retired; animate with the runtime/motion.js verbs "
+                  "and the card motion pack listed in the card MOTION.md")
 MODES = ("explainer", "showcase", "math", "english")
 SHOWCASE_SUBMODULES = ("pdoom", "science")
 LEGACY_MODES = ("text-led", "animation-led")
@@ -60,7 +62,7 @@ def _parameters(metadata: dict, layers: list[tuple[str, dict]]) -> tuple[dict, d
     return values, sources
 
 
-def resolve(root: Path, account: dict, overrides: dict | None = None) -> dict:
+def resolve(root: Path, account: dict, overrides: dict | None = None, *, legacy_motion: dict | None = None) -> dict:
     from asset_store import resolve_asset_closure
     from component_harness import parse_component_ref
     overrides = {} if overrides is None else overrides
@@ -91,7 +93,13 @@ def resolve(root: Path, account: dict, overrides: dict | None = None) -> dict:
     explicit_motion = overrides.get("motion", {})
     if not isinstance(motion, dict) or not isinstance(explicit_motion, dict) or (set(motion) | set(explicit_motion)) - set(SLOTS):
         raise AppearanceError("Unknown motion slot")
-    motion = {**motion, **explicit_motion}
+    if any(value is not None for value in (*motion.values(), *explicit_motion.values())):
+        raise AppearanceError(MOTION_RETIRED)
+    # Account-level Motion is retired: only an existing frozen lock may carry its slots forward,
+    # and an explicit null still switches a carried slot off.
+    if legacy_motion is not None and (not isinstance(legacy_motion, dict) or set(legacy_motion) - set(SLOTS)):
+        raise AppearanceError("Unknown motion slot")
+    motion = {**(legacy_motion or {}), **explicit_motion}
     selections["motion"] = {}
     refs = [value for value in (selections["theme"], selections["background"]) if value]
     for slot in SLOTS:
@@ -312,7 +320,7 @@ def materialize(root: Path, project: Path, lock: dict) -> dict:
     _check_lock(lock)
     runtime_names = ["appearance.js"]
     if "capabilities" in lock or lock.get("mode") in MODES:
-        runtime_names += ["cues.js", "captions.js", "figures.js", "scene-binding.js"]
+        runtime_names += ["cues.js", "captions.js", "figures.js", "scene-binding.js", "motion.js"]
         if designs.capabilities(lock)["rolls"]:
             runtime_names += ["rolls.js", "broll.js"]
     for name in runtime_names:

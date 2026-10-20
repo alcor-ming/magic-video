@@ -137,6 +137,7 @@ def rebind(root, work, variant, state, args, api):
     effective_mode = overrides.get("mode", account.get("mode") if args.account else (current or {}).get("mode", account.get("mode")))
     if not modern and getattr(args, "captions", None) is not None:
         appearance.check_mode(effective_mode)
+    legacy_motion = None
     if current and not args.account:
         choices = {**current["selection"], **{key: current[key] for key in ("mode", "ratio", "width", "height", "fps", "seed") if key in current},
                    "parameters": deepcopy(current["overrides"]["explicit"])}
@@ -148,10 +149,14 @@ def rebind(root, work, variant, state, args, api):
             for dimension in ("width", "height"):
                 if dimension not in overrides:
                     choices.pop(dimension, None)
+        # Frozen account Motion slots carry forward unchanged; a rebind may only switch them off.
+        legacy_motion = choices.pop("motion")
         if "motion" in overrides:
             if not isinstance(overrides["motion"], dict):
                 raise appearance.AppearanceError("Motion selections must be an object")
-            overrides["motion"] = {**choices["motion"], **overrides["motion"]}
+            if any(value is not None for value in overrides["motion"].values()):
+                raise appearance.AppearanceError(appearance.MOTION_RETIRED)
+            legacy_motion = {**legacy_motion, **overrides.pop("motion")}
         if "parameters" in overrides:
             if not isinstance(overrides["parameters"], dict):
                 raise appearance.AppearanceError("Appearance parameters must be an object")
@@ -175,9 +180,7 @@ def rebind(root, work, variant, state, args, api):
         overrides.setdefault("captions", state.get("captions", False))
     if (current or {}).get('card_fonts'):
         overrides['card_fonts'] = current['card_fonts']
-    lock = appearance.resolve(root, account, overrides)
-    if lines.is_math(state) and (not lock["selection"].get("captions") or not modern and lock.get("mode") not in {"math", "explainer"}):
-        raise appearance.AppearanceError("Mathematics requires lyric captions enabled")
+    lock = appearance.resolve(root, account, overrides, legacy_motion=legacy_motion)
     project = safe(variant, "project")
     runtime_updates = {}
     for name, known in (("appearance.js", KNOWN_RUNTIMES), ("cues.js", KNOWN_CUE_RUNTIMES), ("broll.js", KNOWN_BROLL_RUNTIMES), ("figures.js", KNOWN_FIGURE_RUNTIMES)):

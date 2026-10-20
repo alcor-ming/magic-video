@@ -17,7 +17,7 @@ import explainer
 import work_tts
 
 
-@unittest.skipUnless((Path(__file__).resolve().parents[1] / '.studio/designs/math/design.json').is_file(), 'Personal card contract; checked in personal assembly')
+@unittest.skipUnless((Path(__file__).resolve().parents[1] / '.studio/designs/english/design.json').is_file(), 'Personal card contract; checked in personal assembly')
 class IndependentLinesCliTest(unittest.TestCase):
     asset = test_work_appearance.WorkAppearanceTest.asset
 
@@ -39,12 +39,12 @@ class IndependentLinesCliTest(unittest.TestCase):
         work, _ = cli.locate_work(self.root, identity)
         return identity, work
 
-    def test_default_and_explicit_math_english_variants_bind_their_own_plans(self):
+    def test_default_and_explicit_english_variants_bind_their_own_plans(self):
         identity, work = self.create()
         main = cli.read_json(work / 'variants/main/variant.yaml')
         self.assertEqual((main['mode'], main['line']), ('explainer', {'id': 'stage-full', 'version': 1}))
         self.assertEqual(main['design'], 'stage-full')
-        for mode, heading in (('math', '# 数学思维 Plan'), ('english', '# 英语学习 Plan')):
+        for mode, heading in (('english', '# 英语学习 Plan'),):
             self.invoke('--work', identity, 'variant', 'add', mode, '--account', 'a', '--mode', mode)
             variant = work / 'variants' / mode
             state = cli.read_json(variant / 'variant.yaml')
@@ -54,11 +54,10 @@ class IndependentLinesCliTest(unittest.TestCase):
             self.assertEqual(plan['appearance_lock_sha256'], state['appearance_lock']['sha256'])
             self.assertIn(heading, (variant / 'ANIMATION_PLAN.md').read_text())
             self.assertEqual(state['appearance_lock']['mode'], mode)
-            if mode == 'math':
-                self.assertFalse(state['appearance_lock']['selection']['captions'])
-                self.assertFalse(plan['captions'])
+            self.assertFalse(state['appearance_lock']['selection']['captions'])
+            self.assertFalse(plan['captions'])
         # Explicit captions still override the per-design default in both directions.
-        self.invoke('--work', identity, 'variant', 'add', 'with-lyrics', '--account', 'a', '--mode', 'math', '--captions', 'on')
+        self.invoke('--work', identity, 'variant', 'add', 'with-lyrics', '--account', 'a', '--mode', 'english', '--captions', 'on')
         with_lyrics = cli.read_json(work / 'variants/with-lyrics/variant.yaml')
         self.assertTrue(with_lyrics['appearance_lock']['selection']['captions'])
 

@@ -25,7 +25,9 @@ class AppearanceResolverTest(unittest.TestCase):
             self.assets.append({"ref": f"{kind}@v1", "kind": kind, "package_sha256": "a" * 64, "path": path,
                                 "metadata": {"kind": kind, "entry": "entry.json", "parameters": {}, "compatibility": {"ratios": ["16:9"]}}, "acceptance": {}})
         self.assets[0]["metadata"]["parameters"] = {"tokens.surface.amount": {"type": "number", "default": 1, "minimum": 0}, "tokens.surface.enabled": {"type": "boolean", "default": True}}
-        self.account = {"id": "main", "revision": 1, "theme": self.ref("theme"), "background": self.ref("background"), "mode": "explainer", "motion": {"reveal": {"asset": self.ref("motion"), "entry": "reveal"}}, "overrides": {"theme": {"tokens.surface.amount": 2}}}
+        self.account = {"id": "main", "revision": 1, "theme": self.ref("theme"), "background": self.ref("background"), "mode": "explainer", "overrides": {"theme": {"tokens.surface.amount": 2}}}
+        # Frozen account Motion from an old lock; new accounts can no longer bind Motion.
+        self.legacy_motion = {"reveal": {"asset": self.ref("motion"), "entry": "reveal"}}
         patcher = mock.patch("asset_store.resolve_asset_closure", return_value=self.assets, create=True)
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -88,7 +90,7 @@ class AppearanceResolverTest(unittest.TestCase):
         self.assets[1]["metadata"]["parameters"] = {"parameters.color": {"type": "string", "default": "#ffffff"}}
         for parameters in ({"motion": {"reveal": {"slots.reveal.duration": -1}}}, {"background": {"parameters.color": "not-a-color"}}):
             with self.subTest(parameters=parameters), self.assertRaises(component_harness.ComponentError):
-                appearance.resolve(self.root, self.account, {"parameters": parameters})
+                appearance.resolve(self.root, self.account, {"parameters": parameters}, legacy_motion=self.legacy_motion)
         self.assets[1]["metadata"]["parameters"] = {"renderer": {"type": "string", "default": "solid"}}
         with self.assertRaisesRegex(component_harness.ComponentError, "cannot be overridden"):
             appearance.resolve(self.root, self.account)
@@ -133,7 +135,7 @@ class AppearanceResolverTest(unittest.TestCase):
                 asset_store.accept_component(store, candidate["component_ref"], candidate["package_sha256"], "Synthetic isolated appearance test", runtime_root=harness)
                 selections["motion"][slot] = {"asset": {"ref": candidate["component_ref"], "kind": "motion", "package_sha256": candidate["package_sha256"]}, "entry": slot}
             with mock.patch("asset_store.resolve_asset_closure", side_effect=lambda root, refs: asset_store._accepted_closure(store, refs, runtime_root=root)):
-                lock = appearance.resolve(harness, selections)
+                lock = appearance.resolve(harness, {key: value for key, value in selections.items() if key != "motion"}, legacy_motion=selections["motion"])
                 project = self.root / "project"
                 project.mkdir()
                 (project / "index.html").write_text("<html><body>isolated fixture</body></html>")

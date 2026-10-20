@@ -8,13 +8,13 @@ Work 管一期内容，Variant 管独立制作版本。设计卡在制作中实�
 
 资产选型使用 `component list` 查询卡内资产，按用途、类型、标签或画幅筛选，再通过 interface 阅读用法。来源卡缺失或引用断链时明确报告；单张无效或同 ID 冲突的卡只停用自身。`--design <card>` 只列该卡 Variant 可用的资产，`usable_by` 与安装/绑定的实际范围一致；`component trace` 只读核对卡—引用—账号—Work 关系，分开报告缺源、未安装与旧冻结副本。设计卡声明 Plan、阶段指导、资产范围和豁免；素材卡只被引用或本地化，不能用作 Variant 的设计。
 
-五层宿主与 A/B-roll 按所选卡的合同取用，不以四模式或执行模型限制设计选择。字幕、音效和封面由设计默认值与各层覆盖决定；数学、英语等用户设计的专属规则随卡维护。旧 `explainer`、`showcase`、`science`、`card` 身份提示重选，不静默回退。
+五层宿主与 A/B-roll 按所选卡的合同取用，不以四模式或执行模型限制设计选择。字幕、音效和封面由设计默认值与各层覆盖决定；英语等用户设计的专属规则随卡维护。旧 `explainer`、`showcase`、`science`、`card`、`math`、`explainer/math-rap` 身份提示重选，不静默回退。
 
 公共 TTS 默认火山引擎，可配置替代脚本；切换提供方不改 Script / Plan。候选音频、正式声音采用与字词对齐分开记录，只采用提供方原生时间证据；缺少原生时间证据时明确报告缺失，不以估时或替代流程补齐。凭据不进入源码、日志、缓存与发行包，服务失败不自动换供应商。真实合成与听校须有各自证据。
 
 card 链路从 repo 和产品配送中删除，不保留制作、编辑或渲染兼容实现。旧作品、接受快照和成片保留；继续内容须显式采用到受支持的新版本。显式或配置中的旧 card 值报告来源，不静默改为 explainer；普通卡片式画面仍可用于其他链路。
 
-数学链路复用 `cues build --alignment <文件>` 的歌词逐字对齐，不对未对齐字插值。正式声音已有且 cue 已建立后，使用 `./work --work <id> --variant <id> beats build --audio <Work相对音频路径> --beats-per-bar <每小节拍数> --first-downbeat <零基拍点索引>`；锁定上游提取拍点，拍号和首个强拍须人工明确，弱起不猜测，生成的网格绑定音频摘要。`plan check` 报告数学职责、符号一致性和收尾空档，不替代观看或接受。
+按音乐拍点编排时，正式声音已有且 cue 已建立后，使用 `./work --work <id> --variant <id> beats build --audio <Work相对音频路径> --beats-per-bar <每小节拍数> --first-downbeat <零基拍点索引>`；锁定上游提取拍点，拍号和首个强拍须人工明确，弱起不猜测，生成的网格绑定音频摘要，cue 可用 `{bar, beat}` 引用拍点。
 
 `./work --work <id> --variant <id> review package <审查ID> --manifest <Work相对JSON路径>` 将当前 Plan、字级时间/节拍和声明文件复制到 WorkStore 的 `review/<审查ID>`。声明格式为 `{"scenes":["variants/<版本>/project/scene.html"],"screenshots":[{"time":1.5,"path":"materials/frame.png"}],"contact_sheet":"materials/contact-sheet.png"}`；截图先通过官方 Studio/snapshot 取得，命令只复制，不导出视频、不扫描未声明素材。审查输出使用【图】【码】【未实现】证据、严重度表与推荐分镜表。
 
@@ -67,7 +67,7 @@ card 链路从 repo 和产品配送中删除，不保留制作、编辑或渲染
 
 Studio 对 current 的修改同步原文案真源或暂停对应再生成，旧 MP4 / QA 不继续代表新源码。登记版本的独立审阅副本文件只读，不支持 Studio 保存；打开时先校验，副本变化则新建目录并保留旧副本，不放宽诊断完整性检查。`reference` Plan 没有虚构的可播放工程，直接审阅其资产引用。
 
-数学首批积木使用同 Scene 的 `math-plan` 定义单元与 cue，`math` 块只定义对应布局和冻结字体。安装用户卡中的 `math/math-kit`（兼容旧 `math-kit@v1`）后运行 `./work --work <id> --variant <id> math build --browser <Chromium路径>`；方向参考使用 `math build --purpose plan --scene S03`，保留完整 Plan、只准备该 Scene 的 HTML，并以相同 Scene 范围登记。构建复用锁定 Puppeteer 与 Chromium，检查真实字形、系统字体回退和文本容量，再更新受保护挂载。接口、九种积木、导出与闭包约定见 数学设计卡内的积木接口卡。开发仓只做隔离验证，Windows 原生和部署后带声效果验收另报。
+数学卡已于 2026-10-20 退役，`math build`、数学图积木与数学 Plan 检查一并删除。旧数学 Work 只读：状态、列表、预览列表与诊断照常，制作、登记、导出等命令报错；要继续做，用 `variant reselect` 换到其他卡。账号不受影响，换绑别的卡后照常使用。
 
 对已打开的准确目标运行 `./work --work <id> --variant <id> preview diagnose <current或Plan/Draft-ID>`，支持 executable 登记（`plan-vNNN` / `draft-vNNN`），拒绝静态 `reference` 和 `layout`。只读输出上屏照搬、Plan 信息缺失/截短、其他实现偏离和静止疑点，不作 QA 通过判断。Plan 支持新 `screen` 信息块与旧表格格式。登记 Plan/Draft 使用同版冻结的 Script、Research、Plan 与工程，当前文稿的跨版本差异另列；输入在诊断期间变化则报告过期。单 Scene Plan 参考沿用登记的 `sample_scenes`，其他 Scene 列入 `d1.out_of_scope`（不在本参考范围），不报缺失或未验证。文字按 `data-info-id` 或与唯一信息块的精确文本匹配归属；无法唯一归属时按元素列为待核验，相关信息不报缺失。多信息 Scene 可在信息块容器上标注可选的 `data-info-id`。参数及明确引用例外见 `preview diagnose --help`。制作中可用 `--range` / `--times` 只采样正在做的段，`--frames` 把采样帧存到 Variant `.runtime/diagnose-frames/` 供执行者自看（不作交付证据，交付前仍全片诊断）。范围内未采样状态、无法确认 ready 的媒体/子画面及图片内文字保留未验证，仍需按 [Draft QA](.studio/spec/hyperframes.md#draft-qa) 连续观看；诊断不导出视频或修改接受状态。
 
@@ -109,9 +109,9 @@ Draft 与 Final 生命周期：
 
 系列、用途与账号通过 Work CLI 管理。新 Variant 用 `--design <id>` 明确选择设计，可用 `--account <id>` 或 `--no-account`；素材卡不能作为设计选择。账号、系列、Work 与 Variant 的覆盖值按既有优先级解析，设计身份不绑定执行模型。旧身份只读并提示重选，不默认选择 explainer。
 
-Theme/Background/Motion 使用单资产合同与工程内的精确 vendor/lock。外观变更仍使用 `appearance rebind`，旧冻结工程不因卡片编辑而自动换配。字段与参数见 [资产合同](.studio/spec/hyperframes-assets.md)。
+Theme/Background 使用单资产合同与工程内的精确 vendor/lock；账号级 Motion 已退役，动作用工具级 `runtime/motion.js` 与设计卡的卡片动作包（卡内 `MOTION.md`），旧冻结 Work 里的四槽 Motion 照常校验与播放。外观变更仍使用 `appearance rebind`，旧冻结工程不因卡片编辑而自动换配。字段与参数见 [资产合同](.studio/spec/hyperframes-assets.md)。
 
-Motion v3 增加风格入退场、一次性强调与转场、back-out/spring 及 cue 相位 hold_fps；允许不同槽混用 v2/v3，新 lock 采用最高能力版本，旧冻结 Work 不自动升级。完整账号外观指定 Theme/Background/Motion；跨账号风格叠加省略 theme，保留各自账号 Theme。B-roll module 可通过 `component list --broll-role hook|concept|transition --tag <style>` 查询，接口卡显示完整挂载示例和插槽；Scene 手动接既有 A/B 编排，Binding schema 不变。合同与生产源自检见 [镜头创作指南](.studio/spec/broll-assets.md)。
+Motion v3 增加风格入退场、一次性强调与转场、back-out/spring 及 cue 相位 hold_fps；允许不同槽混用 v2/v3，新 lock 采用最高能力版本，旧冻结 Work 不自动升级。完整账号外观指定 Theme/Background；跨账号风格叠加省略 theme，保留各自账号 Theme。B-roll module 可通过 `component list --broll-role hook|concept|transition --tag <style>` 查询，接口卡显示完整挂载示例和插槽；Scene 手动接既有 A/B 编排，Binding schema 不变。合同与生产源自检见 [镜头创作指南](.studio/spec/broll-assets.md)。
 
 所有新视频 Work 默认把 Script/Research 放在 `shared/`，各 Variant 通过 `shared_inputs` 引用同一源，Plan/工程/接受/Final 各自独立。`variant add --from <variant-id>` 显式创建内容分支，不是仅为了新增账号而必需；旧 Variant 内文稿仍按原位置读取。创建隔离测试可用 `work new "联动测试" --workflow hyperframes_video --purpose test --batch <batch-id>`，只进行 Studio 验证，不导出视频。
 
@@ -194,7 +194,7 @@ work --work <Work-ID> --variant <Variant-ID> variant design-update
 
 新设计卡以 `capabilities` 描述能力，不必填写 `mode`：`layers.required/optional` 声明 background/stage/overlay/text；`rolls` 决定是否安装 A/B 运行时（为 true 时需声明 subjects）；`bindings` 分别声明 theme/background/motion 的 required/optional/none；`checks` 选择已注册的检查，`research_template` 和 `plan_template` 优先读取卡内同名模板，再使用工具默认模板。字幕默认值只读 `defaults.captions.enabled`。
 
-`optional` 继承账户但允许留空，`none` 不继承账户但允许显式选择；两张内置舞台卡的三个绑定均为 optional。`motion=required` 至少配置一个槽位；`showcase stage/cast` 可由任意设计卡显式调用。旧卡、旧 Lock 和旧 Variant 仍按固定兼容映射读取，不原地改写。新外观 Lock 保存能力声明及其摘要，诊断只报告 required 层的缺失。
+`optional` 继承账户但允许留空，`none` 不继承账户但允许显式选择；两张内置舞台卡的三个绑定均为 optional。`bindings.motion` 只对旧锁有意义（账号级 Motion 已退役，新 Work 不再选动作槽）；`showcase stage/cast` 可由任意设计卡显式调用。旧卡、旧 Lock 和旧 Variant 仍按固定兼容映射读取，不原地改写。新外观 Lock 保存能力声明及其摘要，诊断只报告 required 层的缺失。
 
 `localize` 要求先在本卡 `design.json.references` 声明引用，复制后记录在 `borrowed.json`。`compare` 只列差异，不自动合并。`preview` 的范例与摘要见输出目录；新建空骨架须先补齐范例及 `example-manifest.json`。卡内安装使用 `component install <card>/<asset> --binding-file <JSON>`；Binding 可以写卡资产身份，安装后 lock 记录准确版本与内容摘要，不要求库级 accept。
 

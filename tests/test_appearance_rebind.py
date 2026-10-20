@@ -169,6 +169,34 @@ class AppearanceRebindTest(unittest.TestCase):
         self.assertEqual("unchanged", self.update("--apply")["status"])
         self.assertEqual(stable, self.contents())
 
+    def test_frozen_account_motion_carries_forward_but_cannot_be_added(self):
+        # 旧 Work 的冻结锁带一个账号动作槽：重绑原样带过去、可关闭，但不能新加或换成别的动作。
+        stamp = self.asset("stamp", "motion", {"slots": {"reveal": {"duration": 0.2, "easing": "linear"}}, "reduced_motion": {}})
+        state = cli.read_json(self.variant / "variant.yaml")
+        old = state["appearance_lock"]
+        frozen = {"reveal": {"asset": stamp, "entry": "reveal"}}
+        lock = appearance.resolve(self.root, state["account_settings"],
+                                  {**{key: old[key] for key in ("ratio", "width", "height", "fps", "seed") if key in old},
+                                   "capabilities": old["capabilities"], "captions": old["selection"].get("captions", False)},
+                                  legacy_motion=frozen)
+        appearance.materialize(self.root, self.variant / "project", lock)
+        state.update(appearance_lock=lock, motion=lock["selection"]["motion"])
+        cli.write_variant(self.variant, state)
+        self.assertEqual("rebound", self.update("--apply")["status"])
+        after = cli.read_json(self.variant / "variant.yaml")["appearance_lock"]
+        self.assertEqual(lock["selection"]["motion"], after["selection"]["motion"])
+        appearance.verify(self.variant / "project", after)
+        choice = self.base / "motion-choice.json"
+        choice.write_text(json.dumps({"motion": {"exit": {"asset": stamp, "entry": "reveal"}}}))
+        with self.assertRaisesRegex(appearance.AppearanceError, "Account-level Motion is retired"):
+            self.update("--appearance-file", str(choice))
+        with self.assertRaisesRegex(cli.HarnessError, "Account-level Motion is retired"):
+            cli.account_service(self.root).put("account", "b", {**self.account, "motion": {"reveal": frozen["reveal"]}})
+        cli.account_service(self.root).put("account", "c", {**self.account, "motion": dict.fromkeys(appearance.SLOTS)})
+        choice.write_text(json.dumps({"motion": {"reveal": None}}))
+        self.update("--appearance-file", str(choice), "--apply")
+        self.assertIsNone(cli.read_json(self.variant / "variant.yaml")["appearance_lock"]["selection"]["motion"]["reveal"])
+
     def test_prepare_failure_and_unknown_runtime_do_not_touch_original(self):
         with patch.object(appearance, "materialize", side_effect=appearance.AppearanceError("injected second asset failure")):
             with self.assertRaisesRegex(appearance.AppearanceError, "injected"):

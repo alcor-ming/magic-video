@@ -171,7 +171,7 @@ class CardDiscoveryTest(Fixture):
         with self.assertRaisesRegex(designs.DesignError, "material card"):
             designs.require("kit")
         _, mine = self.rows(design="mine")
-        self.assertEqual({("mine/ink", "card"), ("mine/stage-rig", "card"), ("mine/stage-kit", "card"), ("kit/paper", "reference")}, set(mine))
+        self.assertEqual({("mine/ink", "card"), ("mine/stage-rig", "card"), ("mine/stage-kit", "card"), ("mine/stage-motion", "card"), ("kit/paper", "reference")}, set(mine))
         # The reference row describes a real call: the declaring card resolves the source read-only.
         path, acceptance = asset_store.resolve_component(self.root, "kit/paper")
         self.assertEqual(((self.cards / "kit/assets/paper").resolve(), None), (path.resolve(), acceptance))
@@ -246,7 +246,7 @@ class CardTraceTest(Fixture):
         self.assertEqual(before, self.snapshot())
         self.assertEqual({"in-sync"}, {item["relation"] for item in trace["work"]["variants"][0]["assets"]})
         self.assertEqual([False, True], [row["selected_card_scope"] for row in trace["account"]["bindings"]])
-        self.assertEqual({"mine/paper", "mine/plain", "mine/stage-rig", "mine/stage-kit"},
+        self.assertEqual({"mine/paper", "mine/plain", "mine/stage-rig", "mine/stage-kit", "mine/stage-motion"},
                          {row["component_ref"] for row in trace["design"]["assets"]})
         self.card_asset("mine", "paper", color="#333333")
         changed = json.loads(self.invoke("--work", work_id, "component", "trace"))["work"]["variants"][0]

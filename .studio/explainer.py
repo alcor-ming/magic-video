@@ -88,7 +88,7 @@ def find_cue(cues, query):
             raise ExplainerError('invalid_beat_query')
         if 'beat_grid' not in cues:
             raise ExplainerError('missing_beat_grid')
-        from math_chain import find_beat
+        from beat_grid import find_beat
         try:
             return find_beat(cues['beat_grid'], query['bar'], query['beat'])
         except ValueError as exc:
@@ -133,7 +133,7 @@ def validate_cues(data):
             or not isinstance(data.get("text"), str) or not isinstance(data.get("characters"), list)):
         raise ExplainerError("invalid_cues")
     if 'beat_grid' in data:
-        from math_chain import validate_beat_grid
+        from beat_grid import validate_beat_grid
         try:
             validate_beat_grid(data['beat_grid'])
         except ValueError as exc:

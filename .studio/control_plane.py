@@ -43,8 +43,8 @@ class AccountService:
         if kind == "series":
             from appearance import check_mode
             check_mode(data.get("mode"), "Series")
-            if "spec" in data and (data["spec"] != "math-rap" or data.get("mode") not in ("math", "explainer")):
-                raise self.api.HarnessError("math-rap requires a math or legacy explainer series")
+            if "spec" in data or data.get("mode") == "math" or data.get("design") == "math":
+                raise self.api.HarnessError("The math card and its math-rap spec are retired; choose another design for this series")
             if not isinstance(data.get("accounts", []), list):
                 raise self.api.HarnessError("Series accounts must be a list")
             for account in data.get("accounts", []):

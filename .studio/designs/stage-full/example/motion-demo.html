@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>stage-full · 动作对照（原型）</title>
+  <style>
+    @font-face {
+      font-family: "SourceHanSansCN";
+      src: url("media/SourceHanSansCN-Regular.otf") format("opentype");
+      font-display: block;
+    }
+    body { margin: 0; background: #05070d; }
+    #stage-full-motion-demo {
+      position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden;
+      font-family: "SourceHanSansCN", sans-serif; color: #2a2018; background: #10141d;
+    }
+    .layer { position: absolute; inset: 0; pointer-events: none; }
+    .half { position: absolute; top: 0; width: 960px; height: 1080px; }
+    .half-right { left: 960px; }
+    .backdrop {
+      position: absolute; left: 40px; right: 40px; top: 150px; height: 560px; border-radius: 10px;
+      background: linear-gradient(180deg, #f3e6cf, #e2cba4);
+    }
+    .floor {
+      position: absolute; left: 40px; right: 40px; top: 710px; height: 190px; border-radius: 0 0 10px 10px;
+      background: repeating-linear-gradient(90deg, rgba(90,60,30,.12) 0 2px, transparent 2px 96px), linear-gradient(180deg, #d4b07c, #b98c55);
+    }
+    .piece {
+      position: absolute; width: 170px; height: 210px; border: 6px solid #fff; border-radius: 8px;
+      box-shadow: 8px 10px 0 rgba(30,20,10,.28); box-sizing: border-box;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 64px; color: rgba(255,255,255,.92);
+    }
+    .piece-a { background: #e0563c; }
+    .piece-b { background: #4f8fb8; }
+    .piece-c { background: #e8a83a; }
+    .piece-d { background: #5aa36e; }
+    .piece-e { background: #8a6bb8; }
+    .title {
+      position: absolute; top: 46px; width: 960px; text-align: center; font-size: 44px; color: #f3e6cf;
+    }
+    .caption {
+      position: absolute; left: 0; right: 0; top: 950px; text-align: center; font-size: 48px; color: #f3e6cf;
+    }
+    .divider { position: absolute; left: 958px; top: 0; width: 4px; height: 1080px; background: #2c3445; }
+  </style>
+</head>
+<body>
+<main id="stage-full-motion-demo" data-composition-id="stage-full-motion-demo"
+      data-width="1920" data-height="1080" data-start="0" data-duration="12" data-fps="30">
+  <section class="layer" data-hf-layer="background" aria-hidden="true">
+    <div class="half"><div class="backdrop"></div><div class="floor"></div></div>
+    <div class="half half-right"><div class="backdrop"></div><div class="floor"></div></div>
+    <div class="divider"></div>
+  </section>
+  <section class="layer" data-hf-layer="stage">
+    <div class="half" id="tool-side"></div>
+    <div class="half half-right" id="card-side"></div>
+  </section>
+  <section class="layer" data-hf-layer="text">
+    <div class="title">工具默认</div>
+    <div class="title" style="left:960px">stage-full 卡片</div>
+    <div class="caption" id="caption"></div>
+  </section>
+</main>
+<script src="runtime/gsap.min.js"></script>
+<script src="runtime/scene-binding.js"></script>
+<script src="runtime/motion.js"></script>
+<script src="runtime/stage-motion.js"></script>
+<script src="motion-demo.js"></script>
+</body>
+</html>

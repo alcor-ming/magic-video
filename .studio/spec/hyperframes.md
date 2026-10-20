@@ -35,7 +35,7 @@
 
 ### 五层与运行时
 
-模式为 `explainer`、`showcase`、`math` 与 `english`，默认 `explainer`；使用 16:9 / 9:16。`--captions on|off` 在 `appearance_lock.selection.captions` 冻结布尔开关，数学必须开启歌词字幕。showcase 的子模块与创作豁免见 showcase.md（仅自用包），五层仅为可选参考；四条链路共用现有渲染器。
+模式为 `explainer`、`showcase` 与 `english`，默认 `explainer`（旧 `math` 锁只读，数学卡已退役）；使用 16:9 / 9:16。`--captions on|off` 在 `appearance_lock.selection.captions` 冻结布尔开关。showcase 的子模块与创作豁免见 showcase.md（仅自用包），五层仅为可选参考；各链路共用现有渲染器。
 
 各链路按专属规则使用共同五层宿主，叙事职责见 `visual-design.md`：
 
@@ -53,7 +53,7 @@
 
 ## Draft QA
 
-showcase 不要求 explainer 分层/角色检查、Q1 或节奏诊断必经闭环；下文表现形式要求不适用，但 CDN、闭包外资产及 `onUpdate` 状态等硬约束继续检查。`math` 与旧 `explainer/math-rap` 保留歌词字幕与数学关系核对，不要求角色／生图或通用 Brief，见 math-rap.md（仅自用包）。英语按教学 Plan 核对发音、拼写、词义、记忆提示、回忆任务及声画对应，保留合理阅读停顿，不强加通用角色、生图或 A/B 配额。诊断和代码证据不代替用户观看。
+showcase 不要求 explainer 分层/角色检查、Q1 或节奏诊断必经闭环；下文表现形式要求不适用，但 CDN、闭包外资产及 `onUpdate` 状态等硬约束继续检查。英语按教学 Plan 核对发音、拼写、词义、记忆提示、回忆任务及声画对应，保留合理阅读停顿，不强加通用角色、生图或 A/B 配额。诊断和代码证据不代替用户观看。
 
 explainer 的 `preview diagnose` 另报告 `explainer_layer_missing`、`captions_lock_mismatch` 与 `sound_asset_outside_closure`，闭包检查覆盖音轨和 character。口播 audio 显式标注 `data-audio-role="voice"` 才豁免声音资产检查，其余 audio 必须来自 media 闭包，不能把 BGM/SFX 标为 voice 绕过校验。角色 DOM 标注 `data-character-ref="<id@vN>"` 辅助静态 diagnose 核对 character 闭包。均为静态疑点；第 5 层口播字幕不按第 4 层 A1 判为照搬。Plan/Q1 还需人工核验每场可见事件、角色与图片风格、遮挡和有声观看，技术报告不代替接受。
 

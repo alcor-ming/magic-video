@@ -39,7 +39,6 @@ def rhythm_diagnostics(samples, scenes, *, plan='', cues=None, mode=None):
     allowed = {'text_reveal', 'b_enter', 'a_return', 'enter', 'exit', 'bounce', 'squash', 'point', 'state',
                'pan_start', 'pan_end', 'zoom_start', 'zoom_end', 'camera_start', 'camera_end', 'camera_turn', 'tween', 'tween_end', 'set',
                'motion_reveal', 'motion_emphasis', 'motion_exit', 'motion_transition', 'broll_moment'}
-    allowed |= {'math_reveal', 'math_remove'}
     for observations in candidates.values():
         candidate = observations[0][1]
         if candidate.get('unverified'):
@@ -57,7 +56,7 @@ def rhythm_diagnostics(samples, scenes, *, plan='', cues=None, mode=None):
             continue
         key = 'state_signature' if candidate['kind'] == 'state' else 'signature'
         changed = before.get(key) != after.get(key)
-        opening = at == 0 and candidate['kind'] in {'text_reveal', 'b_enter', 'enter', 'math_reveal'} and after['visible']
+        opening = at == 0 and candidate['kind'] in {'text_reveal', 'b_enter', 'enter'} and after['visible']
         if (changed and (before['visible'] or after['visible'])) or opening:
             hit = {**{key: candidate[key] for key in ('id', 'time', 'kind', 'layer', 'scene')},
                    'targets': candidate.get('targets', []), 'target_node': candidate.get('target_node')}

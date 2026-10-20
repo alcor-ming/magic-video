@@ -24,7 +24,7 @@ class DesignMigrationTest(unittest.TestCase):
         recipe = self.root / 'migration-overrides.json'
         recipe.write_text('{}')
         args = ('--work', identity, '--variant', 'alternate', 'migrate', 'design',
-                '--design', 'stage-light', '--design-version', '1', '--no-account', '--overrides', str(recipe),
+                '--design', 'stage-light', '--design-version', str(cli.designs.get('stage-light')['version']), '--no-account', '--overrides', str(recipe),
                 '--source-sha256', cli.file_sha256(variant / 'variant.yaml'))
         self.assertEqual('preview', json.loads(self.invoke(*args))['status'])
         with patch.object(cli, 'write_variant', side_effect=OSError('injected write failure')):

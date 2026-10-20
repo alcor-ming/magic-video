@@ -9,7 +9,8 @@
 
 ## 资源闭包、字体与释放
 
-- 资源闭包：只依赖宿主放好的 `runtime/gsap.min.js`、`runtime/scene-binding.js`、`runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`；无图片、音频、字体下载与新依赖。
+- 资源闭包：示例只依赖宿主放好的 `runtime/gsap.min.js`、`runtime/scene-binding.js`、`runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`；无图片、音频、字体下载与新依赖。Work 工程用自带的 `runtime/motion.js`，卡内资产用 `component install stage-full/<资产>` 装进 `vendor/components/stage-full/`，加载顺序见 GUIDE §10「动作与背景接入 Work」。
+- 动作：前景物体的出现、退场、强调、移动、落定、换场与归位只用 [MOTION.md](../MOTION.md) 里的动作；换地点用背景动作 `refold`，前景在换景开始前退场、换景完成后再出现。
 - 字体：`document.fonts.ready` 就绪后才首次渲染；`@font-face` 只指向 `media/SourceHanSansCN-Regular.otf`，`font-display:block`；不使用网络字体或系统回退排版。
 - 布局：固定 1920×1080；五层各占一层，第 3 层不遮挡第 4 层正文；文字只在阅读窗口内保持稳定。
 

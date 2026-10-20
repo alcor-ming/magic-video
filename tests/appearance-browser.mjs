@@ -39,10 +39,11 @@ for name in ('light','dark','clear','moving'):
  project = root/('project-'+name); project.mkdir()
  account = {'id':'fixture','revision':1,'theme':refs['paper'],'background':refs['light' if name == 'moving' else name],'mode':'explainer','ratio':'16:9','motion':{'reveal':None,'emphasis':None,'exit':None,'transition':None}}
  account['overrides'] = {'theme':{'tokens.colors.text':'#19352b'}}
+ legacy = None
  if name == 'moving':
-  account['motion']['reveal'] = {'asset':refs['gentle'],'entry':'reveal'}
+  legacy = {'reveal':{'asset':refs['gentle'],'entry':'reveal'}}
   account['overrides']['motion'] = {'reveal':{'slots.reveal.duration':2}}
- lock = appearance.resolve(harness, account)
+ lock = appearance.resolve(harness, account, legacy_motion=legacy)
  appearance.materialize(harness,project,lock)
 free = root/'project-free'; free.mkdir()
 appearance.materialize(harness,free,appearance.resolve(harness,{},{'mode':'showcase','submodule':'pdoom'}))

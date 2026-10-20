@@ -20,7 +20,7 @@ module/media 使用 Binding schema 3 的 `component_ref`、`scene` 和 `usage`�
 
 纯声明资产的 Binding schema 3 不要求 Scene，`usage.role` 为该 kind；递归依赖可标 `scope:dependency`，但必须从正常绑定根资产的精确依赖图可达，不构成绕过依赖校验的入口。工程沿用准确 hash 和本地 vendor 校验。JSON 预设不冒充可执行组件，也不因纯 JSON 强加动态 runtime 审片。
 
-新 Account 的 theme/background 为精确引用，motion 为 reveal/emphasis/exit/transition 槽位到 `{asset:精确引用,entry:预设条目}` 或 null；省略继承、null 禁用。`overrides` 按 theme/background/motion 分组，组内采用 manifest 声明的点路径，0/false 不视作缺值。新 Variant 的 `appearance_lock` 保存规范化 JSON SHA-256、账户 revision/hash、精确闭包、最终参数与来源、宽高/fps/seed。账号默认不追改旧 Variant；宿主读取 `project/appearance-lock.json` 及 vendor，不重读当前服务默认值。锁校验失败明确停止。
+新 Account 的 theme/background 为精确引用；motion 字段只为旧账号保留，四个槽位 reveal/emphasis/exit/transition 只能为 null（账号级 Motion 已退役，见下）；省略继承、null 禁用。`overrides` 按 theme/background/motion 分组，组内采用 manifest 声明的点路径，0/false 不视作缺值。新 Variant 的 `appearance_lock` 保存规范化 JSON SHA-256、账户 revision/hash、精确闭包、最终参数与来源、宽高/fps/seed。账号默认不追改旧 Variant；宿主读取 `project/appearance-lock.json` 及 vendor，不重读当前服务默认值。锁校验失败明确停止。
 
 `work appearance resolve --account <id> --appearance-file <json>` 只读解析；`new`/`variant add` 可用相同 `--appearance-file`，其中 `parameters` 为本次参数覆盖，优先级高于账号 overrides。`--theme <id@vN>`、`--background <id@vN>` 固定当前准确接纳 hash，不跟随 latest；`--mode`、`--ratio` 独立，`--fps`/`--seed` 可显式给定。source 画幅必须提供 width/height 后冻结。创建在暂存对象完成 vendor 与 Lock 校验再公布；未知字段、缺依赖或错误 hash 不留下半冻结 Variant。preview 的快照和 metadata 包含该锁及实际闭包；断开源库后仍能验证，不覆盖旧 Draft/Final。
 
@@ -29,6 +29,8 @@ module/media 使用 Binding schema 3 的 `component_ref`、`scene` 和 `usage`�
 冻结时复制当前 `runtime/appearance.js` 到工程本地，宿主先校验锁与闭包，再 `await HarnessAppearance.load()`，随后同步 `apply(stage, resolved)`；不引用安装根活跃源码。Theme 输出 `--appearance-*` CSS 变量，`data-appearance-text/card` 是可选宿主标记，不替 Scene 决定布局和文字。字体声明的 family/path/license 必填，文件与许可属于包内 dependencies；style 可为 normal/italic/oblique，weight 可为 1..1000 整数、对应数字字符串、normal/bold 或升序范围字符串（如 `"100 900"`），缺省 normal。load 等待本地字体加载后才返回，布局测量与宿主 ready 必须在其后；缺失、损坏、越界或重定向明确失败，不静默退回系统字体。Typography 字体族 token 映射为实例私有别名，Scene 通过这些 CSS 变量使用字体；重复 apply 不重复加载，结束时调用返回对象的 `dispose()`，仅释放自身字体，不影响其他同名字体实例。
 
 load 默认以当前页面目录为 project；显式 projectURL 必须是同源项目目录并保留末尾 `/`，例如 `await HarnessAppearance.load("./project/")`，不能传外部 URL 或把文件 URL 当目录。
+
+**账号级 Motion 已退役（2026-10-20）**：账号、`--appearance-file`、`new`/`variant add` 都不能再选择非空动作槽，写入即报错。新作品的动作用工具级 `runtime/motion.js`（见 [runtime-interfaces](runtime-interfaces.md#motionjs)）和所选卡的卡片动作包，清单在卡内 `MOTION.md`。只有旧 Work 冻结锁里已有的槽，在不换账号的 `appearance rebind` 中原样带过去，可用 null 关闭，不能新增或替换。旧锁的校验、安装与 `bindMotion` 播放保持不变；下面的四槽 Motion 合同只作为旧 Work 的兼容参考。
 
 受支持链路共用 solid/transparent/module 背景合同。四槽 Motion 资产采用 manifest `contract_version:2` 和 entry `capability_version:2`，精确 ref/hash 不可覆盖。含 v2 Motion 的闭包生成 appearance lock schema/contract 2、resolver 1，旧宿主明确拒绝。工具安装不升级旧 Work 的冻结 runtime；明确目标的更新仍用上文 rebind/upgrade-runtime，不修改历史快照或自动接纳资产。
 
@@ -84,7 +86,7 @@ v3 的缓动增加 back-out 与固定采样 spring；normal 可选整数 hold_fp
 
 新版 v2/v3 Motion 绑定在 `__hfRhythmSources` 注册带 target/cue 的 `motion_<slot>` 候选，dispose 注销；探针只计目标可见且状态实际变化的事件，不把 WAAPI 的存在当作通过。
 
-账号外观可完整指定 Theme/Background/Motion；跨账号的风格叠加只指定 background/motion、省略 theme。后者保留账号 Theme，前者覆盖，沿用当前解析合并规则，不新增资产 kind。
+账号外观可完整指定 Theme/Background；跨账号的风格叠加只指定 background、省略 theme。后者保留账号 Theme，前者覆盖，沿用当前解析合并规则，不新增资产 kind。
 
 ### 动效 B-roll module
 
@@ -100,4 +102,4 @@ v3 的缓动增加 back-out 与固定采样 spring；normal 可选整数 hold_fp
 
 `design source-add <https-repository-url> --commit <完整SHA>` 需要本机 Git，仅 fetch/archive 到用户卡根 `.sources/`，不执行上游、不配送来源缓存。逐文件摘要与许可线索在 `source.json`，默认 `unreviewed`；制作卡前逐文件确认许可并排除非开放角色/数据。外部 `borrowed.json` 记录 source.kind=external、url、commit、files（sha256/license/attribution）；新 commit 先缓存再 `design compare <card> <asset> --commit <SHA>`，不自动同步。提示词合集只记录参考机制，不缓存原文。
 
-抽取结果是普通用户卡。风格进入 stages/Plan/GUIDE，色板进入 Theme，缓动/转场进入 Motion，绘制进入静态闭包 module。不得保留 eval、同步 XHR 或运行时外网加载；许可和本项目合同取舍写入 GUIDE。引擎型 module 的文字、字体与确认见 [B-roll 合同](broll-assets.md#非-dom-文字与字体)。
+抽取结果是普通用户卡。风格进入 stages/Plan/GUIDE，色板进入 Theme，缓动/转场进入卡片动作包（替换工具动作的实现或加本卡独有动作，列进卡内 `MOTION.md`），绘制进入静态闭包 module。不得保留 eval、同步 XHR 或运行时外网加载；许可和本项目合同取舍写入 GUIDE。引擎型 module 的文字、字体与确认见 [B-roll 合同](broll-assets.md#非-dom-文字与字体)。

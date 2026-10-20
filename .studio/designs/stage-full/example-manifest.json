@@ -70,7 +70,7 @@
     {
       "source": ".studio/designs/stage-full/GUIDE.md",
       "target": "GUIDE.md",
-      "sha256": "4794f49f6782fc6cfc1cbb989ca5bd992771c959cadcd9897ba119caefdf7d1d",
+      "sha256": "91172a31d8401d7d7621be88c566f613ebcccd2a510cd40a51d12b7245fd5331",
       "origin": "Project authored source extraction guide",
       "version": "1",
       "license": "Apache-2.0",
@@ -83,7 +83,7 @@
     {
       "source": ".studio/designs/stage-full/stages/draft.md",
       "target": "stages/draft.md",
-      "sha256": "7500f7ed9655116ae3729c4d0d255b7a2ec02ed87a0072165043ac8a986b14ef",
+      "sha256": "7e6595e19b32904e6455196f32ff1a01ae6e6cac3b4a3501e7d58d5c97497575",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -96,7 +96,7 @@
     {
       "source": ".studio/designs/stage-full/stages/export.md",
       "target": "stages/export.md",
-      "sha256": "1687403e92f3e4954e7c2002f675f77e0c7fffe92d0380c3b3eefded31659236",
+      "sha256": "3d0291f5252b80f684c8c1c5dc2a0c1b64c7e4616a4f12ce57cc883e12578014",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -109,7 +109,7 @@
     {
       "source": ".studio/designs/stage-full/stages/plan.md",
       "target": "stages/plan.md",
-      "sha256": "dd73828af77331d93862ed83d21431c5023ba7cbfec615b0fd23bcfadeafadb6",
+      "sha256": "1ac577349ea53e6ee624e939210f8767f74328ec9e2be6ac1bd568b82aa665c1",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -200,7 +200,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-rig/stage-rig.js",
       "target": "runtime/stage-rig.js",
-      "sha256": "a6bd08f7552f7ef4f4d9fe4db006394aca2846bd684acca63e0ab8ea047850ce",
+      "sha256": "3b507848271c5ba34249b904d399a1409b3dfde01134ae013e84c09c096ee89a",
       "origin": "Project authored stage folding mechanism; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",
@@ -304,7 +304,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-kit/blocks/disc-scene.js",
       "target": "runtime/stage-kit/blocks/disc-scene.js",
-      "sha256": "ef9e2c8789bc0598e455744fa6b7a8bd50c88ead2409a8b1d7f7890bedfd5333",
+      "sha256": "853c0562d6f87c73ca06e2cb287e7fe5ac049519101e0d03e34a001ab6fc04b3",
       "origin": "Project authored stage block; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",
@@ -387,6 +387,123 @@
       "version": "1",
       "license": "Apache-2.0",
       "purpose": "Stage block sign-plate",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/MOTION.md",
+      "target": "MOTION.md",
+      "sha256": "0fb8bf7978c2e546e037756e5ebbf4adaac6d66da4b1e596a1c930bba032060f",
+      "origin": "Project authored card motion menu",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Merged tool and card motion verbs for this card",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/runtime/motion.js",
+      "target": "runtime/motion.js",
+      "sha256": "7f63ef7beb568741cd4b73a8174ee4317229a8706e74785955f876309d432a9d",
+      "origin": "Project authored tool-level motion verbs",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Host runtime for standard motion verbs",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/assets/stage-motion/stage-motion.js",
+      "target": "runtime/stage-motion.js",
+      "sha256": "c34a21e8eac83e52e354b8bde22b2585fee997f7b8ec9853db6c1c679e454e45",
+      "origin": "Project authored stage-full motion pack",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Card replacements for the standard motion verbs",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/example/motion-demo.html",
+      "target": "motion-demo.html",
+      "sha256": "f4c05f8ad212cdfff73abe8f935dbaf8dd5e64b4aca1215c40dc46b542d81ccc",
+      "origin": "Project authored editable stage-full example",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Tool versus card motion comparison",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/example/motion-demo.js",
+      "target": "motion-demo.js",
+      "sha256": "65cb60c66e24c975fadccf07fc7388e152622dedbd390d61e04b621040b695c8",
+      "origin": "Project authored editable stage-full example",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Tool versus card motion comparison",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/example/backdrop-demo.html",
+      "target": "backdrop-demo.html",
+      "sha256": "959508fd5fe4baf56dec7d0574961bdfea135621afa621e278bf43250802a47d",
+      "origin": "Project authored editable stage-full example",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Standard full-screen paper backdrop actions",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/example/backdrop-demo.js",
+      "target": "backdrop-demo.js",
+      "sha256": "4b3462ccfc239c2138dbd29c61b29b60e426906f10c2a359f3b0d36da6d3cc71",
+      "origin": "Project authored editable stage-full example",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Standard full-screen paper backdrop actions",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/example/backdrop-advanced-demo.html",
+      "target": "backdrop-advanced-demo.html",
+      "sha256": "e3c3548960ce1f7489d3f76673f7cb8ffafe47dd8ae1deb2fd676ab548665504",
+      "origin": "Project authored editable stage-full example",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Advanced disc, board and stacked pieces background",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/designs/stage-full/example/backdrop-advanced-demo.js",
+      "target": "backdrop-advanced-demo.js",
+      "sha256": "8dcf0b59f90eccafc6c4c528a415addbd24f65a599c99339abf471ef1f0ad956",
+      "origin": "Project authored editable stage-full example",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Advanced disc, board and stacked pieces background",
       "packages": [
         "public",
         "personal"

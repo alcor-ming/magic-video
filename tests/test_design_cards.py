@@ -14,7 +14,6 @@ import designs
 
 
 EXPECTED_DEFAULTS = {
-    "math": {"captions": False, "sfx": False},
     "english": {"captions": False, "sfx": False},
     "stage-full": {"captions": True, "sfx": True},
     "stage-light": {"captions": True, "sfx": True},

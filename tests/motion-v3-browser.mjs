@@ -116,8 +116,8 @@ def four(name):
 
 def project(name, theme, motion):
     target = root / ('project-' + name); target.mkdir()
-    account = {'id': 'fixture-' + name, 'revision': 1, 'theme': refs[theme], 'background': refs['background'], 'ratio': '16:9', 'motion': motion}
-    lock = appearance.resolve(harness, account, {})
+    account = {'id': 'fixture-' + name, 'revision': 1, 'theme': refs[theme], 'background': refs['background'], 'ratio': '16:9'}
+    lock = appearance.resolve(harness, account, {}, legacy_motion=motion)
     appearance.materialize(harness, target, lock)
     appearance.verify(target, lock)
 

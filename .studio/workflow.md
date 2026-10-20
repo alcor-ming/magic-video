@@ -8,7 +8,7 @@
 
 先区分讨论、继续现有 Work/Variant、同内容目标的独立 Variant、临时实验和新生产目标。普通修订留在当前 Variant；同一期新账号适配建立独立 Variant；只有用户明确要求旧归档实体只读、另建同一期实体时使用继任。用途有实质歧义才询问，不从 URL、缺账号或缺 Final 推断实验。
 
-账号属于 Variant；Work 级 Script/Research 由各 Variant 共享，各 Variant 独立维护 Plan、工程与接受结果。显式内容分支按 CLI 定位。新视频显式指定 `--purpose standard|ip|test`，生产用途指定系列；账号与制作版本可以稍后确定。视觉主题、背景、画幅和可选 Motion 按所选设计卡配置；设计身份由设计卡显式选择（公共包 `stage-full`、`stage-light`；其他设计由用户卡目录提供），旧身份只读并提示重选，不隐式套用 `explainer`。Theme 负责字体、语义色与表面，不决定模式、布局或 cue；Variant 使用冻结外观。
+账号属于 Variant；Work 级 Script/Research 由各 Variant 共享，各 Variant 独立维护 Plan、工程与接受结果。显式内容分支按 CLI 定位。新视频显式指定 `--purpose standard|ip|test`，生产用途指定系列；账号与制作版本可以稍后确定。视觉主题、背景和画幅按所选设计卡配置，动作用工具动作与卡片动作包（卡内 `MOTION.md`）；设计身份由设计卡显式选择（公共包 `stage-full`、`stage-light`；其他设计由用户卡目录提供），旧身份只读并提示重选，不隐式套用 `explainer`。Theme 负责字体、语义色与表面，不决定模式、布局或 cue；Variant 使用冻结外观。
 
 WorkStore 按系列物理分层：`works/<系列ID>/<Work>/`，临时实验在 `works/test/`，未登记系列的 Work 在 `works/_未归系列/`；归档与停放只是 Work 内标记，不移动目录，`series move` 会把 Work 目录一并移到新系列文件夹（存活 Studio 先 `preview studio stop`）。旧版 `works/active|parked|archive/` 布局以 `work migrate layout` 预览、`--apply` 执行一次性迁移，可重复执行；Studio 记录是写入它的运行时的绝对路径，生产根须用 Windows 侧 `work.cmd` 执行，WSL 下会拒绝；迁移报告列出仍写着旧绝对路径的工作文件，由使用者下次使用时改正，冻结快照与证据不改写。系列经验规则即系列文件夹内的 `works/<系列ID>/AGENTS.md`，以 `work series rules show <id>` 读取、`work series rules put <id> --file -` 从标准输入整份替换（也可给文件路径；`series put <id> --file -` 同样从标准输入读配置 JSON；不要在 WorkStore 根目录落请求草稿；旧版与历史留在 control-plane）、`work series rules delete <id>` 撤下当前规则（正文转入历史）；`work status` 的 `series_rules` 给出所属系列规则路径。读写一律经系列 ID 的 CLI，不从 Work 的上级目录或链接位置推断，开始 Script 前读取；复盘只写回已成立、可复用的结论，合并重复、修正被推翻条目，不堆日志或猜测，也不自动变成系列默认配置。不再使用的系列以 `work series delete <id>` 退役：仍有任何 Work（含归档）归属时拒绝，须先 `series move`；系列文件夹除 `AGENTS.md` 外仍有内容时也拒绝；配置、配置历史与规则整体移入 WorkStore `control-plane/deleted/series/` 并移除空系列文件夹，不硬删，同 ID 可重新创建且版本从 1 起。系列 ID 不可改名，需要新 ID 时新建系列、逐个 `series move` 后删除旧系列。
 
@@ -22,7 +22,7 @@ WorkStore 按系列物理分层：`works/<系列ID>/<Work>/`，临时实验在 `
 
 复用合格 Script、录音、对齐与材料。Script 只来自用户提供的文稿或用户撰写；Script 为空时整理用户文稿，不提供下载或转录提取，正文改动须用户批准。用 `work script text` 排除 Scene 索引，避免重复对齐处理。Script 稳定后通过 `work name` 补语义标题。
 
-数学沿用原片声音与人工核对歌词；英语使用原创教学稿和公共 TTS。TTS 提供方通过配置选择、不静默回退；先生成候选，再明确采用正式声音，最后以提供方可信原生时间证据完成字词对齐，缺少原生时间证据时明确报告缺失。未对齐处不估时，候选生成不等于声音采用或内容接受。正文或声音变化仅重做受影响的新制作范围，保留旧接受快照。
+英语使用原创教学稿和公共 TTS。TTS 提供方通过配置选择、不静默回退；先生成候选，再明确采用正式声音，最后以提供方可信原生时间证据完成字词对齐，缺少原生时间证据时明确报告缺失。未对齐处不估时，候选生成不等于声音采用或内容接受。正文或声音变化仅重做受影响的新制作范围，保留旧接受快照。
 
 Research 按段落或 Anchor 记录事实与来源、B-roll 候选（可定位位置及取得状态）、比喻与例子。先理解完整段落，再定点补具体材料缺口；它不是另一份脚本或必上屏清单。事实冲突交用户判断相关表达，不擅改原音。共享输入变化只更新受影响研究及引用。
 
@@ -82,7 +82,7 @@ Work 是内容容器，各 Variant 平级；`required_variants` 不再作为第�
 
 ## 画面复盘与样片记忆
 
-找问题由用户指定，优秀只由用户标记。复盘不修改作品源、Plan、Current 和接受记录。数学的复盘之外仍遵守原只读边界。只使用登记 Draft 快照与 PNG，不导出视频，不调用外部服务。
+找问题由用户指定，优秀只由用户标记。复盘不修改作品源、Plan、Current 和接受记录。只使用登记 Draft 快照与 PNG，不导出视频，不调用外部服务。
 
 显式传 `--work <Work ID> --variant <Variant ID>` 后运行 `retro open <Draft ID>`；有匹配且 hash 完整的 critic 包时复制证据，否则加 `--hyperframes-cli` 和 `--browser` 从冻结快照采样，不写 critic ledger。记录在 `retro/<Draft ID>/VISUAL.md`，重开保留内容，不同 Draft 独立保存。`retro check <Draft ID>` 校验字段和枚举，不判断归因。
 

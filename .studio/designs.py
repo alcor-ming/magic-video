@@ -45,7 +45,8 @@ REFERENCE = re.compile(r"(?P<card>[a-z][a-z0-9-]*)/(?P<asset>[a-z0-9]+(?:-[a-z0-
 # Explicit retired identities -> unique reselect target (None means "any design").
 RETIRED = {
     "explainer": "stage-full",
-    "explainer/math-rap": "math",
+    "explainer/math-rap": None,
+    "math": None,
     "showcase": None,
     "showcase/pdoom": None,
     "showcase/science": "collage",
@@ -63,10 +64,11 @@ _NEW_REQUIRED = _REQUIRED | {"type", "runtime"}
 _MATERIAL_REQUIRED = {"id", "version", "type", "assets", "runtime"}
 _RUNTIME_KEYS = {"gsap", "plugins"}
 LAYERS = ("background", "stage", "overlay", "text")
-CHECKS = {"math": "math_chain.py", "math-complete": "visual_plan.py",
-          "english": "english_plan.py", "director": "director_plan.py",
+CHECKS = {"english": "english_plan.py", "director": "director_plan.py",
           "reference-count": "director_plan.py",
           "css-contract": "css_contract.py", "frame-blank": "stage_checks.py"}
+# Checks of retired cards: still readable in frozen snapshots and old Locks, never run.
+RETIRED_CHECKS = ("math", "math-complete")
 
 
 def legacy_capabilities(mode: str) -> dict:
@@ -112,7 +114,7 @@ def validate_capabilities(value: object) -> None:
             or any(item not in ("required", "optional", "none") for item in bindings.values())):
         raise DesignError("Invalid capabilities.bindings")
     checks = value["checks"]
-    if (not isinstance(checks, list) or any(not isinstance(item, str) or item not in CHECKS for item in checks)
+    if (not isinstance(checks, list) or any(not isinstance(item, str) or item not in (*CHECKS, *RETIRED_CHECKS) for item in checks)
             or len(checks) != len(set(checks))):
         raise DesignError("Unknown capabilities check")
     template = value["research_template"]
@@ -1129,7 +1131,9 @@ def _validate_one(name, card, found, root, config, runtime_root, tracked_root=No
     if card.get("type") == DESIGN:
         caps = capabilities(card)
         for check in caps["checks"]:
-            if not (Path(__file__).parent / CHECKS[check]).is_file():
+            if check in RETIRED_CHECKS:
+                errors.append(f"Retired check: {check}")
+            elif not (Path(__file__).parent / CHECKS[check]).is_file():
                 errors.append(f"Missing check implementation: {check}")
         if not template_path(card, caps['research_template'], directory=card_dir).is_file():
             errors.append("Missing research_template: " + caps["research_template"])

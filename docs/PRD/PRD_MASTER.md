@@ -6,6 +6,8 @@
 
 开发设计记录（本地、不配送）：[本任务 PRD](../../.trellis/tasks/10-10-hyperframes-docs-discipline-extension/prd.md) 与 [脚手架细则](../../.trellis/tasks/10-10-hyperframes-docs-discipline-extension/scaffold-design.md)。P9 卡片迁移、P10 历史清理另行授权。
 
+数学卡已于 2026-10-20 退役（卡、`math build`、数学图积木与数学检查一并删除；旧数学 Work 只读，`variant reselect` 换卡后可继续），下文 v3.x 关于数学链路的描述只作历史背景。
+
 现行生产入口与恢复协议见 [生产会话接口](production-session-interface.md)。历史 ledger（含 `component-authoring-m0-m1.md` D8）、v3.x Skill 旧名及客户端/模型分工已被该接口取代；历史原文仅保留背景，不构成现行入口或执行限制。
 
 ## 历史版本索引

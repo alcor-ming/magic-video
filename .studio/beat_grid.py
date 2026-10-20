@@ -1,13 +1,48 @@
-"""Use pinned upstream beat detection, never guess meter or downbeats."""
+"""Musical beat grid: pinned upstream beat detection and bar/beat lookup; never guess meter or downbeats."""
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
 
-from math_chain import make_beat_grid
+
+def validate_beat_grid(grid):
+    if (not isinstance(grid, dict) or set(grid) != {
+            'schema_version', 'audio_sha256', 'beats_per_bar', 'first_downbeat', 'times'}
+            or type(grid['schema_version']) is not int or grid['schema_version'] != 1
+            or not isinstance(grid['audio_sha256'], str)
+            or not re.fullmatch(r'[0-9a-fA-F]{64}', grid['audio_sha256'])
+            or type(grid['beats_per_bar']) is not int or not 1 <= grid['beats_per_bar'] <= 9007199254740991
+            or not isinstance(grid['times'], list) or not grid['times']
+            or type(grid['first_downbeat']) is not int
+            or not 0 <= grid['first_downbeat'] < len(grid['times'])):
+        raise ValueError('invalid_beat_grid')
+    previous = -1
+    for time in grid['times']:
+        if type(time) not in (int, float) or not math.isfinite(time) or time < 0 or time <= previous:
+            raise ValueError('invalid_beat_grid')
+        previous = time
+    return grid
+
+
+def make_beat_grid(times, audio_sha256, beats_per_bar, first_downbeat):
+    return validate_beat_grid(dict(schema_version=1, audio_sha256=audio_sha256,
+                                   beats_per_bar=beats_per_bar, first_downbeat=first_downbeat, times=times))
+
+
+def find_beat(grid, bar, beat):
+    validate_beat_grid(grid)
+    if (type(bar) is not int or not 1 <= bar <= 9007199254740991
+            or type(beat) is not int or not 1 <= beat <= grid['beats_per_bar']):
+        raise ValueError('invalid_beat_query')
+    index = grid['first_downbeat'] + (bar - 1) * grid['beats_per_bar'] + beat - 1
+    if index >= len(grid['times']):
+        raise ValueError('beat_not_found')
+    return grid['times'][index]
 
 
 def extract(audio, cli, beats_per_bar, first_downbeat):

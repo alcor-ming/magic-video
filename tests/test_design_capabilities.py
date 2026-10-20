@@ -61,7 +61,7 @@ class CapabilitiesTest(unittest.TestCase):
     def test_required_motion_accepts_one_slot_and_rejects_empty(self):
         caps = designs.legacy_capabilities('explainer')
         caps['bindings']['motion'] = 'required'
-        lock = appearance.resolve(self.root, self.account, {'capabilities': caps})
+        lock = appearance.resolve(self.root, self.account, {'capabilities': caps}, legacy_motion=self.legacy_motion)
         appearance._check_lock(lock)
         with self.assertRaisesRegex(appearance.AppearanceError, 'at least one'):
             appearance.resolve(self.root, self.account,
@@ -77,10 +77,13 @@ class CapabilitiesTest(unittest.TestCase):
                 args = {'mode': mode}
                 if mode == 'showcase':
                     args['submodule'] = 'pdoom'
-                lock = appearance.resolve(self.root, self.account, args)
+                lock = appearance.resolve(self.root, self.account, args,
+                                         legacy_motion=None if mode == 'showcase' else self.legacy_motion)
                 fixtures_path = Path(__file__).parent / 'fixtures/capabilities/legacy-locks.json'
                 baseline = json.loads(fixtures_path.read_text())['locks'][mode]
-                self.assertEqual(baseline, lock)
+                # 夹具账号当年带四槽 Motion，现改由 legacy_motion 带入：只有账号摘要与整锁摘要不同。
+                strip = lambda value: {**value, 'sha256': None, 'account': {**value['account'], 'sha256': None}}
+                self.assertEqual(strip(baseline), strip(lock))
                 before = json.dumps(lock, sort_keys=True)
                 caps = designs.capabilities(lock)
                 self.assertTrue(caps['rolls'])
@@ -100,11 +103,11 @@ class CapabilitiesTest(unittest.TestCase):
                 {'capabilities': caps, 'selection': {'captions': False}})
         self.assertFalse(report['findings'], report)
 
-    def test_legacy_math_rap_keeps_distinct_checks(self):
+    def test_legacy_math_rap_is_retired_and_runs_no_math_check(self):
         state = {'mode': 'explainer', 'series_binding': {'spec': 'math-rap'}}
-        self.assertTrue(lines.is_math(state))
-        self.assertFalse(lines.has_check(state, 'math-complete'))
-        self.assertTrue(lines.has_check({'mode': 'math'}, 'math-complete'))
+        self.assertTrue(lines.retired_math(state))
+        self.assertFalse(lines.has_check(state, 'math'))
+        self.assertNotIn('math', designs.CHECKS)
 
     def test_rolls_false_does_not_install_ab_runtime(self):
         caps = designs.legacy_capabilities('showcase')
@@ -115,6 +118,8 @@ class CapabilitiesTest(unittest.TestCase):
             project.mkdir()
             appearance.materialize(self.root, project, lock)
         self.assertTrue((project / 'runtime/cues.js').is_file())
+        self.assertTrue((project / 'runtime/motion.js').is_file())
+        self.assertIn('runtime/motion.js', json.loads((project / 'project-config.json').read_text())['snapshot_dependencies'])
         self.assertFalse((project / 'runtime/rolls.js').exists())
         self.assertFalse((project / 'runtime/broll.js').exists())
         appearance.verify(project, lock)

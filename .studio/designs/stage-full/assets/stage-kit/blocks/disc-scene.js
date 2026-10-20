@@ -72,6 +72,16 @@
     var cx = number(centre[0], 'disc.centre[0]'), cy = number(centre[1], 'disc.centre[1]');
     var radius = diameter / 2;
     var turnDur = positive(options.turnDur === undefined ? 2.2 : options.turnDur, 'turnDur');
+    var boardDur = positive(options.boardDur === undefined ? 1.6 : options.boardDur, 'boardDur');
+    function board(value) {
+      if (value == null) return null;
+      if (!global.HarnessStageRig || !global.HarnessStageRig.createBackdrop) throw new TypeError('disc.scene: scene.board needs runtime/stage-rig.js loaded first');
+      if (typeof value !== 'object') throw new TypeError('disc.scene: scene.board must be an object');
+      Object.keys(value).forEach(function (key) {
+        if (['wall', 'floor', 'horizon', 'panels'].indexOf(key) < 0) throw new TypeError('disc.scene: unknown scene.board field ' + key);
+      });
+      return { wall: value.wall, floor: value.floor, horizon: value.horizon, panels: value.panels };
+    }
     var sceneIds = [], scenes = array(options.scenes, 'scenes').map(function (scene) {
       var id = text(scene.id, 'scene.id'), ids = [];
       if (sceneIds.indexOf(id) >= 0) throw new TypeError('disc.scene: duplicate scene ' + id);
@@ -79,6 +89,7 @@
       return {
         id: id, color: text(scene.color, 'scene.color'),
         backdrop: scene.backdrop == null ? null : text(scene.backdrop, 'backdrop'),
+        board: board(scene.board),
         pieces: array(scene.pieces, 'pieces').map(function (piece, index) {
           var row = kit.requireBox(piece, ['x', 'y', 'w', 'h'], 'disc.scene');
           row.id = text(piece.id, 'piece.id');
@@ -126,6 +137,16 @@
       entry.plane.style.backgroundColor = entry.scene.color;
       entry.plane.setAttribute('data-scene', entry.scene.id);
       if (entry.scene.backdrop) entry.backdrop = image(entry.scene.backdrop, entry.plane, 'backdrop', 1920, 1080);
+      // 进阶背景：本景自带一块全屏纸板，转正后先展开，小素材再逐件落到纸板上。
+      var piecesAt = entry.buildAt, piecesDur = entry.buildDur;
+      if (entry.scene.board) {
+        var b = entry.scene.board;
+        entry.board = global.HarnessStageRig.createBackdrop({ mount: entry.plane, panels: b.panels, horizon: b.horizon, props: false,
+          skins: { scene: { wall: b.wall, floor: b.floor } } }).unfold({ at: entry.buildAt, duration: boardDur });
+        piecesAt = entry.buildAt + boardDur;
+        piecesDur = entry.buildDur - boardDur;
+        if (piecesDur < 1) throw new TypeError('disc.scene: buildDur must leave at least 1 s after the board unfolds');
+      }
       entry.pieces = entry.scene.pieces.map(function (row) {
         var el = node('div', 'piece', entry.plane, row);
         var inner = node('div', 'inner', el, { x: 0, y: 0, w: row.w, h: row.h });
@@ -143,7 +164,7 @@
         p.groupIndex = groups.indexOf(key);
       });
       entry.pieces.forEach(function (p) {
-        p.ts = p.row.finish ? entry.buildAt + entry.buildDur - 0.15 : entry.buildAt + p.groupIndex * (entry.buildDur - 1) / Math.max(1, groups.length - 1);
+        p.ts = p.row.finish ? piecesAt + piecesDur - 0.15 : piecesAt + p.groupIndex * (piecesDur - 1) / Math.max(1, groups.length - 1);
         p.from = fromState(p.row, p.groupIndex);
         p.impact = { x: 0, y: 0, rx: 0, ry: 0, r: 0 };
         var primary = ['rx', 'ry', 'y', 'x'].filter(function (key) { return p.from[key] !== 0; })[0];
@@ -163,6 +184,7 @@
         var active = t >= entry.enter && (!entries[index + 2] || t < entries[index + 2].enter);
         kit.shown(entry.plane, active ? 1 : 0);
         if (entry.backdrop) kit.shown(entry.backdrop, active ? 1 : 0);
+        if (entry.board) entry.board.apply(t);
         entry.pieces.forEach(function (p) {
           var s = kit.settle(t, p.ts, 0.65, 0.16), state = {};
           ['x', 'y', 'rx', 'ry', 'r'].forEach(function (key) {

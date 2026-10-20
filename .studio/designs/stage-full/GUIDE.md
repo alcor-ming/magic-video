@@ -6,14 +6,15 @@
 
 可运行示例：`example/index.html`（配 `example/style.css`、`example/scene.js` 与共享
 `../shared/stage-rig.js`）。宿主在运行目录放入 `runtime/gsap.min.js`、`runtime/scene-binding.js`、
-`runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`，示例不联网、不带位图与音频。
+`runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`，示例不联网、不带位图与音频。Work 里的接线见 §10「动作与背景接入 Work」。
 
 ## 0. 分轨：背景轨与前景轨
 
 本卡按层分工，不按模型分档。
 
 - **背景轨**：第 1 层、rig 布景件（墙板、地面）与换景动作。
-  - **默认背景**：直接用卡内简单积木的现有设定：`stage-rig` 纸舞台（皮肤见 `example/style.css`），Scene 之间用 `rig.rebuild` 折叠重建换地点；有自备布景位图时可改用 `disc.scene`。任何模型都可以按默认使用，不需要另做设计。
+  - **默认背景**：标准背景动作，即 `HarnessStageRig.createBackdrop` 的全屏纸板：展开后背板铺满地平线以上、台面铺满地平线以下，单层、不垫第二层底；开场 `unfold`，换地点 `refold`（折起、换皮、原地展开），收尾 `fold`（见 [MOTION.md](MOTION.md)「背景动作」）。任何模型都可以按默认使用，不需要另做设计。
+  - **进阶背景**：有自备布景位图时用 `disc.scene` 加 `board`：圆盘半周换景，转正后纸板展开铺满全屏，小素材再逐件落上去，三个动作在同一层背景里。用了进阶就不再另放 `createBackdrop`。旧的 `rig.rebuild`（舞台式纸布景、整台后退重搭）仍可用，但不是默认。
   - **定制背景**：按 Work 设计，可以整体替换默认背景，只要守住下面的接口。v6 起不限模型：能读图、能按「自看循环」自己看帧的执行模型都可以做（Work 071 的银河虚空由 DeepSeek V4.1 完成并获批）。先在 Work 的 `materials/tests/<名>/` 做成独立小样、自看通过，再并入工程；不能读图的执行模型仍用默认背景。
   - **背景给前景的接口**：台面区（默认 x 120–1800、y 200–900，字幕安全带以上）；换景时刻清单（前景在换景开始前退场，换景完成后入场）；布景件带 `data-hf-set`（stage-rig 的墙板与地面已自带），诊断据此把布景与前景分开。
   - **WebGL / 粒子背景**（银河、黑洞、虚空这类，Work 071 实测可行）：全屏 canvas 固定 1920×1080，放在第 1 层，不进前景 3D 叠层、不随叠层旋转；只由主时间线驱动（时间线 `onUpdate` 里按当前时刻 `render`），不用 rAF、Date、`Math.random`（随机用固定种子）；`window.__timelines` 仍只注册一条。无 GPU 时 Studio 与渲染走 SwiftShader，先实测单帧耗时，预算约 250 ms：逐像素着色器先降内部分辨率（Work 071 黑洞满分辨率 3.1 s/帧，0.35 倍约 0.36 s/帧）再降步数；GLSL 里注入的数字一律带小数点（int 字面量不能初始化 `const float`）。
@@ -91,7 +92,7 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 - **字体**：`document.fonts.ready` 就绪后才首次渲染；`@font-face` 只指向 `media/SourceHanSansCN-Regular.otf`，
   `font-display:block`；不使用网络字体或系统回退排版。
 - **布局**：固定 1920×1080；五层各占一层，第 3 层不遮挡第 4 层正文；文字只在阅读窗口内保持稳定。
-- **闭包**：只依赖宿主放好的 `runtime/gsap.min.js`、`runtime/scene-binding.js`、`runtime/stage-rig.js`
+- **闭包**：示例只依赖宿主放好的 `runtime/gsap.min.js`、`runtime/scene-binding.js`、`runtime/stage-rig.js`
   与 `media/SourceHanSansCN-Regular.otf`；无图片、音频、字体下载与新依赖；所有道具与布景为原创内联 SVG/CSS 剪贴。
 
 ## 8. 声音
@@ -112,6 +113,15 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 | **画风拼贴 + 贴图方块**：写实位图、纸艺、Q 版与毛玻璃同框；带背景的方图直接上台。 | 表前锁本卡纸艺画风、色板与角色状态；道具用带 alpha 的镂空图，方图只进纸框或作墙面贴纸，写实件避开阅读区上方。 |
 
 ## 10. 积木清单
+
+标准动作（前景：出现、退场、强调、移动到、落定、换场，加本卡独有的归位；背景：全屏纸板展开、换景、收起，进阶为圆盘 + 纸板 + 小素材）见 [MOTION.md](MOTION.md)，对照示范为 `example/motion-demo.html`、`example/backdrop-demo.html`、`example/backdrop-advanced-demo.html`。前景物体的出现、退场、移动等一律用动作清单里的动作，不手写缓动；积木只负责它自己那件物的机关。
+
+### 动作与背景接入 Work
+
+- 工具动作 `runtime/motion.js` 随 Work 创建自动放进工程，不用安装。
+- 卡内资产按用到的装：`work --work <id> --variant <id> component install stage-full/<资产> --binding-file <binding.json>`，背景用 `stage-rig`，积木用 `stage-kit`，前景动作用 `stage-motion`。文件落在 `vendor/components/stage-full/<资产>/v1/`，页面必须真的加载入口文件，否则 `component verify` 报错。
+- 加载顺序：`runtime/gsap.min.js` → `runtime/scene-binding.js` → `runtime/motion.js` → `vendor/components/stage-full/stage-rig/v1/stage-rig.js` → `vendor/components/stage-full/stage-kit/v1/stage-kit.js` 与所用 `blocks/*.js` → `vendor/components/stage-full/stage-motion/v1/stage-motion.js` → 工程脚本。
+- 渲染：`renderAt(t)` 里依次调用背景 `apply(t)`、积木 `apply(t)`、`motion.apply(t)`，都传全片秒数。
 
 积木是可选工具，不是菜单：物由本期内容决定，积木只省掉定位、显隐、皮肤与确定性插值的工程活。积木由 `assets/stage-kit/stage-kit.js` 统一注册与组合，先加载核心，再加载所用积木；参数合同以各 `blocks/*.md` 为准。工程统一传入全片秒数，调用 `apply(t)` 重建画面，结束时调用 `dispose()`。
 

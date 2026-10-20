@@ -12,6 +12,10 @@
 | scenes[].id | string | 是 | 场景标识 |
 | scenes[].color | string | 是 | 场景面板与对应半边的 CSS 底色 |
 | scenes[].backdrop | string | 否 | 空布景位图文件，相对 base；铺满面板 |
+| scenes[].board | object | 否 | 进阶背景：本景自带一块全屏纸板（背板在上、台面在下），转正后在 buildAt 展开，小素材随后逐件堆叠。需先加载 `runtime/stage-rig.js` |
+| board.wall / board.floor | [string, string] | 随 board 必填 | 背板、台面的上下两端颜色 |
+| board.horizon | number | 否 | 地平线 y，默认 700 |
+| board.panels | 4 或 2 | 否 | 背板块数，默认 4 |
 | scenes[].pieces | Array | 是 | 部件清单；数组顺序决定绘制叠放顺序 |
 | pieces[].id | string | 是 | 景内唯一部件标识 |
 | pieces[].file | string | 是 | 相对 base 的位图文件 |
@@ -28,6 +32,7 @@
 | entries[].buildAt | number | 是 | 装配起点，单位秒 |
 | entries[].buildDur | number | 否 | 装配时段，默认 4.2 秒 |
 | turnDur | number | 否 | 每次半周转动时长，默认 2.2 秒 |
+| boardDur | number | 否 | 有 board 的景纸板展开时长，默认 1.6 秒；小素材在其后的 buildDur − boardDur 内装配，至少留 1 秒 |
 | disc | object | 否 | 整项省略使用直径 4400、圆心 [960,1080]；传入时须完整给出下两项 |
 | disc.diameter | number | 随 disc 必填 | 圆盘直径，像素 |
 | disc.centre | [number, number] | 随 disc 必填 | 宿主坐标中的圆心 |

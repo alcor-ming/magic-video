@@ -1,5 +1,5 @@
 from pathlib import Path
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
 import unittest
@@ -9,8 +9,8 @@ import test_work_appearance
 from test_work_cli import WORK_CLI as cli
 import appearance
 import appearance_rebind
+import beat_grid
 import explainer
-import math_chain
 
 
 class V36IntegrationTest(unittest.TestCase):
@@ -75,34 +75,39 @@ class V36IntegrationTest(unittest.TestCase):
         with self.assertRaisesRegex(cli.HarnessError, "retired"):
             self.invoke("new", "Plain", "--workflow", "hyperframes_video", "--purpose", "test", "--mode", "explainer")
 
-    @unittest.skipUnless((Path(__file__).resolve().parents[1] / '.studio/designs/math/design.json').is_file(), 'Personal card resources; checked in personal assembly')
-    def test_math_series_freezes_spec_and_adopts_successor(self):
+    def run_cli(self, *arguments):
+        args = cli.build_parser().parse_args(["--json", *arguments])
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as errors:
+            code = cli.execute_command(self.root, args)
+        return code, errors.getvalue()
+
+    def test_retired_math_series_and_old_works_are_read_only(self):
         service = cli.account_service(self.root)
-        service.put("series", "fixture", {"name": "Math", "mode": "explainer", "spec": "math-rap"})
-        series = service.get("series", "fixture")
-        identity, variant = self.create("--captions", "off")
+        for series in ({"name": "Math", "mode": "explainer", "spec": "math-rap"}, {"name": "Math", "mode": "math"}):
+            with self.subTest(series=series), self.assertRaisesRegex(cli.HarnessError, "math card .* retired"):
+                service.put("series", "fixture", series)
+        identity, variant = self.create()
         state = cli.read_json(variant / "variant.yaml")
-        expected = {key: series[key] for key in ("id", "revision", "mode", "spec")}
-        self.assertEqual(state["series_binding"], expected)
-        self.assertEqual(state['line'], {'id': 'math', 'version': 1})
-        self.assertEqual(state["design"], "math")
-        # Math defaults captions off; an explicit false is honored, not rejected.
-        self.assertFalse(state["captions"])
-        self.assertEqual(state["appearance_lock"]["mode"], "math")
-        self.assertFalse(state["appearance_lock"]["selection"]["captions"])
-        self.assertEqual(cli.read_frontmatter(variant / "ANIMATION_PLAN.md")["series_binding"], expected)
-        before = {name: (variant / name).read_bytes() for name in ("variant.yaml", "ANIMATION_PLAN.md")}
-        service.put("series", "fixture", {"name": "Changed", "mode": "english"})
-        for name, content in before.items():
-            self.assertEqual((variant / name).read_bytes(), content)
-        self.invoke("variant", "add", "next", "--account", "a")
-        adopted = cli.read_json(variant.parent / "next/variant.yaml")
-        self.assertEqual(adopted["series_binding"]["revision"], series["revision"] + 1)
-        self.assertEqual(adopted["mode"], "english")
-        self.assertEqual(adopted['line'], {'id': 'english', 'version': 1})
+        # An old math Work as frozen before the card retired.
+        cli.write_json(variant / "variant.yaml", {**state, "design": "math", "line": {"id": "math", "version": 1}})
+        code, errors = self.run_cli("--work", identity, "--variant", "main", "plan", "check")
+        self.assertEqual((2, True), (code, "math card is retired" in errors), errors)
+        code, errors = self.run_cli("--work", identity, "status")
+        self.assertEqual(0, code, errors)
+        with self.assertRaisesRegex(cli.HarnessError, "retired"):
+            self.invoke("variant", "add", "next", "--account", "a", "--design", "math")
+        # Reselecting another card is the way out; leftover math history no longer blocks it.
+        code, errors = self.run_cli("--work", identity, "--variant", "main", "variant", "reselect",
+                                    "--account", "a", "--design", "stage-full", "--apply")
+        self.assertEqual(0, code, errors)
+        reselected = cli.read_json(variant / "variant.yaml")
+        self.assertEqual("stage-full", reselected["design"])
+        cli.write_json(variant / "variant.yaml", {**reselected, "series_binding": {"spec": "math-rap"}})
+        code, errors = self.run_cli("--work", identity, "--variant", "main", "plan", "check")
+        self.assertNotIn("math card is retired", errors)
 
     def test_retired_modes_require_reselect_and_default_binds_stage_full(self):
-        for mode, target in (("explainer", "stage-full"), ("showcase", "pdoom"), ("science", "collage")):
+        for mode, target in (("explainer", "stage-full"), ("showcase", "pdoom"), ("science", "collage"), ("math", None)):
             with self.subTest(mode=mode), self.assertRaisesRegex(cli.HarnessError, f"reselect {target}" if target in cli.designs.DESIGN_IDS else "reselect a design"):
                 self.create("--mode", mode)
         with self.assertRaisesRegex(cli.HarnessError, "reselect a design"):
@@ -112,35 +117,23 @@ class V36IntegrationTest(unittest.TestCase):
         card = json.loads((Path(__file__).resolve().parents[1] / '.studio/designs/stage-full/design.json').read_text())
         self.assertEqual(cli.read_json(variant / 'variant.yaml')['line'], {'id': 'stage-full', 'version': card['version']})
 
-    @unittest.skipUnless((Path(__file__).resolve().parents[1] / '.studio/designs/math/design.json').is_file(), 'Personal card resources; checked in personal assembly')
-    def test_plan_and_beats_cli_use_frozen_math_contract(self):
-        cli.account_service(self.root).put("series", "fixture", {"name": "Math", "mode": "explainer", "spec": "math-rap"})
+    def test_beats_build_binds_grid_to_formal_audio(self):
         identity, variant = self.create()
         work = variant.parent.parent
-        self.assertIn("原作者", (work / "shared/RESEARCH.md").read_text())
-        metadata = cli.read_frontmatter(variant / "ANIMATION_PLAN.md")
-        metadata["plan_format"] = "3.5.2"
-        contract = dict(units=[dict(id="u1", symbol="x", graphic="square")], symbols={"x": "square"},
-                        invariants=["fixed equality"], zero_basics=[dict(relation="same value", action="retain square")],
-                        cues=[dict(cue="a", keep=[], reveal=["u1"], remove=[])])
-        (variant / "ANIMATION_PLAN.md").write_text("---\n" + json.dumps(metadata) + "\n---\n## S01\n```math-plan\n" + json.dumps(contract) + "\n```\n")
-        (variant / "project/index.html").write_text('<main data-scene-id="S01" data-start="0" data-duration="6"></main><script>const tween={onUpdate:()=>{window.x=1}};</script>')
-        cues = explainer.build_cues("a", b'{"characters":[{"char":"a","start":0,"end":1}]}')
         cue_path = variant / "project/runtime/cues.json"
-        cli.write_json(cue_path, cues)
-        report = json.loads(self.invoke("--work", identity, "--variant", "main", "plan", "check"))
-        kinds = {f.get("code", f.get("kind")) for f in report["findings"]}
-        self.assertTrue({"math_trailing_gap", "on_update_seek_risk"}.issubset(kinds))
+        cli.write_json(cue_path, explainer.build_cues("a", b'{"characters":[{"char":"a","start":0,"end":1}]}'))
         audio = work / "formal.wav"
         audio.write_bytes(b"audio fixture")
         upstream = self.base / "hyperframes.mjs"
         upstream.write_text("fixture")
-        grid = math_chain.make_beat_grid([0, 1, 2], cli.file_sha256(audio), 3, 0)
-        with patch("math_audio.extract", return_value=grid) as extract:
+        grid = beat_grid.make_beat_grid([0, 1, 2], cli.file_sha256(audio), 3, 0)
+        with patch("beat_grid.extract", return_value=grid) as extract:
             self.invoke("--work", identity, "--variant", "main", "beats", "build", "--audio", "formal.wav",
                         "--beats-per-bar", "3", "--first-downbeat", "0", "--hyperframes-cli", str(upstream))
             self.assertEqual(extract.call_args.args, (audio, upstream, 3, 0))
-        self.assertEqual(cli.read_json(cue_path)["beat_grid"], grid)
+        cues = cli.read_json(cue_path)
+        self.assertEqual(cues["beat_grid"], grid)
+        self.assertEqual(2, explainer.find_cue(cues, {"bar": 1, "beat": 3}))
 
     def test_known_cue_runtime_requires_explicit_upgrade(self):
         identity, variant = self.create()

@@ -39,8 +39,6 @@ class WorkWslTest(unittest.TestCase):
         self.assertIn('D:\\production root\\notes \\ source.json', command)
         equals = work_wsl.command(self.root, ["--appearance-file=D:\\production root\\notes \\ source.json"])
         self.assertIn('--appearance-file=D:\\production root\\notes \\ source.json', equals)
-        exported = work_wsl.command(self.root, ['component', 'math-kit-source', 'sources/math-kit'])
-        self.assertIn('D:\\production root\\sources\\math-kit', exported)
 
     def test_production_commands_and_card_identity_forwarded(self):
         for args in (['doctor'], ['status', '--json'],
@@ -61,8 +59,7 @@ class WorkWslTest(unittest.TestCase):
         for arguments in (["--to=C:\\outside"], ["--mapping=../outside.json"], ["--align=C:\\outside"],
                           ["--appearance-file", "..\\outside.json"], ["C:relative"], ["root", "set", "../outside"],
                           ["component", "install", "asset@v1", "--binding-file", "escape/binding.json"],
-                          ["--binding-file=C:\\outside.json"], ["component", "pack", "--json", "escape/source"],
-                          ['component', 'math-kit-source', 'escape/source']):
+                          ["--binding-file=C:\\outside.json"], ["component", "pack", "--json", "escape/source"]):
             with self.subTest(arguments=arguments), self.assertRaises(ValueError):
                 work_wsl.command(self.root, arguments)
 
@@ -87,7 +84,7 @@ class WorkWslTest(unittest.TestCase):
                 mock.patch.object(work_wsl.subprocess, 'check_output', return_value='/custom/c/Windows/System32/cmd.exe') as convert, \
                 mock.patch.object(Path, 'is_file', return_value=True), \
                 mock.patch.object(work_wsl.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)) as run:
-            self.assertEqual(work_wsl.main(['math', 'build', '--help']), 0)
+            self.assertEqual(work_wsl.main(['preview', 'diagnose', '--help']), 0)
         self.assertEqual('/custom/c/Windows/System32/cmd.exe', run.call_args.args[0][0])
         convert.assert_any_call(['wslpath', '-u', r'C:\Windows\System32\cmd.exe'], text=True)
         self.assertEqual(self.root, run.call_args.kwargs['cwd'])

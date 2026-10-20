@@ -51,7 +51,6 @@ except ModuleNotFoundError:  # Loading this file by path from repository tests.
 
 from visual_plan import VisualPlanError, PLAN_FORMAT, plan_scene_rows, scene_projection, layout_projection, reference_projection, validate_dependencies, source_changes, serve
 import icon_sets
-import math_build
 import work_requests
 import studio_preview
 import visual_diagnostics
@@ -504,8 +503,6 @@ def selected_design(root: Path, args: argparse.Namespace, work: Path | None, acc
     if prior:
         return designs.require(designs.identify(prior['state']))
     identity = series_settings.get('design') or account.get('design')
-    if not identity and series_settings.get('spec') == 'math-rap':
-        identity = 'math'
     if not identity and series_settings.get('mode') in designs.DESIGN_IDS:
         identity = series_settings['mode']
     if identity:
@@ -726,7 +723,6 @@ def command_plan_refresh(root: Path, args: argparse.Namespace) -> None:
 
 
 def command_plan_check(root: Path, args: argparse.Namespace) -> None:
-    import math_chain
     import seek_check
     work, _ = selected_work(root, args)
     require_workflow(work, "hyperframes_video")
@@ -757,18 +753,11 @@ def command_plan_check(root: Path, args: argparse.Namespace) -> None:
     if lines.has_check(state, 'css-contract'):
         import css_contract
         findings.extend(css_contract.findings(project, dependencies))
-    if lines.is_math(state):
-        cues = explainer.validate_cues(read_json(project / "runtime/cues.json"))
-        scenes = scene_projection(project, text)
-        try:
-            findings.extend(math_chain.plan_findings(text, cues, max(s["start"] + s["duration"] for s in scenes), scenes=scenes))
-        except ValueError as error:
-            raise HarnessError(str(error)) from error
     print_result(root, args, {"status": "diagnostic_only", "findings": findings, "unverified": diagnostic["unverified"]})
 
 
 def command_beats_build(root: Path, args: argparse.Namespace) -> None:
-    import math_audio
+    import beat_grid
     if not args.work_override or not args.variant_override:
         raise HarnessError("Beat extraction requires explicit --work and --variant")
     work, _ = selected_work(root, args)
@@ -782,7 +771,7 @@ def command_beats_build(root: Path, args: argparse.Namespace) -> None:
         cues = explainer.validate_cues(read_json(path))
         cli = runtime_path(args.hyperframes_cli, "HYPERFRAMES_CLI")
         try:
-            grid = math_audio.extract(audio, cli, args.beats_per_bar, args.first_downbeat)
+            grid = beat_grid.extract(audio, cli, args.beats_per_bar, args.first_downbeat)
         except (ValueError, KeyError, OSError, subprocess.TimeoutExpired) as error:
             raise HarnessError(str(error)) from error
         cues["beat_grid"] = grid
@@ -811,7 +800,7 @@ def adopt_variant(path: Path, settings: dict[str, Any], *, shared: bool = False,
     if settings.get("theme") or settings.get("appearance_lock"):
         state["profile"] = None
     work = path.parent.parent
-    if settings.get("design") or settings.get("mode") in {"showcase", "math", "english"}:
+    if settings.get("design") or settings.get("mode") in {"showcase", "english"}:
         plan = path / "ANIMATION_PLAN.md"
         original = read_frontmatter(plan)
         card = lines.frozen(state)
@@ -1360,11 +1349,15 @@ def selected_variant(root: Path, work: Path, args: argparse.Namespace) -> tuple[
     if appearance_rebind.journal_path(path).exists() and getattr(args, "appearance_command", None) != "recover":
         raise HarnessError("Appearance recovery pending; run appearance recover with this exact --work and --variant")
     state = read_json(path / "variant.yaml")
-    if state.get('design_live'):
+    retired_math = lines.retired_math(state)
+    if state.get('design_live') and not retired_math:
         refresh_card_values(state, designs.require(state['design']))
     command = getattr(args, "command", None)
     history_only = command in {None, "status", "storage", "archive", "request"} or (
         command == "preview" and getattr(args, "preview_command", None) in {"context", "stop", "list", "diff"})
+    if retired_math and not (history_only or command == "preview" and getattr(args, "preview_command", None) in {"diagnose", "open"}
+                             or command == "variant" and getattr(args, "variant_command", None) == "reselect"):
+        raise HarnessError(lines.MATH_RETIRED)
     if "capabilities" not in state and state.get("mode", "explainer") not in appearance.MODES and not history_only:
         raise HarnessError("This Variant uses an unsupported production mode; explicitly adopt its content in a new supported Variant")
     readonly = command in {None, "status", "archive", "reopen", "finalize", "storage", "request"} or (
@@ -2297,53 +2290,6 @@ def command_icons(root: Path, args: argparse.Namespace) -> None:
     print_result(root, args, result)
 
 
-def command_math_source(root: Path, args: argparse.Namespace) -> None:
-    from math_kit_assets import export_math_kit
-    print_result(root, args, export_math_kit(root, Path(args.target)))
-
-
-def command_math(root: Path, args: argparse.Namespace) -> None:
-    from component_harness import package_write_lock
-    variant = None
-    if args.project:
-        project = asset_store.authoring_project(root, Path(args.project))
-        if not args.plan:
-            raise HarnessError('Standalone math requires --plan within the registered AssetSource')
-        plan_path = Path(args.plan).expanduser().absolute()
-        asset_store.authoring_project(root, plan_path.parent)
-        storage.scoped_path(plan_path.parent, plan_path.name)
-    else:
-        if not args.work_override or not args.variant_override or args.plan:
-            raise HarnessError('Math requires explicit --work/--variant, or --project/--plan')
-        work, _ = selected_work(root, args)
-        require_workflow(work, 'hyperframes_video')
-        variant, _ = selected_variant(root, work, args)
-        project = variant / 'project'
-        plan_path = storage.scoped_path(variant, 'ANIMATION_PLAN.md')
-    with package_write_lock(work_requests.safe(project.parent, '.runtime/component-install.lock')):
-        plan_bytes = plan_path.read_bytes()
-        plan = plan_bytes.decode('utf-8')
-        plan_scene_rows(plan)
-        metadata = read_frontmatter(plan_path)
-        state_bytes = (variant / 'variant.yaml').read_bytes() if variant else None
-        state = json.loads(state_bytes) if state_bytes is not None else metadata
-        if variant and args.purpose == 'plan':
-            assert_preview_ready(variant, state, purpose='plan', kind='reference')
-        elif metadata.get('status') != 'approved' and (not variant or plan_confirmation(root, variant, state)):
-            raise HarnessError('ANIMATION_PLAN.md must be approved before math build')
-        lock = state.get('appearance_lock') if variant else read_json(project / 'appearance-lock.json')
-        if (not lock or not lines.is_math(state)
-                or metadata.get('series_binding') != state.get('series_binding')):
-            raise HarnessError('Math build requires a frozen mathematics binding')
-        appearance.verify(project, lock, check_mounts=False)
-        expected = {plan_path: plan_bytes}
-        if variant:
-            expected[variant / 'variant.yaml'] = state_bytes
-        result = math_build.build(project, plan, root, lock['ratio'], browser=args.browser,
-                                  expected_before=expected, scene_ids=args.scene)
-    print_result(root, args, result)
-
-
 def command_component_store(root: Path, args: argparse.Namespace) -> None:
     action = args.component_command
     if action == "root":
@@ -2993,8 +2939,6 @@ def command_preview_register(root: Path, args: argparse.Namespace) -> None:
     scenes = reference_projection(plan_text) if reference else layout_projection(project, plan_text, args.scene) if layout else scene_projection(project, plan_text, args.scene if scene else None) if visual else None
     if not reference and visual:
         closure = validate_dependencies(project, layout=layout)
-        if not layout:
-            math_build.verify_generated(project, plan_text, args.scene if scene else None, closure=closure)
     draft_digest = file_sha256(draft) if draft else None
     source_digest = hashlib.sha256().hexdigest() if reference else snapshot_digest(project, kind)
     plan_digest = file_sha256(variant / "ANIMATION_PLAN.md") if visual else None
@@ -3517,7 +3461,6 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     scoped_scenes = scope['scenes'] if scope else scenes
     scoped_ids = sample_scenes if sample_scenes is not None or not scope else [scene['id'] for scene in scoped_scenes]
     dependencies = validate_dependencies(project)
-    math_build.verify_generated(project, contents['ANIMATION_PLAN.md'], sample_scenes, closure=dependencies)
     inventory = visual_diagnostics.static_inventory(project, dependencies)
     exceptions = []
     if args.exceptions:
@@ -3640,14 +3583,6 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
         report['stage'] = stage_checks.frame_blank(
             sampled['samples'], scoped_scenes,
             coverage_min=((line or {}).get('thresholds') or {}).get('stage_coverage_min'))
-    if lines.is_math(read_frontmatter(input_path(documents, 'ANIMATION_PLAN.md'))):
-        import math_chain
-        try:
-            report['math'] = {'findings': math_chain.plan_findings(contents['ANIMATION_PLAN.md'],
-                explainer.validate_cues(read_json(project / 'runtime/cues.json')),
-                max(s['start'] + s['duration'] for s in scenes), scenes=scenes)}
-        except ValueError as error:
-            raise HarnessError(str(error)) from error
     if lines.has_check(diagnostic_lock, 'english'):
         import english_plan
         cue_path = project / 'runtime/cues.json'
@@ -4933,17 +4868,7 @@ def build_parser() -> argparse.ArgumentParser:
     plan = commands.add_parser("plan")
     plan_commands = plan.add_subparsers(dest="plan_command", required=True)
     plan_commands.add_parser("refresh", help="Refresh CLI metadata without approving changed content").set_defaults(handler=command_plan_refresh)
-    plan_commands.add_parser("check", help="Report mode-aware engineering and mathematical Plan findings").set_defaults(handler=command_plan_check)
-
-    math_command = commands.add_parser('math', help='Build Plan-owned mathematical diagrams')
-    math_commands = math_command.add_subparsers(dest='math_command', required=True)
-    math_builder = math_commands.add_parser('build')
-    math_builder.add_argument('--project', help='Editable sample inside a registered AssetSource')
-    math_builder.add_argument('--plan', help='Standalone sample Plan path')
-    math_builder.add_argument('--purpose', choices=('plan', 'draft'), default='draft', help='Build a direction reference before Plan approval, or an approved Draft')
-    math_builder.add_argument('--scene', action='append', help='Build exactly one Plan Scene reference; HTML must contain only this Scene')
-    math_builder.add_argument('--browser', help='Chromium executable for glyph and geometry checks')
-    math_builder.set_defaults(handler=command_math)
+    plan_commands.add_parser("check", help="Report mode-aware engineering Plan findings").set_defaults(handler=command_plan_check)
 
     showcase = commands.add_parser('showcase', help='Optional independent stage and white-background cast tools')
     showcase_commands = showcase.add_subparsers(dest='showcase_command', required=True)
@@ -5064,9 +4989,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     component = commands.add_parser("component", help="Inspect card assets and install Work-owned copies")
     component_commands = component.add_subparsers(dest="component_command", required=True)
-    math_source = component_commands.add_parser('math-kit-source', help='Export editable math-kit source; never accept')
-    math_source.add_argument('target')
-    math_source.set_defaults(handler=command_math_source)
     interface = component_commands.add_parser('interface', help='Read card asset details or an explicit legacy reference')
     interface.add_argument('component', help='Card/asset identity, exact legacy version, or explicit listed source path')
     interface.add_argument('--candidate', action='store_true', help='Read an explicit candidate package or editable source path; never authorize installation')
@@ -5304,7 +5226,7 @@ def operation_lock(root: Path, args: argparse.Namespace):
             or args.command == 'component' and args.component_command in {'list', 'interface', 'validate', 'verify', 'trace'}):
         yield
         return
-    variant_commands = {'preview', 'finalize', 'tts', 'math', 'showcase', 'cues', 'sound',
+    variant_commands = {'preview', 'finalize', 'tts', 'showcase', 'cues', 'sound',
                         'beats', 'plan', 'critic', 'wait', 'cover', 'appearance'}
     if args.command == 'request' and args.request_command in {'freeze', 'accept'}:
         variant_commands.add('request')

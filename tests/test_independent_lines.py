@@ -1,8 +1,7 @@
-"""Independent routes and shared math delivery use no retired implementation."""
+"""Independent routes use no retired implementation; the retired math card stays read-only."""
 import json
 from pathlib import Path
 import sys
-import tempfile
 import unittest
 
 REPO = Path(__file__).resolve().parents[1]
@@ -11,36 +10,50 @@ import appearance
 import designs
 import director_plan
 import lines
-import math_build
-import math_kit_assets
 from visual_plan import VisualPlanError, plan_scene_rows
 
 
-@unittest.skipUnless((Path(__file__).resolve().parents[1] / '.studio/designs/math/design.json').is_file(), 'Personal card contract; checked in personal assembly')
 class IndependentLinesTest(unittest.TestCase):
-    def test_routes_freeze_and_legacy_math(self):
+    def test_routes_freeze(self):
         catalog = lines.validate_catalogues()
         self.assertEqual(set(designs.DESIGN_IDS), set(catalog))
-        self.assertEqual({'explainer', 'showcase', 'math', 'english'}, set(appearance.MODES))
         self.assertNotIn('card', catalog)
+        self.assertNotIn('math', catalog)
         with self.assertRaisesRegex(ValueError, 'No design selected'):
             lines.select({})
         for design in designs.DESIGN_IDS:
             state = {'mode': design}
             self.assertEqual(design, lines.frozen({'line': lines.bind(state)})['id'])
             self.assertEqual(design, lines.select(state)['id'])
-        for mode in ('math', 'english'):
-            state = {'mode': mode}
-            self.assertEqual(mode.upper() + '_PLAN.template.md', lines.select(state)['plan_template'])
+        if 'english' in designs.DESIGN_IDS:
+            state = {'mode': 'english'}
+            self.assertEqual('ENGLISH_PLAN.template.md', lines.select(state)['plan_template'])
             self.assertEqual([], director_plan.parse('', {'line': lines.bind(state)}, {'S01': {}})['findings'])
-        for state in ({'mode': 'math'}, {'line': {'id': 'explainer/math-rap', 'version': 1}},
-                      {'mode': 'explainer', 'series_binding': {'spec': 'math-rap'}}):
-            self.assertTrue(lines.is_math(state))
-        self.assertFalse(lines.is_math({'mode': 'english', 'series_binding': {'spec': 'math-rap'}}))
-        self.assertEqual('explainer/math-rap', lines.frozen({'line': {'id': 'explainer/math-rap', 'version': 1}})['id'])
+
+    def test_retired_math_is_recognised_but_never_run(self):
+        for identity in ('math', 'explainer/math-rap'):
+            with self.subTest(identity=identity), self.assertRaisesRegex(ValueError, 'retired.*reselect'):
+                lines.select({'mode': identity})
+        old = ({'mode': 'math'}, {'line': {'id': 'explainer/math-rap', 'version': 1}},
+               {'design': 'math', 'design_live': True},
+               {'mode': 'explainer', 'series_binding': {'spec': 'math-rap'}},
+               {'line': {'id': 'old', 'version': 1}, 'design_snapshot': {'capabilities': {'checks': ['math', 'math-complete']}}})
+        for state in old:
+            with self.subTest(state=state):
+                self.assertTrue(lines.retired_math(state))
+        self.assertFalse(lines.retired_math({'design': 'stage-full', 'mode': 'math', 'series_binding': {'spec': 'math-rap'}}))
+        # Frozen snapshots that declared the math checks still validate for reading.
+        caps = designs.legacy_capabilities('math')
+        designs.validate_capabilities(caps)
+        self.assertEqual(['math', 'math-complete'], caps['checks'])
+        # A math-plan fence is no longer special anywhere.
+        header = '---\n' + json.dumps({'plan_format': '3.5.2', 'mode': 'math'}) + '\n---\n## S01\n'
+        rows = plan_scene_rows(header + '```math-plan\n{"units": []}\n```\n')
+        self.assertEqual([], rows['S01']['events'])
+        self.assertNotIn('math_plan', rows['S01'])
 
     def test_retired_mode_keeps_configuration_source(self):
-        for identity in ('card', 'showcase'):
+        for identity in ('card', 'showcase', 'math'):
             with self.subTest(identity=identity), self.assertRaisesRegex(ValueError, 'retired.*reselect'):
                 lines.select({'mode': identity})
         for source in ('Account', 'Series', 'Appearance selection'):
@@ -51,10 +64,11 @@ class IndependentLinesTest(unittest.TestCase):
         # Historical identities stay locatable for reading, not creation.
         self.assertEqual('explainer', lines.frozen({'line': {'id': 'explainer', 'version': 1}})['id'])
 
-    def test_math_and_english_default_captions_off(self):
-        expected = {'math': False, 'english': False, 'stage-full': True,
-                    'stage-light': True, 'collage': True}
+    def test_card_default_captions(self):
+        expected = {'english': False, 'stage-full': True, 'stage-light': True, 'collage': True}
         for identity, enabled in expected.items():
+            if identity not in designs.DESIGN_IDS:
+                continue
             with self.subTest(identity=identity):
                 self.assertEqual(enabled, designs.defaults(identity)['captions.enabled'])
 
@@ -68,33 +82,6 @@ class IndependentLinesTest(unittest.TestCase):
         rows = plan_scene_rows(header + '## S01\n### I01 · P001\n```screen\nA card-shaped panel\n```\n')
         self.assertEqual('A card-shaped panel', rows['S01']['screens']['I01']['实际表达'])
         self.assertNotIn('cards', rows['S01'])
-
-    def test_direct_math_requires_actual_teaching_contract(self):
-        header = '---\n' + json.dumps({'plan_format': '3.7.0', 'mode': 'math',
-                                     'line': {'id': 'math', 'version': 1}}) + '\n---\n## S01\n'
-        intent = {'units': [{'id': 'U1', 'symbol': 'x', 'graphic': 'square'}],
-                  'symbols': {'x': 'square'}, 'invariants': ['Fixed equality'],
-                  'zero_basics': [{'relation': 'same value', 'action': 'retain square'}],
-                  'cues': [{'cue': 'x', 'keep': [], 'reveal': ['U1'], 'remove': []}]}
-        plan = header + '```math-plan\n' + json.dumps(intent) + '\n```\n'
-        rows = plan_scene_rows(plan)
-        self.assertEqual('math_reveal', rows['S01']['events'][0]['change'])
-        self.assertEqual([], rows['S01']['segments'])
-        self.assertEqual(rows, plan_scene_rows(plan.replace('"mode": "math", ', '')))
-        intent['units'][0]['graphic'] = '<graphic>'
-        with self.assertRaisesRegex(VisualPlanError, 'incomplete_math_plan'):
-            plan_scene_rows(header + '```math-plan\n' + json.dumps(intent) + '\n```\n')
-
-    def test_math_export_and_embedded_json_are_independent(self):
-        with tempfile.TemporaryDirectory() as directory:
-            source = Path(directory) / 'math-source'
-            result = math_kit_assets.export_math_kit(REPO, source)
-            self.assertEqual('math-kit@v1', result['component_ref'])
-            self.assertEqual({'asset.json', 'math-kit.js', 'math-kit.css', 'USAGE.md'},
-                             {p.name for p in source.iterdir()})
-            self.assertEqual(result, math_kit_assets.export_math_kit(REPO, source))
-        self.assertNotIn('</script>', math_build.script_json({'text': '</script>'}))
-        self.assertEqual(64, len(math_build.digest(b'math')))
 
 
 if __name__ == '__main__':
