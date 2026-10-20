@@ -97,7 +97,12 @@ Draft 与 Final 生命周期：
 ./work --work <work-id> storage cleanup
 # 核对上一步清单后执行可回收缓存清理
 ./work --work <work-id> storage cleanup --apply
+# 旧导出（<系列>/<Work>/<Variant>/）迁到 <账号>/<系列>/ 的新位置：先预览，再 --apply
+./work exports migrate
+./work exports migrate --apply
 ```
+
+成片与封面导出到 `<导出根>/<账号>/<系列>/`（上传按账号进行，所以账号在第一层），文件名 `<系列>_E012_<账号>_v01.mp4`（封面同名 `.png`），用系列与账号 ID、期号是系列号而不是 Work 号。一个版本是一整个上传包：视频或封面变了，整期一起升到 v02，上一版按原名移入 `_superseded/`，文件夹里留下的就是要上传的版本。导出根的 `publish-log.csv`（Excel 可直接打开）一期一行：工具维护编号、账号、系列、期数、版本与文件名；状态、发布日期、链接、备注和你自己加的列工具不动，已发的期出了新版本状态变为「待重发」。
 
 对成片不满意，取消原 Variant 归档继续改，不新建 Work 或 successor。新增版本或重开任一版本后 Work 回 active，其他版本保持归档；零版本不自动完成。未导出版本可手动归档并显示未导出。归档与恢复不搬目录；`park` 只暂停 Work，`resume` 解除暂停，不改等待事项、兄弟版本归档或 Studio 路径。
 

@@ -3929,7 +3929,7 @@ def complete_final_lifecycle(root: Path, work: Path, variant: Path) -> None:
         cover.verify(files['cover'].parent)
     try:
         delivery = exports.publish(Path(config.get('export_root', root / 'exports')), work, variant, files,
-            series=read_frontmatter(work / 'WORK.md').get('series'), revision=state.get('revision', 1),
+            **export_names(root, work, variant, state), revision=state.get('revision', 1),
             review=os.environ.get('HYPERFRAMES_AI_REVIEW') == '1'
                    or read_frontmatter(work / 'WORK.md').get('purpose') == 'test')
     except (OSError, ValueError) as error:
@@ -4621,6 +4621,75 @@ def prepare_draft_cover(variant: Path, state: dict) -> None:
         print('Cover incomplete: ' + str(error), file=sys.stderr)
 
 
+def export_names(root: Path, work: Path, variant: Path, state: dict) -> dict:
+    """Ids for the export file name (``<series>_E012_<account>``) and display names for the publish log."""
+    metadata = read_frontmatter(work / 'WORK.md')
+    service = account_service(root)
+
+    def name(kind, identity):
+        try:
+            return service.get(kind, identity).get('name') or identity
+        except (HarnessError, OSError, ValueError):
+            return identity
+    series, account = metadata.get('series') or None, state.get('account') or None
+    label = account
+    siblings = [path for path in (work / 'variants').iterdir()
+                if path != variant and (path / 'variant.yaml').is_file()] if (work / 'variants').is_dir() else []
+    if account and any(read_json(path / 'variant.yaml').get('account') == account for path in siblings):
+        label = f'{account}-{variant.name}'
+    return {'series': series, 'number': metadata.get('series_number') if series else None, 'account': account,
+            'label': label, 'series_name': name('series', series) if series else None,
+            'account_name': name('account', account) if account else None}
+
+
+def command_exports(root: Path, args: argparse.Namespace) -> None:
+    """Copy exports from the old <series>/<Work>/<Variant>/ shelf into the <account>/<series>/ episode packages."""
+    import exports
+    config = json.loads(os.environ.get('HYPERFRAMES_AI_RESOLVED_CONFIG', '{}'))
+    export_root = Path(config.get('export_root', root / 'exports'))
+    index = export_root / exports.INDEX
+    episodes = exports._read_index(index)['episodes'] if index.is_file() else {}
+    planned, skipped = [], []
+    for entry in exports.legacy_entries(export_root):
+        source = {key: entry[key] for key in ('series', 'work', 'variant', 'sequence')}
+        try:
+            work, _ = locate_work(root, entry['work'])
+        except HarnessError as error:
+            skipped.append({**source, 'reason': str(error)})
+            continue
+        variant = work / 'variants' / entry['variant']
+        state = read_json(variant / 'variant.yaml') if (variant / 'variant.yaml').is_file() else {}
+        names = export_names(root, work, variant, state)
+        target = exports.shelf_target(work.name, entry['variant'], **{key: names[key] for key in
+                                                                       ('series', 'number', 'account', 'label')})
+        episode = episodes.get('/'.join(target))
+        if episode and any(not item.get('migrated') for item in episode['files']):
+            skipped.append({**source, 'reason': 'Episode already has a new export: ' + target[2]})
+            continue
+        if episode and set(entry['hashes'].values()) <= {item['sha256'] for item in episode['files']}:
+            continue
+        missing = [role for role, path in entry['files'].items()
+                   if not path.is_file() or path.is_symlink() or exports.sha256(path) != entry['hashes'][role]]
+        if missing:
+            skipped.append({**source, 'reason': 'Old export missing or changed: ' + ', '.join(missing)})
+            continue
+        planned.append({**source, 'target': '/'.join(target), 'revision': entry['revision'], 'names': names,
+                        'files': {role: str(path) for role, path in entry['files'].items()}})
+    if args.apply:
+        for item in planned:
+            names = item['names']
+            exports.place(export_root, tuple(item['target'].split('/')),
+                          {role: Path(path) for role, path in item['files'].items()},
+                          {'work': item['work'], 'variant': item['variant'], 'revision': item['revision'],
+                           'migrated': True, 'number': names['number'],
+                           'account_name': names['account_name'] or names['account'] or '',
+                           'series_name': names['series_name'] or names['series'] or ''})
+    for item in planned:
+        del item['names']
+    print_result(root, args, {'export_root': str(export_root), 'applied': bool(args.apply), 'planned': planned,
+                              'skipped': skipped, 'note': 'Old files stay where they are; delete them yourself after checking.'})
+
+
 def command_cover(root: Path, args: argparse.Namespace) -> None:
     import cover
     work, _ = selected_work(root, args)
@@ -4638,7 +4707,7 @@ def command_cover(root: Path, args: argparse.Namespace) -> None:
         config = json.loads(os.environ.get('HYPERFRAMES_AI_RESOLVED_CONFIG', '{}'))
         report = exports.publish(Path(config.get('export_root', root / 'exports')), work, variant,
             {'cover': storage.scoped_path(variant, state['current_cover'])},
-            series=read_frontmatter(work / 'WORK.md').get('series'), revision=state.get('revision', 1),
+            **export_names(root, work, variant, state), revision=state.get('revision', 1),
             review=os.environ.get('HYPERFRAMES_AI_REVIEW') == '1' or read_frontmatter(work / 'WORK.md').get('purpose') == 'test')
         print_result(root, args, report)
 
@@ -4743,6 +4812,11 @@ def build_parser() -> argparse.ArgumentParser:
             switch.add_argument('value', help='JSON boolean/integer or string')
         switch.set_defaults(handler=command_settings)
 
+    exports_parser = commands.add_parser('exports', help='Export shelf: <account>/<series>/<series>_E012_<account>_v01.mp4 plus publish-log.csv')
+    exports_commands = exports_parser.add_subparsers(dest='exports_command', required=True)
+    migrate_exports = exports_commands.add_parser('migrate', help='Copy old <series>/<Work>/<Variant>/ exports into the account/series packages; preview unless --apply')
+    migrate_exports.add_argument('--apply', action='store_true', help='Copy; old files are kept')
+    migrate_exports.set_defaults(handler=command_exports)
     cover = commands.add_parser('cover', help='Render or independently export the frozen account cover recipe')
     cover_commands = cover.add_subparsers(dest='cover_command', required=True)
     cover_render = cover_commands.add_parser('render')

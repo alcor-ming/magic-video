@@ -81,11 +81,70 @@ class CoverCliTest(unittest.TestCase):
                 second=json.loads(invoke('cover','render','--title','Second'))
                 again=json.loads(invoke('cover','export'))
             self.assertNotEqual(first['id'],second['id'])
-            self.assertEqual(1,exported['sequence']);self.assertEqual(2,again['sequence'])
+            self.assertEqual(1,exported['version']);self.assertEqual(2,again['version'])
             self.assertEqual(b'video unchanged',video.read_bytes())
-            self.assertEqual(2,len(list(Path(exported['directory']).glob('*.png'))))
+            self.assertEqual(str(root/'exports'/'account'/'series'),exported['directory'])
+            self.assertEqual('series_E001_account_v02.png',again['files']['cover'])
+            self.assertEqual(['series_E001_account_v01.png'],[p.name for p in Path(exported['directory']).glob('_superseded/*.png')])
+            self.assertEqual(1,len(list(Path(exported['directory']).glob('*.png'))))
+            # The old <series>/<Work>/<Variant>/ shelf migrates into the same package, keeping the new export current.
+            legacy=root/'exports'/'series'/identity/'main'
+            legacy.mkdir(parents=True)
+            (legacy/'main-r001-e001-cover.png').write_bytes(b'legacy cover')
+            (legacy/'.exports.json').write_text(json.dumps([{'sequence':1,'revision':1,'hashes':{'cover':cover.digest(b'legacy cover')},
+                                                             'files':{'cover':'main-r001-e001-cover.png'}}]))
+            preview=json.loads(invoke('exports','migrate'))
+            self.assertEqual([],preview['planned'])
+            self.assertIn('already has a new export',preview['skipped'][0]['reason'])
             (Path(second['path'])/'cover.png').write_bytes(b'tampered')
             with self.assertRaisesRegex(ValueError,'changed'): cover.verify(Path(second['path']))
+
+    def test_old_shelf_migrates_into_account_series_packages(self):
+        import test_work_cli as fixtures
+        from contextlib import redirect_stdout
+        import io, json, shutil
+        cli=fixtures.WORK_CLI
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            shutil.copytree(fixtures.REPO/'.studio/templates',root/'.studio/templates')
+            font=root/'font.ttf';font.write_bytes(b'font')
+            cli.account_service(root).put('account','acct',{'name':'账号A','overrides':{'cover':{'width':640,'height':360,
+                'font':{'path':str(font),'sha256':cover.digest(b'font')},'logo':{'path':str(font),'sha256':cover.digest(b'font')}}}})
+            cli.account_service(root).put('series','eng',{'name':'英语歪理','design':'stage-full'})
+            def invoke(*args):
+                with redirect_stdout(io.StringIO()) as output:
+                    self.assertEqual(0,cli.main(['--json',*args],root=root))
+                return json.loads(output.getvalue())
+            with redirect_stdout(io.StringIO()) as output:
+                cli.main(['new','Old','--workflow','hyperframes_video','--purpose','standard','--series','eng','--account','acct','--design','stage-full','--variant-id','main'],root=root)
+            identity=output.getvalue().strip()
+            legacy=root/'exports'/'eng'/identity/'main'
+            legacy.mkdir(parents=True)
+            entries=[]
+            for sequence,content in ((1,b'old video'),(2,b'newer video')):
+                name=f'main-r00{sequence}-e00{sequence}-video.mp4'
+                (legacy/name).write_bytes(content)
+                entries.append({'sequence':sequence,'revision':sequence,'hashes':{'video':cover.digest(content)},'files':{'video':name}})
+            (legacy/'.exports.json').write_text(json.dumps(entries))
+            stray=root/'exports'/'eng'/'work-gone'/'main';stray.mkdir(parents=True);(stray/'.exports.json').write_text('[]')
+            (root/'exports'/'eng'/'work-gone'/'x').mkdir();(root/'exports'/'eng'/'work-gone'/'x'/'.exports.json').write_text(json.dumps(entries[:1]))
+            preview=invoke('exports','migrate')
+            self.assertEqual(['acct/eng/eng_E001_acct']*2,[item['target'] for item in preview['planned']])
+            self.assertIn('Unknown work',preview['skipped'][0]['reason'])
+            self.assertFalse((root/'exports'/'acct').exists())
+            invoke('exports','migrate','--apply')
+            folder=root/'exports'/'acct'/'eng'
+            self.assertEqual(b'newer video',(folder/'eng_E001_acct_v02.mp4').read_bytes())
+            self.assertEqual(b'old video',(folder/'_superseded'/'eng_E001_acct_v01.mp4').read_bytes())
+            import csv
+            rows=list(csv.DictReader(io.StringIO((root/'exports'/'publish-log.csv').read_text(encoding='utf-8-sig'))))
+            self.assertEqual([('eng_E001_acct','账号A','英语歪理','1','2','eng_E001_acct_v02.mp4','待发')],
+                             [(r['编号'],r['账号'],r['系列'],r['期数'],r['版本'],r['视频'],r['状态']) for r in rows])
+            self.assertTrue((legacy/'main-r001-e001-video.mp4').is_file())
+            again=invoke('exports','migrate','--apply')
+            self.assertEqual([],again['planned'])
+            self.assertEqual([],list(folder.glob('*_v03*')))
+            self.assertEqual(b'newer video',(folder/'eng_E001_acct_v02.mp4').read_bytes())
 
     def test_account_character_library_and_tagline_reach_the_layout_cover(self):
         import test_work_cli as fixtures
