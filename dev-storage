@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+"""Report development checkout storage and reclaim rebuildable artifacts of archived Trellis tasks.
+
+Development only: never a product source. `cleanup` previews unless `--apply` is given.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import sys
+
+
+REPO = Path(__file__).resolve().parent
+AREAS = (".trellis/tasks", "dist", ".studio/.runtime", ".git")
+ARCHIVED_WORK = {"completed", "cancelled"}
+# Package and deploy outputs of a finished task; PRDs, receipts, logs, scripts and images stay as evidence.
+REBUILDABLE_DIRS = {"node_modules", "unpacked"}
+REBUILDABLE_SUFFIXES = (".zip", ".zip.sha256")
+# Release archives are kept per channel; unrecognised names are never reclaimed.
+RELEASE_CHANNEL = re.compile(r"(.+-(?:harness|candidate|local))-.+-windows-x64\.zip")
+
+
+def tree_bytes(path: Path) -> int:
+    if path.is_symlink() or path.is_file():
+        return path.lstat().st_size
+    def failed(error):
+        raise error
+    total = 0
+    for directory, _, files in os.walk(path, onerror=failed):
+        total += sum((Path(directory) / name).lstat().st_size for name in files)
+    return total
+
+
+def task_skip_reason(task: Path) -> str | None:
+    try:
+        data = json.loads((task / "task.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "task.json unreadable"
+    if not isinstance(data, dict):
+        return "task.json unreadable"
+    if data.get("work_state") in ARCHIVED_WORK and data.get("archive_state") == "logical_archived":
+        return None
+    return f"not archived ({data.get('work_state')}/{data.get('archive_state')})"
+
+
+def task_candidates(task: Path) -> list[Path]:
+    found = []
+    for directory, folders, files in os.walk(task):
+        parent = Path(directory)
+        for name in list(folders):
+            if (parent / name).is_symlink():
+                folders.remove(name)
+            elif name in REBUILDABLE_DIRS:
+                folders.remove(name)
+                found.append(parent / name)
+        found += [parent / name for name in files
+                  if name.endswith(REBUILDABLE_SUFFIXES) and not (parent / name).is_symlink()]
+    return found
+
+
+def dist_candidates(dist: Path) -> list[Path]:
+    """Keep the newest archive of each release channel; release deploy prunes dist/deployments by its own receipts."""
+    channels: dict[str, list[Path]] = {}
+    for path in dist.glob("*.zip"):
+        match = RELEASE_CHANNEL.fullmatch(path.name)
+        if match and path.is_file() and not path.is_symlink():
+            channels.setdefault(match.group(1), []).append(path)
+    stale = [item for archives in channels.values()
+             for path in sorted(archives, key=lambda path: path.stat().st_mtime)[:-1]
+             for item in (path, path.with_name(path.name + ".sha256"))]
+    return [path for path in stale if path.is_file() and not path.is_symlink()]
+
+
+def contained(repo: Path, path: Path) -> bool:
+    root = repo.resolve()
+    return (path.resolve().is_relative_to(root) and path.resolve() != root
+            and not any(item.is_symlink() for item in (path, *path.parents) if item.is_relative_to(repo)))
+
+
+def plan(repo: Path = REPO) -> dict:
+    tasks, candidates = [], []
+    root = repo / ".trellis/tasks"
+    for task in sorted(root.iterdir()) if root.is_dir() else []:
+        if not task.is_dir() or task.is_symlink():
+            continue
+        reason = task_skip_reason(task)
+        found = [] if reason else task_candidates(task)
+        row = {"task": task.name, "bytes": tree_bytes(task), "reclaimable_bytes": sum(map(tree_bytes, found))}
+        if reason:
+            row["skipped"] = reason
+        tasks.append(row)
+        candidates += found
+    if (repo / "dist").is_dir():
+        candidates += dist_candidates(repo / "dist")
+    items = [{"path": path.relative_to(repo).as_posix(), "bytes": tree_bytes(path)} for path in candidates]
+    return {"areas_bytes": {name: tree_bytes(repo / name) if (repo / name).exists() else 0 for name in AREAS},
+            "tasks": sorted(tasks, key=lambda row: -row["bytes"]),
+            "reclaimable": items, "reclaimable_bytes": sum(item["bytes"] for item in items)}
+
+
+def apply(repo: Path, items: list[dict]) -> tuple[list[str], list[str]]:
+    """Revalidate containment and task state immediately before each deletion."""
+    removed, errors = [], []
+    for item in items:
+        path = repo / item["path"]
+        parts = Path(item["path"]).parts
+        try:
+            if not contained(repo, path):
+                raise ValueError("outside the checkout or behind a link")
+            if parts[:2] == (".trellis", "tasks") and task_skip_reason(repo / Path(*parts[:3])):
+                raise ValueError("task is no longer archived")
+            if path.is_dir():
+                shutil.rmtree(path)
+            elif path.is_file():
+                path.unlink()
+            else:
+                continue
+            removed.append(item["path"])
+        except (ValueError, OSError) as error:
+            errors.append(f"{item['path']}: {error}")
+    return removed, errors
+
+
+def main(arguments: list[str] | None = None, repo: Path = REPO) -> int:
+    command = argparse.ArgumentParser(description=__doc__)
+    command.add_argument("operation", choices=["inspect", "cleanup"])
+    command.add_argument("--apply", action="store_true", help="Actually delete the listed candidates (cleanup only)")
+    args = command.parse_args(arguments)
+    try:
+        report = plan(repo)
+    except OSError as error:
+        print(f"dev-storage: cannot measure: {error}", file=sys.stderr)
+        return 1
+    if args.operation == "cleanup" and args.apply:
+        report["removed"], report["errors"] = apply(repo, report["reclaimable"])
+        try:
+            report["after"] = plan(repo)["areas_bytes"]
+        except OSError as error:
+            report["errors"].append(f"cannot remeasure: {error}")
+    print(json.dumps(report, indent=2))
+    return 1 if report.get("errors") else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

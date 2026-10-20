@@ -58,7 +58,7 @@ critic 提供方为 off 时仍生成证据和 ledger，不生成提示词。开�
 
 ## 4. 导出、封面与归档
 
-封面按账号配置组成（风格 + 角色 + 标题 + 一句话，见 [creative.md](spec/creative.md)），Draft 登记时用已采用的标题、一句话和角色渲染。生产 Variant 从准确 Accepted Draft 的闭合快照进入 Finalize，输出最终 MP4 与封面；test-work 不进入任何视频导出链。成功编码、QA、成片提升及收据完成后，MP4 与封面复制到聚合导出架，Variant 保持 active 可继续修改；归档与重开显式执行，不改等待事项或兄弟版本的归档状态。零版本与部分归档不算整期完成。导出与归档不包含上传/发布。
+封面按账号配置组成（风格 + 角色 + 标题 + 一句话，见 [creative.md](spec/creative.md)），Draft 登记时用已采用的标题、一句话和角色渲染。生产 Variant 从准确 Accepted Draft 的闭合快照进入 Finalize，输出最终 MP4 与封面；test-work 不进入任何视频导出链。成功编码、QA、成片提升及收据完成后，MP4 与封面复制到导出架（`<账号>/<系列>/<系列>_E012_<账号>_v01.mp4`，封面同名，旧版本移入 `_superseded/`，根目录 `publish-log.csv` 一期一行跟踪上传，见 [hyperframes-final](spec/hyperframes-final.md)），Variant 保持 active 可继续修改；归档与重开显式执行，不改等待事项或兄弟版本的归档状态。零版本与部分归档不算整期完成。导出与归档不包含上传/发布。
 
 编码 QA 检查规格、原音时长、全量解码、代表帧及必要听音；首次跨引擎输出核对构图、中文边缘、字体、颜色、透明合成与声音。失败不归档，保留复现及旧 Final。成片已成功而导出复制或收据写入中断时，从同次收据恢复，不重复编码或增加历史条目。历史成片与当次 manifest 一起保存；旧散装 MP4 缺收据时标明历史来源未知，不猜配、不自动删除。
 
@@ -70,7 +70,7 @@ Work 是内容容器，各 Variant 平级；`required_variants` 不再作为第�
 
 `list` 默认展示 active（含 parked），`list --archived` 查看归档，`list --all` 查看全部；`list --tree` 与可重建的 `浏览目录.md` 使用同一展示数据；`浏览目录.md` 按系列分组，附系列文件夹与系列规则链接，归档 Work 在所属系列内标为已归档。按标题、系列号、版本归档数、当前焦点及最近导出定位，工程与成片链接指向准确对象。查看归档不等于重新激活。
 
-`work storage inspect` 按 Work 盘点空间，`work storage cleanup` 默认仅预览，加 `--apply` 才执行；均可用 `--work <Work-ID>` 限定目标。容量按需统计，无法读取时报告未知。回收只处理已证明归属、可重建、无引用且相关进程已停止的缓存；源、原媒体、接受快照、历史成片、未知内容及失败证据保留，归档本身不触发删除。
+`work storage inspect` 按 Work 盘点空间，`work storage cleanup` 默认仅预览，加 `--apply` 才执行；均可用 `--work <Work-ID>` 限定目标。容量按需统计，无法读取时报告未知。回收只处理已证明归属、可重建、无引用且相关进程已停止的缓存；Studio 私有浏览器配置（`.runtime/studio-browser`，含审片副本内的）单列 `browser_profiles` 容量，仅在该 Variant 的 Studio 已停止、浏览器不再占用配置时回收其中的 Chrome 缓存目录，`Preferences`（DNT）等配置保留，跳过原因列在 `skipped`；源、原媒体、接受快照、历史成片、未知内容及失败证据保留，归档本身不触发删除。
 
 ## 复用与交接
 
