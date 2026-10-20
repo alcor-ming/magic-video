@@ -225,15 +225,7 @@ def summary(api, root):
     candidates, warnings = [], []
     # Known Work roots only; never crawl tools, assets or arbitrary root content.
     works = scoped_path(base, 'works')
-    paths = []
-    for location in ('active', 'parked', 'archive'):
-        parent = scoped_path(works, location)
-        for child in sorted(parent.iterdir()) if parent.is_dir() else []:
-            scoped_path(works, child.relative_to(works).as_posix())
-            if location == 'archive' and child.is_dir():
-                paths.extend(sorted(child.iterdir()))
-            else:
-                paths.append(child)
+    paths = [path for path, _ in api.work_paths(root)]
     for work in paths:
         scoped_path(works, work.relative_to(works).as_posix())
         if work.name.startswith('.pending-') or not work.is_dir() or not (work / 'WORK.md').is_file():

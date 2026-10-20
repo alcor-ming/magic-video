@@ -1,6 +1,7 @@
 """Exercise diagnostic CLI boundaries against isolated Work fixtures, without video export."""
 
 import json
+from pathlib import Path
 import shutil
 import unittest
 from unittest import mock
@@ -215,6 +216,72 @@ class VisualDiagnosticsCliTests(unittest.TestCase):
                 self.assertIn(reason, [item["reason"] for item in report["unverified"]])
                 self.assertIn("plan_information_not_observed", [item["reason"] for item in report["d1"]["unverified"]])
                 self.assertNotIn("pass", json.dumps(report).lower())
+
+    def two_scenes(self):
+        self.plan.write_text(self.plan.read_text(encoding="utf-8")
+                             + '## S02\n### I02\n**来源：** SCRIPT.md#P001\n```screen\n其他场景的完整结论\n```\n', encoding="utf-8")
+        (self.project / "index.html").write_text(
+            '<section id="S01" data-hf-layer="text" data-start="0" data-duration="4">' + COPY + '</section>'
+            '<section id="S02" data-hf-layer="text" data-start="4" data-duration="4">其他场景的完整结论</section>', encoding="utf-8")
+
+    def test_range_samples_only_overlapping_scenes_and_scopes_findings(self):
+        self.two_scenes()
+        self.sampled['samples'] = [{"time": 5, "ready": True, "texts": [
+            {"scene": "S02", "info": "I02", "text": "其他场景的完整结论", "selector": "#S02", "layer": "text"}]}]
+        before = self.files()
+        report = json.loads(self.diagnose("current", "--range", "4.5", "20"))
+        self.assertEqual(before, self.files())
+        request = self.probe.call_args.args[0]
+        self.assertEqual(['S02'], [scene['id'] for scene in request['scenes']])
+        self.assertEqual([4.5, 8], request['range'])
+        self.assertNotIn('times', request)
+        self.assertEqual({'range': [4.5, 8], 'times': None, 'scenes': ['S02']}, report['scope'])
+        self.assertIn('range_limited_sampling', [item['reason'] for item in report['unverified']])
+        self.assertFalse(any(hit.get('scene') == 'S01' for hit in report['d1']['findings']))
+        self.assertEqual({'samples': 1, 'ready': 1}, report['sampling'])
+
+    def test_explicit_times_pass_through_and_imply_their_span(self):
+        self.two_scenes()
+        report = json.loads(self.diagnose("current", "--times", "6,1.5,6"))
+        request = self.probe.call_args.args[0]
+        self.assertEqual([1.5, 6], request['times'])
+        self.assertEqual([1.5, 6], request['range'])
+        self.assertEqual(['S01', 'S02'], report['scope']['scenes'])
+
+    def test_invalid_scope_fails_before_sampling(self):
+        self.two_scenes()
+        for options in (("--range", "5", "2"), ("--range", "3", "3"), ("--range", "8", "9"), ("--range", "nan", "2"),
+                        ("--times", "a"), ("--times", ""), ("--times", "-1"), ("--times", "9"),
+                        ("--range", "0", "2", "--times", "3")):
+            with self.subTest(options=options):
+                message = self.diagnose("current", *options, expected=2)
+                self.assertTrue("--range" in message or "--times" in message, message)
+        self.probe.assert_not_called()
+
+    def test_frames_go_to_variant_runtime_and_old_runs_are_trimmed(self):
+        self.sampled['samples'][0]['screenshot'] = 'frame-000000000000.png'
+        self.sampled['determinism'] = [{'time': 0, 'via': [0, 3.999], 'identical': True}]
+        base = self.variant / '.runtime' / 'diagnose-frames'
+        for index in range(4):
+            (base / f'2026010{index}T000000000000').mkdir(parents=True)
+        (base / 'keep-me').mkdir()
+        report = json.loads(self.diagnose("current", "--frames", "--times", "0"))
+        request = self.probe.call_args.args[0]
+        frames = Path(request['evidence_dir'])
+        self.assertTrue(request['measurements'])
+        self.assertEqual(base, frames.parent)
+        self.assertEqual(str(frames), report['frames']['directory'])
+        self.assertEqual([{'time': 0, 'file': 'frame-000000000000.png'}], report['frames']['files'])
+        self.assertEqual(self.sampled['determinism'], report['determinism'])
+        self.assertEqual(sorted(['20260102T000000000000', '20260103T000000000000', frames.name, 'keep-me']),
+                         sorted(path.name for path in base.iterdir()))
+        self.assertEqual(CLI.preview_input_hashes(self.variant), report['input_sha256'])
+
+    def test_no_verified_sample_carries_a_rerun_hint(self):
+        self.probe.return_value = {"samples": [{"time": 0, "ready": False, "texts": []}], "unverified": []}
+        report = json.loads(self.diagnose())
+        self.assertEqual(0, report['sampling']['ready'])
+        self.assertIn('preview stop', report['sampling']['hint'])
 
     def test_invalid_confirmed_exceptions_are_rejected_before_sampling(self):
         exceptions = self.root / "exceptions.json"

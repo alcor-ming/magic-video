@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Local lifecycle CLI for HyperFrames AI works."""
+"""Local lifecycle CLI for Magic Video works."""
 
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from contextlib import contextmanager, ExitStack
 from datetime import datetime
 import hashlib
@@ -50,7 +51,6 @@ except ModuleNotFoundError:  # Loading this file by path from repository tests.
 
 from visual_plan import VisualPlanError, PLAN_FORMAT, plan_scene_rows, scene_projection, layout_projection, reference_projection, validate_dependencies, source_changes, serve
 import icon_sets
-import math_build
 import work_requests
 import studio_preview
 import visual_diagnostics
@@ -90,6 +90,11 @@ WAIT_REASONS = {
 SNAPSHOT_ITEMS = ("index.html", "compositions", "DESIGN.md", "project-config.json")
 ID_PATTERN = re.compile(r"^[\w.-]+$", re.UNICODE)
 NUMBERED_TITLE_PATTERN = re.compile(r"^(\d{3})-(.+)$")
+# works/<series>/<Work>/; the legacy flat containers stay readable until `migrate layout`.
+LEGACY_WORK_CONTAINERS = ("active", "parked", "archive")
+RESERVED_SERIES_IDS = {*LEGACY_WORK_CONTAINERS, "history"}
+UNSORTED_SERIES_FOLDER = "_未归系列"
+LEGACY_ARCHIVE_MARKER = ".runtime/legacy-archive.json"
 
 
 class HarnessError(RuntimeError):
@@ -375,7 +380,14 @@ def account_service(root: Path) -> control_plane.AccountService:
 def command_config(root: Path, args: argparse.Namespace) -> None:
     service = account_service(root)
     if args.operation == "put":
-        record = service.put(args.command, args.identity, read_json(Path(args.file)))
+        if args.file == "-":
+            try:
+                data = json.loads(sys.stdin.read())
+            except ValueError as error:
+                raise HarnessError(f"Invalid JSON on stdin: {error}") from error
+        else:
+            data = read_json(Path(args.file))
+        record = service.put(args.command, args.identity, data)
     elif args.operation == "get":
         record = service.get(args.command, args.identity)
         if args.command == "series":
@@ -395,7 +407,8 @@ def command_series_rules(root: Path, args: argparse.Namespace) -> None:
     service = account_service(root)
     if args.rules_operation == "put":
         try:
-            content = Path(args.file).expanduser().read_text(encoding="utf-8")
+            # "-" reads stdin so agents need no draft file in the WorkStore.
+            content = sys.stdin.read() if args.file == "-" else Path(args.file).expanduser().read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError) as error:
             raise HarnessError(f"Cannot read series rules file: {error}") from error
         record = service.put_rules(args.identity, content)
@@ -490,8 +503,6 @@ def selected_design(root: Path, args: argparse.Namespace, work: Path | None, acc
     if prior:
         return designs.require(designs.identify(prior['state']))
     identity = series_settings.get('design') or account.get('design')
-    if not identity and series_settings.get('spec') == 'math-rap':
-        identity = 'math'
     if not identity and series_settings.get('mode') in designs.DESIGN_IDS:
         identity = series_settings['mode']
     if identity:
@@ -687,11 +698,15 @@ def command_plan_refresh(root: Path, args: argparse.Namespace) -> None:
     memory_needed = bool(visual_memory.references(text) or original.get('reference_memory_sha256'))
     old_memory = None
     if original.get('reference_memory_sha256'):
-        old_memory = visual_memory.frozen(storage.scoped_path(variant, f"reference-memory/{original['revision']}"), original['reference_memory_sha256'])
+        old_memory = visual_memory.frozen(visual_memory.located(variant, original['revision'], original['reference_memory_sha256']),
+                                          original['reference_memory_sha256'])
     changed = changed or (memory_needed and (old_memory is None or old_memory['input'] != reference_input))
     revision = max(state.get("plan_revision", 1), original.get("revision", 1)) + int(changed)
     if memory_needed:
         try:
+            if old_memory is not None and revision == original['revision']:
+                # Restore a freeze an earlier CLI revision bump skipped; unchanged inputs keep identical evidence.
+                visual_memory.carry(variant, original['revision'], revision, original['reference_memory_sha256'])
             metadata['reference_memory_sha256'] = visual_memory.freeze(configured_work_root(root) or root, variant, revision, text, state, effective)
         except ValueError as error:
             raise HarnessError(str(error)) from error
@@ -708,7 +723,6 @@ def command_plan_refresh(root: Path, args: argparse.Namespace) -> None:
 
 
 def command_plan_check(root: Path, args: argparse.Namespace) -> None:
-    import math_chain
     import seek_check
     work, _ = selected_work(root, args)
     require_workflow(work, "hyperframes_video")
@@ -736,18 +750,14 @@ def command_plan_check(root: Path, args: argparse.Namespace) -> None:
         findings.extend(english_plan.check(text, read_json(cue_path) if cue_path.is_file() else None))
     diagnostic = visual_diagnostics.explainer_diagnostics(project, dependencies, state.get("appearance_lock"), text)
     findings.extend(diagnostic["findings"])
-    if lines.is_math(state):
-        cues = explainer.validate_cues(read_json(project / "runtime/cues.json"))
-        scenes = scene_projection(project, text)
-        try:
-            findings.extend(math_chain.plan_findings(text, cues, max(s["start"] + s["duration"] for s in scenes), scenes=scenes))
-        except ValueError as error:
-            raise HarnessError(str(error)) from error
+    if lines.has_check(state, 'css-contract'):
+        import css_contract
+        findings.extend(css_contract.findings(project, dependencies))
     print_result(root, args, {"status": "diagnostic_only", "findings": findings, "unverified": diagnostic["unverified"]})
 
 
 def command_beats_build(root: Path, args: argparse.Namespace) -> None:
-    import math_audio
+    import beat_grid
     if not args.work_override or not args.variant_override:
         raise HarnessError("Beat extraction requires explicit --work and --variant")
     work, _ = selected_work(root, args)
@@ -761,7 +771,7 @@ def command_beats_build(root: Path, args: argparse.Namespace) -> None:
         cues = explainer.validate_cues(read_json(path))
         cli = runtime_path(args.hyperframes_cli, "HYPERFRAMES_CLI")
         try:
-            grid = math_audio.extract(audio, cli, args.beats_per_bar, args.first_downbeat)
+            grid = beat_grid.extract(audio, cli, args.beats_per_bar, args.first_downbeat)
         except (ValueError, KeyError, OSError, subprocess.TimeoutExpired) as error:
             raise HarnessError(str(error)) from error
         cues["beat_grid"] = grid
@@ -790,7 +800,7 @@ def adopt_variant(path: Path, settings: dict[str, Any], *, shared: bool = False,
     if settings.get("theme") or settings.get("appearance_lock"):
         state["profile"] = None
     work = path.parent.parent
-    if settings.get("design") or settings.get("mode") in {"showcase", "math", "english"}:
+    if settings.get("design") or settings.get("mode") in {"showcase", "english"}:
         plan = path / "ANIMATION_PLAN.md"
         original = read_frontmatter(plan)
         card = lines.frozen(state)
@@ -983,7 +993,7 @@ def runtime_root(root: Path) -> Path:
 
 
 def ensure_roots(root: Path) -> None:
-    (works_root(root) / "active").mkdir(parents=True, exist_ok=True)
+    works_root(root).mkdir(parents=True, exist_ok=True)
     runtime_root(root).mkdir(parents=True, exist_ok=True)
 
 
@@ -1018,14 +1028,34 @@ def clear_pointer(root: Path, name: str) -> None:
     write_current(root, None if name == 'current-work' else current['work'], None)
 
 
-def archived_work_paths(root: Path) -> Iterable[Path]:
-    archive = works_root(root) / "archive"
-    if not archive.is_dir():
-        return []
-    paths: list[Path] = []
-    for month in sorted(archive.iterdir(), reverse=True):
-        if month.is_dir():
-            paths.extend(path for path in sorted(month.iterdir()) if path.is_dir() and (path / "WORK.md").is_file())
+def series_folder(root: Path, series: Any) -> Path:
+    """Physical home of a Work: works/<series>/, or the unsorted folder without a series."""
+    if not isinstance(series, str) or not series:
+        return works_root(root) / UNSORTED_SERIES_FOLDER
+    validate_id(series, "series")
+    if series in RESERVED_SERIES_IDS or series.startswith(("_", ".")):
+        raise HarnessError(f"Series identity {series!r} is reserved")
+    return works_root(root) / series
+
+
+def work_paths(root: Path) -> list[tuple[Path, str]]:
+    """Every Work directory with its physical container kind: series, or legacy active/parked/archive."""
+    base = works_root(root)
+    containers: list[tuple[Path, str]] = []
+    for child in sorted(base.iterdir()) if base.is_dir() else []:
+        if child.is_symlink() or not child.is_dir() or child.name.startswith("."):
+            continue
+        if child.name == "archive":
+            containers.extend((month, "archive") for month in sorted(child.iterdir(), reverse=True)
+                              if month.is_dir() and not month.is_symlink())
+        else:
+            containers.append((child, child.name if child.name in LEGACY_WORK_CONTAINERS else "series"))
+    paths: list[tuple[Path, str]] = []
+    for container, physical in containers:
+        for path in sorted(container.iterdir()):
+            if (path.is_dir() and not path.name.startswith(".pending-")
+                    and (physical != "archive" or (path / "WORK.md").is_file())):
+                paths.append((path, physical))
     return paths
 
 
@@ -1040,7 +1070,7 @@ def ensure_mutable_work(root: Path, work: Path) -> None:
         raise HarnessError('Work is retired; historical material remains readable')
     if any(work.name in record["chain"][:-1] for record in identity_state(root)["successions"].values()):
         raise HarnessError("Succession predecessor must remain archived")
-    if work.parent.parent.name == "archive":
+    if work.parent.parent.name == "archive" or (work / LEGACY_ARCHIVE_MARKER).is_file():
         raise HarnessError("Legacy physical archive remains read-only; create a new Work for further production")
 
 
@@ -1063,7 +1093,7 @@ def materialize_legacy_lifecycle(work: Path) -> None:
 
 
 def work_location(work: Path, physical: str) -> str:
-    if (work / ".runtime/archive.json").is_file() or physical == "archive":
+    if (work / ".runtime/archive.json").is_file() or physical == "archive" or (work / LEGACY_ARCHIVE_MARKER).is_file():
         return "archive"
     if (work / ".runtime/parked.json").is_file():
         return "parked"
@@ -1077,14 +1107,111 @@ def locate_work(root: Path, work_id: str) -> tuple[Path, str]:
     validate_id(work_id, "work id")
     work_id = identity_state(root)["aliases"].get(work_id, work_id)
     validate_id(work_id, "work id")
-    for location in ("active", "parked"):
-        candidate = works_root(root) / location / work_id
-        if candidate.is_dir():
-            return candidate, work_location(candidate, location)
-    for candidate in archived_work_paths(root):
-        if candidate.name == work_id:
-            return candidate, "archive"
+    matches = [(path, physical) for path, physical in work_paths(root) if path.name == work_id]
+    if len(matches) > 1:
+        raise HarnessError(f"Work {work_id} exists in several folders: " + ", ".join(str(path) for path, _ in matches))
+    if matches:
+        path, physical = matches[0]
+        return path, work_location(path, physical)
     raise HarnessError(f"Unknown work: {work_id}")
+
+
+def physical_container(root: Path, work: Path) -> str:
+    base = works_root(root).absolute()
+    if work.parent.parent.name == "archive" and work.parent.parent.parent.absolute() == base:
+        return "archive"
+    if work.parent.name in LEGACY_WORK_CONTAINERS and work.parent.parent.absolute() == base:
+        return work.parent.name
+    return "series"
+
+
+def relocation_plan(root: Path, work: Path, series: Any) -> dict[str, Any] | None:
+    """Plan moving a Work into works/<series>/; None when it is already there.
+
+    Studio records and cover recipes are read back by absolute path, so they are rewritten;
+    a possibly live Studio process blocks the move.
+    """
+    target = series_folder(root, series) / work.name
+    if target.absolute() == work.absolute():
+        return None
+    if target.exists():
+        raise HarnessError(f"Target folder already exists: {target}")
+    prefixes = [work.resolve(), (works_root(root) / "active" / work.name).resolve()]
+    def moved(value: str) -> str | None:
+        prefix = next((p for p in prefixes if Path(value).is_relative_to(p)), None)
+        return None if prefix is None else str(target.resolve() / Path(value).relative_to(prefix))
+    records = []
+    for variant in variant_paths(work):
+        state = read_json(variant / "variant.yaml")
+        recipe = state.get("cover_recipe")
+        if isinstance(recipe, dict):
+            # Cover assets outside the Work (asset library) keep their paths.
+            refs = {role: moved(ref["path"]) for role, ref in recipe.items()
+                    if isinstance(ref, dict) and isinstance(ref.get("path"), str)}
+            if any(refs.values()):
+                recipe = {**recipe, **{role: {**recipe[role], "path": path} for role, path in refs.items() if path}}
+                records.append((variant.relative_to(work).as_posix() + "/variant.yaml", {**state, "cover_recipe": recipe}))
+        for path in sorted((variant / ".runtime").glob("studio-*.json")):
+            record = read_json(path)
+            changed = {}
+            for key in ("project", "browser_profile"):
+                value = record.get(key)
+                if not isinstance(value, str) or not value:
+                    continue
+                changed[key] = moved(value)
+                if changed[key] is None:
+                    # Windows-written records (D:\...) are unreadable from WSL; liveness is unknowable there too.
+                    raise HarnessError(f"Studio record {path.name} of {work.name}/{variant.name} names a path outside this "
+                                       f"Work as seen by this runtime ({value}); run the move from the runtime that wrote it")
+            if changed:
+                if not record.get("stopped_at") and not storage.process_stopped(record.get("pid")):
+                    raise HarnessError(f"Studio for {work.name}/{variant.name} may still be running; "
+                                       "run preview studio stop before moving the Work")
+                records.append((path.relative_to(work).as_posix(), {**record, **changed}))
+    return {"work": work, "target": target, "physical": physical_container(root, work), "rewrites": records}
+
+
+def apply_relocation(root: Path, plan: dict[str, Any]) -> Path:
+    """Idempotent: records and markers are written inside the Work before the single rename."""
+    work, target = plan["work"], plan["target"]
+    for relative, record in plan["rewrites"]:
+        write_json(work / relative, record)
+    if plan["physical"] == "archive":
+        write_json(work / LEGACY_ARCHIVE_MARKER, {"migrated_from": work.parent.relative_to(works_root(root)).as_posix(),
+                                                  "migrated_at": now()})
+    elif (plan["physical"] == "parked" and not (work / ".runtime/resumed.json").is_file()
+          and not (work / ".runtime/parked.json").is_file()):
+        write_json(work / ".runtime/parked.json", {"parked_at": now(), "stable_path": True, "migrated_from": "parked"})
+    target.parent.mkdir(parents=True, exist_ok=True)
+    work.rename(target)
+    return target
+
+
+LEGACY_WORK_PATH = re.compile(r"works/(?:active|parked|archive/[^/\"'\s]+)/(work-[^/\"'\s]+)")
+# Frozen snapshots, caches and evidence keep their recorded paths; only working files are reported.
+FROZEN_WORK_PARTS = {"previews", ".runtime", "final", "history", "tts-segments", "covers", "vendor", "exports",
+                     "handoff", "node_modules", ".git"}
+CONTENT_ADDRESSED_PART = re.compile(r"[0-9a-f]{64}")
+
+
+def legacy_path_references(work: Path) -> list[dict[str, Any]]:
+    """Working text files that still name a pre-layout Work path; reported for the agent, never rewritten."""
+    found = []
+    for path in sorted(work.rglob("*")):
+        relative = path.relative_to(work)
+        if (FROZEN_WORK_PARTS.intersection(relative.parts) or any(map(CONTENT_ADDRESSED_PART.fullmatch, relative.parts))
+                or path.is_symlink() or not path.is_file()
+                or path.suffix.lower() not in {".json", ".md", ".txt", ".yaml", ".yml", ".py", ".html", ".ps1", ".sh", ".cmd"}
+                or path.stat().st_size > 2 * 1024 * 1024):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8").replace("\\\\", "/").replace("\\", "/")
+        except (OSError, UnicodeDecodeError):
+            continue
+        names = sorted(set(LEGACY_WORK_PATH.findall(text)))
+        if names:
+            found.append({"file": relative.as_posix(), "works": names})
+    return found
 
 
 def list_work_rows(root: Path, *, validate_identity: bool = True) -> list[dict[str, Any]]:
@@ -1149,14 +1276,12 @@ def list_work_rows(root: Path, *, validate_identity: bool = True) -> list[dict[s
         if row["series_number"] is not None and type(row["series_number"]) is not int:
             row["error"], row["series_number"] = "Invalid series number metadata", None
         return row
-    for location in ("active", "parked"):
-        parent = works_root(root) / location
-        if parent.is_dir():
-            for path in sorted(parent.iterdir()):
-                if path.is_dir() and not path.name.startswith(".pending-"):
-                    rows.append(row_for(path, location))
-    for path in archived_work_paths(root):
-        rows.append(row_for(path, "archive"))
+    for path, physical in work_paths(root):
+        rows.append(row_for(path, physical))
+    counts = Counter(row["id"] for row in rows)
+    for row in rows:
+        if counts[row["id"]] > 1:
+            row["error"] = "Work ID exists in several folders; run work migrate layout"
     if validate_identity:
         work_successor.validate(rows, identity_state(root), SimpleNamespace(**globals()))
     location_order = {"active": 0, "parked": 1, "archive": 2}
@@ -1224,11 +1349,15 @@ def selected_variant(root: Path, work: Path, args: argparse.Namespace) -> tuple[
     if appearance_rebind.journal_path(path).exists() and getattr(args, "appearance_command", None) != "recover":
         raise HarnessError("Appearance recovery pending; run appearance recover with this exact --work and --variant")
     state = read_json(path / "variant.yaml")
-    if state.get('design_live'):
+    retired_math = lines.retired_math(state)
+    if state.get('design_live') and not retired_math:
         refresh_card_values(state, designs.require(state['design']))
     command = getattr(args, "command", None)
     history_only = command in {None, "status", "storage", "archive", "request"} or (
         command == "preview" and getattr(args, "preview_command", None) in {"context", "stop", "list", "diff"})
+    if retired_math and not (history_only or command == "preview" and getattr(args, "preview_command", None) in {"diagnose", "open"}
+                             or command == "variant" and getattr(args, "variant_command", None) == "reselect"):
+        raise HarnessError(lines.MATH_RETIRED)
     if "capabilities" not in state and state.get("mode", "explainer") not in appearance.MODES and not history_only:
         raise HarnessError("This Variant uses an unsupported production mode; explicitly adopt its content in a new supported Variant")
     readonly = command in {None, "status", "archive", "reopen", "finalize", "storage", "request"} or (
@@ -1383,12 +1512,14 @@ def command_new(root: Path, args: argparse.Namespace) -> None:
                 raise HarnessError("Experiment already exists: " + ", ".join(existing) + "; use --separate for a new comparison")
         assigned_series_number = (series_number(root, rows, identity, series)
                                   if args.workflow == "hyperframes_video" and args.purpose != "test" else None)
+        folder = series_folder(root, series)
+        folder.mkdir(parents=True, exist_ok=True)
         while True:
             work_id = f"work-{args.workflow}-{number:03d}"
             if args.workflow == "hyperframes_video":
                 work_id += f"-{work_slug(title_text)}"
             if work_id not in existing_ids:
-                work = works_root(root) / "active" / work_id
+                work = folder / work_id
                 try:
                     staging = work.with_name(f".pending-{uuid.uuid4().hex}")
                     staging.mkdir()
@@ -1543,14 +1674,35 @@ def tree_lines(root: Path, rows: list[dict[str, Any]]) -> list[str]:
 def refresh_browser(root: Path) -> None:
     store = works_root(root).parent
     rows = list_work_rows(root)
-    output = ["# 浏览目录", "", "★ 当前焦点；容量为按需盘点记录，非实时扫描。", ""]
-    def link(label: str, path: str) -> str:
+    output = ["# 浏览目录", "", "★ 当前焦点；容量为按需盘点记录，非实时扫描。每个系列对应 works/<系列ID>/ 文件夹，系列规则是其中的 AGENTS.md。", ""]
+    def link(label: str, path: str | Path) -> str:
         relative = Path(path).relative_to(store).as_posix()
         return "[" + label.replace("[", "\\[").replace("]", "\\]").replace("\n", " ") + "](" + quote(relative, safe="/") + ")"
-    for heading, members in (("制作中", [r for r in rows if r["location"] != "archive" and not r.get("error")]),
-                             ("历史归档", [r for r in rows if r["location"] == "archive" and not r.get("error")]),
-                             ("隔离对象", [r for r in rows if r.get("error")])):
-        output.extend(["## " + heading, ""])
+    def series_label(series: Any) -> str:
+        if series == "test":
+            return "临时实验"
+        if not series:
+            return "未归系列"
+        try:
+            return account_service(root).get("series", series)["name"]
+        except HarnessError:
+            return series
+    states = {"active": "制作中", "parked": "停放", "archive": "已归档"}
+    order = {"active": 0, "parked": 1, "archive": 2}
+    healthy = [row for row in rows if not row.get("error")]
+    for series in sorted({row["series"] for row in healthy}, key=lambda value: (value in (None, "test"), value == "test", value or "")):
+        members = sorted((row for row in healthy if row["series"] == series),
+                         key=lambda row: (order[row["location"]], row["series_number"] or 0, row["created_at"], row["id"]))
+        try:
+            folder = series_folder(root, series)
+        except HarnessError:
+            folder = None
+        heading = f"## {series_label(series)}"
+        if folder is not None and folder.is_dir():
+            heading += " · " + link("文件夹", folder)
+        if folder is not None and (folder / "AGENTS.md").is_file():
+            heading += " · " + link("系列规则", folder / "AGENTS.md")
+        output.extend([heading, ""])
         for row in members:
             label = display_name(root, row)
             if row["purpose"] == "test" and sum(r["purpose"] == "test" and r["title"] == row["title"] for r in rows) > 1:
@@ -1558,10 +1710,8 @@ def refresh_browser(root: Path) -> None:
             focus = " ★" if row["current"] else ""
             usage = row["usage"]
             capacity = f"{usage['bytes']} bytes（盘点记录）" if usage.get("bytes") is not None else f"占用未知：{usage.get('reason') or '盘点不可用'}"
-            output.append(f"- {link(label, row['path'])}{focus} · {row['location']} · {row['archived_variants']}/{row['variant_count']} 已归档 · {capacity}")
-            if row.get("error"):
-                output.append("  - 隔离：" + row["error"])
-            elif not row["variants"]:
+            output.append(f"- {link(label, row['path'])}{focus} · {states[row['location']]} · {row['archived_variants']}/{row['variant_count']} 已归档 · {capacity}")
+            if not row["variants"]:
                 output.append("  - 尚未创建制作版本")
             for variant in row["variants"]:
                 label = f"{variant_account_label(row, variant)} · {variant['name']} · {variant['ratio']}" + (" ★" if variant["current"] else "")
@@ -1571,6 +1721,12 @@ def refresh_browser(root: Path) -> None:
                     output.append("    - " + link("最新成片", variant["final"]))
                 for history in variant["history"]:
                     output.append("    - " + link(history["source_preview"] or "历史来源未知", history["path"]))
+        output.append("")
+    isolated = [row for row in rows if row.get("error")]
+    if isolated:
+        output.extend(["## 隔离对象", ""])
+        for row in isolated:
+            output.append(f"- {link(row['title'], row['path'])} · 隔离：{row['error']}")
         output.append("")
     atomic_write(store / "浏览目录.md", "\n".join(output))
 
@@ -1603,6 +1759,55 @@ def command_storage(root: Path, args: argparse.Namespace) -> None:
 def command_browser_rebuild(root: Path, args: argparse.Namespace) -> None:
     refresh_browser(root)
     print(str(works_root(root).parent / "浏览目录.md"))
+
+
+def command_migrate_layout(root: Path, args: argparse.Namespace) -> None:
+    """Idempotent move to works/<series>/<Work>/; only empty legacy containers are removed."""
+    with naming_lock(root):
+        plans, works, errors, references = [], [], [], []
+        for path, _ in work_paths(root):
+            found = legacy_path_references(path)
+            if found:
+                others = sorted({name for item in found for name in item["works"]} - {path.name})
+                references.append({"work": path.name, "files": [item["file"] for item in found], "other_works": others})
+            try:
+                plan = relocation_plan(root, path, read_frontmatter(path / "WORK.md").get("series"))
+            except (HarnessError, OSError, ValueError) as error:
+                errors.append({"work": path.name, "path": str(path), "error": str(error)})
+                continue
+            if plan:
+                plans.append(plan)
+                works.append({"work": path.name, "from": str(path), "to": str(plan["target"]),
+                              "rewritten_files": [name for name, _ in plan["rewrites"]], "legacy_container": plan["physical"]})
+        service, rules = account_service(root), []
+        for config in sorted((runtime_root(root) / "control-plane" / "series").glob("*.json")):
+            try:
+                path, _, legacy = service.rules_paths(config.stem)
+                if legacy.is_file():
+                    if path.exists():
+                        raise HarnessError(f"Series rules exist in both {legacy} and {path}; keep one")
+                    rules.append({"series": config.stem, "from": str(legacy), "to": str(path)})
+            except (HarnessError, OSError, ValueError) as error:
+                errors.append({"series": config.stem, "error": str(error)})
+        targets = Counter(item["to"] for item in works)
+        errors += [{"path": target, "error": "Several Works would move to the same folder"} for target, count in targets.items() if count > 1]
+        # Stale absolute paths in working files do not block the move; agents fix them when next used.
+        report = {"applied": False, "works": works, "rules": rules, "errors": errors, "stale_path_references": references}
+        if args.apply:
+            if errors:
+                raise HarnessError("Layout migration has errors; resolve them first: " + json.dumps(errors, ensure_ascii=False))
+            for plan in plans:
+                apply_relocation(root, plan)
+            for item in rules:
+                service.adopt_legacy_rules(item["series"])
+            base = works_root(root)
+            for container in [*(base / "archive").glob("*"), *(base / name for name in LEGACY_WORK_CONTAINERS)]:
+                if container.is_dir() and not container.is_symlink() and not any(container.iterdir()):
+                    container.rmdir()
+            report["applied"] = True
+    if args.apply:
+        refresh_browser(root)
+    print(json.dumps(report, ensure_ascii=False, indent=2))
 
 
 def command_migrate(root: Path, args: argparse.Namespace) -> None:
@@ -1689,8 +1894,11 @@ def command_series_move(root: Path, args: argparse.Namespace) -> None:
         if metadata.get("workflow") != "hyperframes_video" or metadata.get("purpose", "standard") == "test":
             raise HarnessError("Only production video Works can move between series")
         old_series, old_number = metadata.get("series"), metadata.get("series_number")
+        plan = relocation_plan(root, work, args.identity)
         if old_series == args.identity:
-            print(json.dumps({"work": work.name, "series": old_series, "series_number": old_number}))
+            # Re-running finishes an interrupted move; the folder follows the recorded series.
+            path = apply_relocation(root, plan) if plan else work
+            print(json.dumps({"work": work.name, "series": old_series, "series_number": old_number, "path": str(path)}, ensure_ascii=False))
             return
         rows, identity = list_work_rows(root), identity_state(root)
         new_number = series_number(root, rows, identity, args.identity)
@@ -1703,7 +1911,8 @@ def command_series_move(root: Path, args: argparse.Namespace) -> None:
         identity["series_highwater"][args.identity] = new_number
         write_identity(root, identity)
         atomic_write(metadata_path, "---\n" + json.dumps(metadata, ensure_ascii=False) + "\n---\n" + document_body(metadata_path))
-    print(json.dumps({"work": work.name, "series": args.identity, "series_number": new_number}))
+        path = apply_relocation(root, plan) if plan else work
+    print(json.dumps({"work": work.name, "series": args.identity, "series_number": new_number, "path": str(path)}, ensure_ascii=False))
 
 
 def command_variant_name(root: Path, args: argparse.Namespace) -> None:
@@ -1749,7 +1958,7 @@ def command_root_set(root: Path, args: argparse.Namespace) -> None:
     if not target.is_absolute() or target.is_symlink():
         raise HarnessError("WorkStore root must be an existing absolute directory, not a symlink")
     target = target.resolve()
-    required = [target / "works/active"]
+    required = [target / "works"]
     missing = [str(path) for path in required if not path.is_dir()]
     if missing:
         raise HarnessError("WorkStore root is missing required directories: " + ", ".join(missing))
@@ -1826,7 +2035,7 @@ def refresh_card_values(state, card):
     sources = {key: 'design' for key in values}
     for key, source in state.get('design_sources', {}).items():
         if source != 'design':
-            if key not in card['fields']:
+            if key not in designs.override_fields(card):
                 raise HarnessError('Updated card no longer supports override: ' + key)
             values[key] = state['design_values'][key]
             sources[key] = source
@@ -2081,53 +2290,6 @@ def command_icons(root: Path, args: argparse.Namespace) -> None:
     print_result(root, args, result)
 
 
-def command_math_source(root: Path, args: argparse.Namespace) -> None:
-    from math_kit_assets import export_math_kit
-    print_result(root, args, export_math_kit(root, Path(args.target)))
-
-
-def command_math(root: Path, args: argparse.Namespace) -> None:
-    from component_harness import package_write_lock
-    variant = None
-    if args.project:
-        project = asset_store.authoring_project(root, Path(args.project))
-        if not args.plan:
-            raise HarnessError('Standalone math requires --plan within the registered AssetSource')
-        plan_path = Path(args.plan).expanduser().absolute()
-        asset_store.authoring_project(root, plan_path.parent)
-        storage.scoped_path(plan_path.parent, plan_path.name)
-    else:
-        if not args.work_override or not args.variant_override or args.plan:
-            raise HarnessError('Math requires explicit --work/--variant, or --project/--plan')
-        work, _ = selected_work(root, args)
-        require_workflow(work, 'hyperframes_video')
-        variant, _ = selected_variant(root, work, args)
-        project = variant / 'project'
-        plan_path = storage.scoped_path(variant, 'ANIMATION_PLAN.md')
-    with package_write_lock(work_requests.safe(project.parent, '.runtime/component-install.lock')):
-        plan_bytes = plan_path.read_bytes()
-        plan = plan_bytes.decode('utf-8')
-        plan_scene_rows(plan)
-        metadata = read_frontmatter(plan_path)
-        state_bytes = (variant / 'variant.yaml').read_bytes() if variant else None
-        state = json.loads(state_bytes) if state_bytes is not None else metadata
-        if variant and args.purpose == 'plan':
-            assert_preview_ready(variant, state, purpose='plan', kind='reference')
-        elif metadata.get('status') != 'approved' and (not variant or plan_confirmation(root, variant, state)):
-            raise HarnessError('ANIMATION_PLAN.md must be approved before math build')
-        lock = state.get('appearance_lock') if variant else read_json(project / 'appearance-lock.json')
-        if (not lock or not lines.is_math(state)
-                or metadata.get('series_binding') != state.get('series_binding')):
-            raise HarnessError('Math build requires a frozen mathematics binding')
-        appearance.verify(project, lock, check_mounts=False)
-        expected = {plan_path: plan_bytes}
-        if variant:
-            expected[variant / 'variant.yaml'] = state_bytes
-        result = math_build.build(project, plan, root, lock['ratio'], browser=args.browser,
-                                  expected_before=expected, scene_ids=args.scene)
-    print_result(root, args, result)
-
-
 def command_component_store(root: Path, args: argparse.Namespace) -> None:
     action = args.component_command
     if action == "root":
@@ -2357,7 +2519,7 @@ def command_variant_reselect(root: Path, args: argparse.Namespace) -> None:
                    current_preview=None, current_final=None, current_cover=None, accepted_cover=None,
                    status='waiting_user', wait_for='plan_approval',
                    next_action='Refresh and review Plan, rebuild Draft against the selected configuration')
-    for key in ('cover_recipe', 'cover_id', 'cover_issue'):
+    for key in ('cover_recipe', 'cover_id', 'cover_issue', 'cover_character'):
         updated.pop(key, None)
     if getattr(args, '_migration_record', None):
         updated['design_migration'] = args._migration_record
@@ -2763,11 +2925,12 @@ def command_preview_register(root: Path, args: argparse.Namespace) -> None:
     plan_text = plan_with_card((variant / "ANIMATION_PLAN.md").read_text(encoding="utf-8"), state)
     plan_meta = read_frontmatter(variant / 'ANIMATION_PLAN.md')
     reference_hash = plan_meta.get('reference_memory_sha256')
+    reference_dir = visual_memory.located(variant, plan_meta.get('revision', 1), reference_hash)
     if any('·' in ref for ref in visual_memory.references(plan_text)) and not reference_hash:
         raise HarnessError('Reference Plan requires plan refresh before registration')
     if reference_hash:
         try:
-            manifest = visual_memory.frozen(storage.scoped_path(variant, f"reference-memory/{plan_meta['revision']}"), reference_hash)
+            manifest = visual_memory.frozen(reference_dir, reference_hash)
             if manifest['input']['references'] != visual_memory.references(plan_text):
                 raise ValueError('References changed; run plan refresh')
         except ValueError as error:
@@ -2776,8 +2939,6 @@ def command_preview_register(root: Path, args: argparse.Namespace) -> None:
     scenes = reference_projection(plan_text) if reference else layout_projection(project, plan_text, args.scene) if layout else scene_projection(project, plan_text, args.scene if scene else None) if visual else None
     if not reference and visual:
         closure = validate_dependencies(project, layout=layout)
-        if not layout:
-            math_build.verify_generated(project, plan_text, args.scene if scene else None, closure=closure)
     draft_digest = file_sha256(draft) if draft else None
     source_digest = hashlib.sha256().hexdigest() if reference else snapshot_digest(project, kind)
     plan_digest = file_sha256(variant / "ANIMATION_PLAN.md") if visual else None
@@ -2876,7 +3037,7 @@ def command_preview_register(root: Path, args: argparse.Namespace) -> None:
             design_snapshot.verify(staging / 'design-snapshot', receipt)
             metadata['design_files'] = receipt
         if reference_hash:
-            visual_memory.copy_frozen(storage.scoped_path(variant, f"reference-memory/{plan_meta['revision']}"), staging / 'reference-memory', reference_hash)
+            visual_memory.copy_frozen(reference_dir, staging / 'reference-memory', reference_hash)
             metadata['reference_memory_sha256'] = reference_hash
         if input_hashes is not None:
             metadata["input_sha256"] = input_hashes
@@ -3242,10 +3403,27 @@ def command_preview_studio(root: Path, args: argparse.Namespace) -> None:
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
+DIAGNOSE_FRAME_RUNS = 3
+
+
+def diagnose_frames_directory(variant: Path) -> Path:
+    """Create a fresh self-review frame folder and keep only the newest tool-owned runs."""
+    base = variant / '.runtime' / 'diagnose-frames'
+    base.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().astimezone().strftime('%Y%m%dT%H%M%S%f')
+    target = base / stamp
+    target.mkdir()
+    runs = sorted(path for path in base.iterdir() if path.is_dir() and re.fullmatch(r'\d{8}T\d{12}', path.name))
+    for old in runs[:-DIAGNOSE_FRAME_RUNS]:
+        shutil.rmtree(old)
+    return target
+
+
 def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     if not args.work_override or not args.variant_override:
         raise HarnessError('Diagnostics require explicit --work and --variant; no Current fallback')
     parameters = visual_diagnostics.parameters(args)
+    explicit_times = visual_diagnostics.sample_times(getattr(args, 'times', None))
     work, _ = selected_work(root, args, allow_archive=True)
     require_workflow(work, 'hyperframes_video')
     variant, state = selected_variant(root, work, args)
@@ -3279,8 +3457,10 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     card_state = preview_metadata(documents).get('adopted_settings', state) if (documents / 'preview.md').is_file() else state
     contents['ANIMATION_PLAN.md'] = plan_with_card(contents['ANIMATION_PLAN.md'], card_state)
     scenes = scene_projection(project, contents['ANIMATION_PLAN.md'], sample_scenes)
+    scope = visual_diagnostics.sample_scope(scenes, getattr(args, 'range', None), explicit_times)
+    scoped_scenes = scope['scenes'] if scope else scenes
+    scoped_ids = sample_scenes if sample_scenes is not None or not scope else [scene['id'] for scene in scoped_scenes]
     dependencies = validate_dependencies(project)
-    math_build.verify_generated(project, contents['ANIMATION_PLAN.md'], sample_scenes, closure=dependencies)
     inventory = visual_diagnostics.static_inventory(project, dependencies)
     exceptions = []
     if args.exceptions:
@@ -3300,7 +3480,13 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     studio_preview.context(cli, project, record['port'], 'server')
     browser = args.browser or os.environ.get('HYPERFRAMES_BROWSER_PATH') or str(studio_preview.browser_path())
     request = {'cli': str(cli), 'url': record['url'], 'browser': browser,
-               'scenes': scenes, 'parameters': parameters}
+               'scenes': scoped_scenes, 'parameters': parameters}
+    if scope:
+        request['range'] = scope['range']
+        if scope['times']:
+            request['times'] = scope['times']
+    if getattr(args, 'frames', False) and not getattr(args, '_evidence_dir', None):
+        args._evidence_dir = diagnose_frames_directory(variant)
     plan_meta = read_frontmatter(input_path(documents, 'ANIMATION_PLAN.md'))
     line = lines.frozen(card_state)
     if line or getattr(args, '_evidence_dir', None):
@@ -3344,7 +3530,7 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
     text = visual_diagnostics.text_diagnostics(text_samples, contents['SCRIPT.md'], contents['RESEARCH.md'],
                                                contents['ANIMATION_PLAN.md'], minimum=args.minimum,
                                                similarity=args.similarity, exceptions=exceptions, scenes=scenes,
-                                               scene_ids=sample_scenes, mode=diagnostic_lock.get('mode'),
+                                               scene_ids=scoped_ids, mode=diagnostic_lock.get('mode'),
                                                capabilities=diagnostic_lock.get('capabilities'))
     observed = visual_diagnostics.normalize(''.join(
         item['text'] for sample in sampled['samples'] if sample.get('ready') for item in sample.get('texts', [])))
@@ -3358,7 +3544,7 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
               'parameters': {**parameters, 'minimum': args.minimum, 'similarity': args.similarity},
               'd1': text, 'module_texts': {**module_texts.diagnostics(list(declared_texts.values())), 'unverified': font_unverified},
               'timeline': sampled.get('timeline', []),
-              'rhythm': visual_diagnostics.rhythm_diagnostics(sampled['samples'], scenes,
+              'rhythm': visual_diagnostics.rhythm_diagnostics(sampled['samples'], scoped_scenes,
                   plan=contents['ANIMATION_PLAN.md'],
                   cues=read_json(project / 'runtime/cues.json') if (project / 'runtime/cues.json').is_file() else None,
                   mode='talking_head' if state.get('template') == 'talking_head' else diagnostic_lock.get('mode')),
@@ -3369,6 +3555,16 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
                    'files': [name for name in dependencies if Path(name).suffix in {'.js', '.mjs'}]},
                   {'reason': 'static_candidates_not_observed_not_screen_text', 'entries': static_unverified}],
               'cross_version_differences': []}
+    report['sampling'] = visual_diagnostics.sampling_summary(sampled['samples'])
+    if scope:
+        report['scope'] = {'range': scope['range'], 'times': scope['times'], 'scenes': [scene['id'] for scene in scoped_scenes]}
+        report['unverified'].append({'reason': 'range_limited_sampling', 'range': scope['range']})
+    if sampled.get('determinism') is not None:
+        report['determinism'] = sampled['determinism']
+    if getattr(args, 'frames', False):
+        report['frames'] = {'directory': str(args._evidence_dir), 'files': [
+            {'time': sample['time'], 'file': sample['screenshot']} for sample in sampled['samples'] if sample.get('screenshot')],
+            'note': 'self-review only; not delivery or critic evidence'}
     if line:
         report['fps'] = sampled.get('fps') or plan_meta.get('fps') or 60
         report['still'] = visual_diagnostics.still_diagnostics(sampled['samples'], report['rhythm'], line['thresholds'])
@@ -3379,14 +3575,14 @@ def command_preview_diagnose(root: Path, args: argparse.Namespace) -> None:
             project, dependencies, diagnostic_lock, contents['ANIMATION_PLAN.md'])
     import seek_check
     report['engineering'] = {'findings': seek_check.findings(project, dependencies)}
-    if lines.is_math(read_frontmatter(input_path(documents, 'ANIMATION_PLAN.md'))):
-        import math_chain
-        try:
-            report['math'] = {'findings': math_chain.plan_findings(contents['ANIMATION_PLAN.md'],
-                explainer.validate_cues(read_json(project / 'runtime/cues.json')),
-                max(s['start'] + s['duration'] for s in scenes), scenes=scenes)}
-        except ValueError as error:
-            raise HarnessError(str(error)) from error
+    if lines.has_check(diagnostic_lock, 'css-contract'):
+        import css_contract
+        report['css_contract'] = {'findings': css_contract.findings(project, dependencies)}
+    if lines.has_check(diagnostic_lock, 'frame-blank'):
+        import stage_checks
+        report['stage'] = stage_checks.frame_blank(
+            sampled['samples'], scoped_scenes,
+            coverage_min=((line or {}).get('thresholds') or {}).get('stage_coverage_min'))
     if lines.has_check(diagnostic_lock, 'english'):
         import english_plan
         cue_path = project / 'runtime/cues.json'
@@ -4096,7 +4292,7 @@ def add_variant_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--seed", type=int)
     parser.add_argument("--design", help="Design card id: " + ", ".join(designs.DESIGN_IDS))
     parser.add_argument("--mode", help="Legacy design alias; retired identities reselect")
-    parser.add_argument("--submodule", help="Showcase submodule; fixed to pdoom for the pdoom design")
+    parser.add_argument("--submodule", help="Legacy showcase submodule")
     parser.add_argument("--captions", choices=("on", "off"), help="Variant captions frozen in the appearance lock")
     parser.add_argument("--template", choices=sorted(TEMPLATES))
     parser.add_argument("--profile", choices=sorted(PROFILES))
@@ -4338,24 +4534,44 @@ def command_settings(root, args):
     print_result(root, args, result)
 
 
-def cover_recipe(state: dict, explicit: dict | None = None) -> dict:
+def cover_recipe(state: dict, explicit: dict | None = None, character: str | None = None) -> dict:
     if not state.get('account') and explicit is None and not state.get('cover_recipe'):
         raise HarnessError('Cover requires an account recipe or an explicit task recipe')
     values = state.get('design_values', {})
     recipe = {key.removeprefix('cover.'): value for key, value in values.items()
               if key.startswith('cover.') and key.removeprefix('cover.') in
-              {'width', 'height', 'font', 'logo', 'background_image', 'font_size', 'color', 'background_color'}}
+              {'width', 'height', 'font', 'logo', 'background_image', 'font_size', 'color', 'background_color',
+               'layout', 'tagline_font_size'}}
     if 'background_image' in recipe:
         recipe['background'] = recipe.pop('background_image')
-    return {**recipe, **state.get('cover_recipe', {}), **(explicit or {})}
+    recipe = {**recipe, **state.get('cover_recipe', {})}
+    # The account's character library is a live choice; the chosen file is frozen into the recipe.
+    library = values.get('cover.characters') or {}
+    character = character or state.get('cover_character')
+    if character is not None:
+        if character not in library:
+            raise HarnessError('Unknown cover character; account library has: ' + ', '.join(sorted(library)))
+        recipe['character'] = library[character]
+    elif 'character' not in recipe and recipe.get('layout') and len(library) == 1:
+        character, recipe['character'] = next(iter(library.items()))
+    elif 'character' not in recipe and recipe.get('layout') and library:
+        raise HarnessError('Choose a cover character with --character: ' + ', '.join(sorted(library)))
+    if character is not None:
+        state['cover_character'] = character
+    return {**recipe, **(explicit or {})}
 
 
-def render_variant_cover(variant: Path, state: dict, title: str, explicit=None, browser=None) -> dict:
+def render_variant_cover(variant: Path, state: dict, title: str, explicit=None, browser=None,
+                         tagline: str | None = None, character: str | None = None) -> dict:
     import cover
-    recipe = cover_recipe(state, explicit)
-    result = cover.render(variant, title, recipe, node=os.environ.get('HYPERFRAMES_NODE', 'node'), browser=browser)
+    recipe = cover_recipe(state, explicit, character)
+    tagline = tagline if tagline is not None else state.get('cover_tagline')
+    result = cover.render(variant, title, recipe, tagline=tagline if recipe.get('layout') else None,
+                          node=os.environ.get('HYPERFRAMES_NODE', 'node'), browser=browser)
     state.update(current_cover=(Path(result['path']) / 'cover.png').relative_to(variant).as_posix(),
                  cover_title=title, cover_recipe=recipe, cover_id=result['id'])
+    if recipe.get('layout'):
+        state['cover_tagline'] = tagline
     state.pop('cover_issue', None)
     write_variant(variant, state)
     return result
@@ -4368,7 +4584,7 @@ def prepare_draft_cover(variant: Path, state: dict) -> None:
     try:
         title = state.get('cover_title')
         if not title:
-            raise HarnessError('Cover title is not adopted; use cover render --title with the chosen packaging text')
+            raise HarnessError('Cover title is not adopted; use cover render --title (and --tagline) with the chosen packaging text')
         render_variant_cover(variant, state, title)
     except (HarnessError, ValueError, OSError, subprocess.SubprocessError) as error:
         state['cover_issue'] = str(error)
@@ -4385,7 +4601,7 @@ def command_cover(root: Path, args: argparse.Namespace) -> None:
     ensure_mutable_work(root, work)
     if args.cover_command == 'render':
         explicit = read_json(Path(args.recipe)) if args.recipe else None
-        result = render_variant_cover(variant, state, args.title, explicit, args.browser)
+        result = render_variant_cover(variant, state, args.title, explicit, args.browser, args.tagline, args.character)
         print_result(root, args, result)
     else:
         import exports
@@ -4504,6 +4720,8 @@ def build_parser() -> argparse.ArgumentParser:
     cover_commands = cover.add_subparsers(dest='cover_command', required=True)
     cover_render = cover_commands.add_parser('render')
     cover_render.add_argument('--title', required=True)
+    cover_render.add_argument('--tagline', help='One-line tagline for layout covers (from PACKAGE.md)')
+    cover_render.add_argument('--character', help="Character name from the account's cover.characters library")
     cover_render.add_argument('--recipe', help='Explicit recipe field overrides for this Variant')
     cover_render.add_argument('--browser')
     cover_render.set_defaults(handler=command_cover)
@@ -4591,6 +4809,9 @@ def build_parser() -> argparse.ArgumentParser:
     apply = migrations.add_parser("apply")
     apply.add_argument("--mapping", required=True, help="Mapping produced by migrate dry-run")
     apply.set_defaults(handler=command_migrate)
+    layout = migrations.add_parser("layout", help="Move Works into works/<series>/ and series rules into the series folder; dry-run unless --apply")
+    layout.add_argument("--apply", action="store_true")
+    layout.set_defaults(handler=command_migrate_layout)
     research_catalog.register_cli(commands)
     appearance_parser = commands.add_parser("appearance", help="Resolve or explicitly rebind exact appearance assets")
     appearance_commands = appearance_parser.add_subparsers(dest="appearance_command", required=True)
@@ -4602,7 +4823,9 @@ def build_parser() -> argparse.ArgumentParser:
     rebind.add_argument("--apply", action="store_true")
     rebind.add_argument("--upgrade-runtime", action="store_true", help="Upgrade a known old runtime in the editable project only")
     rebind.set_defaults(handler=command_appearance_update)
-    appearance_commands.add_parser("recover", help="Recover a pending update of the explicit Work/Variant").set_defaults(handler=command_appearance_update)
+    recover = appearance_commands.add_parser("recover", help="Recover a pending update of the explicit Work/Variant")
+    recover.add_argument("--sync-checks", action="store_true", help="Repair added-check-only lock drift from Variant, preserving appearance and acceptance")
+    recover.set_defaults(handler=command_appearance_update)
     for kind in ("account", "series", "theme"):
         config_parser = commands.add_parser(kind)
         operations = config_parser.add_subparsers(dest="operation", required=True)
@@ -4611,7 +4834,7 @@ def build_parser() -> argparse.ArgumentParser:
             if operation != "list":
                 operation_parser.add_argument("identity")
             if operation == "put":
-                operation_parser.add_argument("--file", required=True)
+                operation_parser.add_argument("--file", required=True, help="JSON file, or - for stdin")
             operation_parser.set_defaults(handler=command_config)
         if kind == "series":
             rules = operations.add_parser("rules", help="Read or replace the series AGENTS.md rules by series identity")
@@ -4620,7 +4843,7 @@ def build_parser() -> argparse.ArgumentParser:
             rules_show.add_argument("identity")
             rules_put = rules_operations.add_parser("put")
             rules_put.add_argument("identity")
-            rules_put.add_argument("--file", required=True)
+            rules_put.add_argument("--file", required=True, help="Rules Markdown file, or - for stdin")
             rules_operations.add_parser("delete", help="Remove the current rules; the text is kept in rules history").add_argument("identity")
             rules.set_defaults(handler=command_series_rules)
             delete = operations.add_parser("delete", help="Retire a series that no Work references; config, history and rules are archived")
@@ -4645,17 +4868,7 @@ def build_parser() -> argparse.ArgumentParser:
     plan = commands.add_parser("plan")
     plan_commands = plan.add_subparsers(dest="plan_command", required=True)
     plan_commands.add_parser("refresh", help="Refresh CLI metadata without approving changed content").set_defaults(handler=command_plan_refresh)
-    plan_commands.add_parser("check", help="Report mode-aware engineering and mathematical Plan findings").set_defaults(handler=command_plan_check)
-
-    math_command = commands.add_parser('math', help='Build Plan-owned mathematical diagrams')
-    math_commands = math_command.add_subparsers(dest='math_command', required=True)
-    math_builder = math_commands.add_parser('build')
-    math_builder.add_argument('--project', help='Editable sample inside a registered AssetSource')
-    math_builder.add_argument('--plan', help='Standalone sample Plan path')
-    math_builder.add_argument('--purpose', choices=('plan', 'draft'), default='draft', help='Build a direction reference before Plan approval, or an approved Draft')
-    math_builder.add_argument('--scene', action='append', help='Build exactly one Plan Scene reference; HTML must contain only this Scene')
-    math_builder.add_argument('--browser', help='Chromium executable for glyph and geometry checks')
-    math_builder.set_defaults(handler=command_math)
+    plan_commands.add_parser("check", help="Report mode-aware engineering Plan findings").set_defaults(handler=command_plan_check)
 
     showcase = commands.add_parser('showcase', help='Optional independent stage and white-background cast tools')
     showcase_commands = showcase.add_subparsers(dest='showcase_command', required=True)
@@ -4683,8 +4896,12 @@ def build_parser() -> argparse.ArgumentParser:
     batch.set_defaults(handler=command_tts)
     adopt = speech_commands.add_parser('adopt')
     adopt.add_argument('candidate', help='Full candidate SHA-256 returned by generate')
-    adopt.add_argument('--alignment', required=True, help='Measured characters[] JSON relative to this Work')
+    adopt.add_argument('--alignment', required=True, help='Tool-produced characters[] JSON relative to this Work')
     adopt.set_defaults(handler=command_tts)
+    audit = speech_commands.add_parser('audit', help='Read-only alignment audit with the suspect list adopt would record')
+    audit.add_argument('candidate', help='Full candidate SHA-256 returned by generate')
+    audit.add_argument('--alignment', required=True, help='Tool-produced characters[] JSON relative to this Work')
+    audit.set_defaults(handler=command_tts)
 
     script = commands.add_parser("script")
     script_commands = script.add_subparsers(dest="script_command", required=True)
@@ -4772,9 +4989,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     component = commands.add_parser("component", help="Inspect card assets and install Work-owned copies")
     component_commands = component.add_subparsers(dest="component_command", required=True)
-    math_source = component_commands.add_parser('math-kit-source', help='Export editable math-kit source; never accept')
-    math_source.add_argument('target')
-    math_source.set_defaults(handler=command_math_source)
     interface = component_commands.add_parser('interface', help='Read card asset details or an explicit legacy reference')
     interface.add_argument('component', help='Card/asset identity, exact legacy version, or explicit listed source path')
     interface.add_argument('--candidate', action='store_true', help='Read an explicit candidate package or editable source path; never authorize installation')
@@ -4938,6 +5152,11 @@ def build_parser() -> argparse.ArgumentParser:
     diagnose.add_argument('--width', type=int, default=960, help='Target sampled display width (160..4096; default: 960)')
     diagnose.add_argument('--timeout-ms', type=int, default=5000, help='Readiness timeout per sample (100..30000; default: 5000)')
     diagnose.add_argument('--exceptions', help='JSON array of confirmed {scene,text,source,reason}; source e.g. SCRIPT.md#P001; no automatic exemptions')
+    diagnose.add_argument('--range', nargs=2, type=float, metavar=('START', 'END'),
+                          help='Sample only this span in seconds; findings cover the overlapping Scenes')
+    diagnose.add_argument('--times', help='Comma-separated exact sample times in seconds; replaces the step grid')
+    diagnose.add_argument('--frames', action='store_true',
+                          help='Save each sample as PNG under Variant .runtime/diagnose-frames/ for self-review; not delivery or critic evidence')
     diagnose.set_defaults(handler=command_preview_diagnose)
     for name in ("context", "stop"):
         studio_command = preview_commands.add_parser(name)
@@ -4990,24 +5209,41 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+# Store-wide changes that move, delete or re-identify Works, or retarget the store, need every other operation idle.
+def store_exclusive(args: argparse.Namespace) -> bool:
+    return (args.command in {'migrate', 'successor', 'browser'}
+            or args.command == 'root' and args.root_command == 'set'
+            or args.command == 'storage' and args.storage_command == 'cleanup'
+            or args.command == 'series' and args.operation in {'move', 'delete'})
+
+
 @contextmanager
 def operation_lock(root: Path, args: argparse.Namespace):
+    """Parallel Works: the store lock is shared except for store-wide changes; writers exclude per Work/Variant."""
     from windows_runtime import file_lock
     if (args.command in {'list', 'current', 'find', 'status'}
             or args.command == 'preview' and args.preview_command in {'diagnose', 'list', 'diff', 'context'}
             or args.command == 'component' and args.component_command in {'list', 'interface', 'validate', 'verify', 'trace'}):
         yield
         return
-    variant_commands = {'preview', 'finalize', 'tts', 'math', 'showcase', 'cues', 'sound',
-                        'beats', 'plan', 'critic', 'wait', 'cover'}
+    variant_commands = {'preview', 'finalize', 'tts', 'showcase', 'cues', 'sound',
+                        'beats', 'plan', 'critic', 'wait', 'cover', 'appearance'}
+    if args.command == 'request' and args.request_command in {'freeze', 'accept'}:
+        variant_commands.add('request')
+    if (args.command == 'component' and args.component_command == 'install'
+            or args.command == 'icons' and args.icon_command == 'use' and args.work_override):
+        variant_commands.add(args.command)
     work_commands = variant_commands | {'name', 'archive', 'reopen', 'park', 'resume', 'variant', 'script', 'status', 'workflow'}
     if getattr(args, 'project', None):
         work_commands.discard(args.command)
-    # New identities and versioned catalog writes already hold the short naming lock.
-    catalog = args.command in {'series', 'account', 'theme'} and args.operation in {'put', 'get', 'list'}
+    # Catalogs, assets and request packages are outside any Work: they exclude only one another.
+    catalog = args.command not in work_commands | {'new'} and not (
+        args.command in {'series', 'account', 'theme'} and args.operation in {'put', 'get', 'list'})
     with ExitStack() as locks:
-        locks.enter_context(file_lock(runtime_root(root) / 'operations.lock',
-                                      shared=catalog or args.command in work_commands | {'new', 'list', 'current', 'find'}))
+        exclusive = store_exclusive(args)
+        locks.enter_context(file_lock(runtime_root(root) / 'operations.lock', shared=not exclusive))
+        if catalog and not exclusive:
+            locks.enter_context(file_lock(runtime_root(root) / 'catalog.lock'))
         if args.command in work_commands:
             if args.command == 'reopen':
                 work, _ = locate_work(root, args.work_id)
@@ -5017,7 +5253,8 @@ def operation_lock(root: Path, args: argparse.Namespace):
             locks.enter_context(file_lock(work / '.runtime/operation.lock', shared=variant_operation))
             if variant_operation:
                 variant, _ = selected_variant(root, work, args)
-                locks.enter_context(file_lock(variant / '.runtime/operation.lock'))
+                locks.enter_context(file_lock(variant / '.runtime/operation.lock',
+                                              shared=args.command == 'request' and args.request_command == 'freeze'))
         yield
 
 

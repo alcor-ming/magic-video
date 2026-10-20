@@ -86,12 +86,7 @@ def publication_paths(api, root):
     """Enumerate only registered Work locations, including archive date buckets."""
     base = api.configured_work_root(root) or root
     works = scoped_path(base, 'works')
-    candidates = []
-    for location in ('active', 'parked', 'archive'):
-        parent = scoped_path(works, location)
-        for child in sorted(parent.iterdir()) if parent.is_dir() else []:
-            scoped_path(works, child.relative_to(works).as_posix())
-            candidates.extend(sorted(child.iterdir()) if location == 'archive' and child.is_dir() else [child])
+    candidates = [path for path, _ in api.work_paths(root)]
     for work in candidates:
         scoped_path(works, work.relative_to(works).as_posix())
         if work.name.startswith('.pending-') or not (work / 'WORK.md').is_file() or api.work_workflow(work) != 'hyperframes_video':

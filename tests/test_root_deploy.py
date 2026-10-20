@@ -114,7 +114,7 @@ class RootDeploymentTests(unittest.TestCase):
             manifest["files"][name] = deploy.digest(path)
         (package / ".release.json").write_text(json.dumps(manifest))
 
-    def test_deployment_and_preflight_only_require_active_workstore(self):
+    def test_deployment_and_preflight_only_require_workstore_root(self):
         (self.root / 'works/parked').rmdir()
         (self.root / 'works/archive').rmdir()
         package = self.package('active-only')
@@ -125,7 +125,9 @@ class RootDeploymentTests(unittest.TestCase):
         self.assertFalse((self.root / 'works/parked').exists())
         self.assertFalse((self.root / 'works/archive').exists())
         (self.root / 'works/active').rmdir()
-        with self.assertRaisesRegex(ValueError, 'Missing WorkStore directory: active'):
+        self.assertEqual('ready', deploy.preflight(self.root)['status'])
+        (self.root / 'works').rmdir()
+        with self.assertRaisesRegex(ValueError, 'Missing WorkStore directory: works'):
             deploy.preflight(self.root)
 
     def test_incremental_backup_removal_and_two_step_rollback(self):

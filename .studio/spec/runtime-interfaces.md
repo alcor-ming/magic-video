@@ -48,33 +48,13 @@ Rolls 独占 A/B 宿主的 opacity、visibility、filter；与 Motion 或其他�
 
 ## appearance.js
 
-用途：冻结外观 token 与动作配方；画幅：16:9、9:16；占层：沿调用节点，不生成额外层。参数：`load(projectURL?)`、`apply(stage,appearance)`、`bindMotion(el,appearance,slot,{cue,restoreCue,endCue,overlap,reducedMotion})`；动作返回 `seek/dispose`。
+用途：冻结外观 token；`bindMotion` 只供旧 Work 冻结锁里的四槽账号 Motion 使用，新作品的动作见上文 motion.js；画幅：16:9、9:16；占层：沿调用节点，不生成额外层。参数：`load(projectURL?)`、`apply(stage,appearance)`、`bindMotion(el,appearance,slot,{cue,restoreCue,endCue,overlap,reducedMotion})`；动作返回 `seek/dispose`。
 
 ```js
 const appearance = await HarnessAppearance.load();
 HarnessAppearance.apply(stage, appearance);
 const motion = HarnessAppearance.bindMotion(titleElement, appearance, 'reveal', {cue: at});
 motion.seek(at);
-```
-
-## math-kit.js
-
-用途：固定槽位公式与首批数学图解；画幅：16:9、9:16；占层：图形 2、文字 4。参数：`mount({stage,text,math,intent,cues,ratio,start,end,appearance,fontURL})`；返回 `items/renderAt/retime/rhythm/dispose`。从已安装的 `math-kit@v1` 加载，字体须通过真实字形检查，不回退系统字体，见 接口卡（仅自用包）。
-
-```js
-const diagram = await HarnessMathKit.mount({stage, text, math, intent, cues,
-  ratio: '16:9', start: 0, end: 10, appearance, fontURL});
-diagram.renderAt(3);
-```
-
-## math-project.js
-
-用途：`math build` 的 Plan 挂载与宿主 seek 接线；画幅：16:9、9:16；占层：2、4。参数：`math-plan` 的 cue 与 `math` 的布局生成的冻结数据，不手写挂载、不另建播放循环。`scene(id)` 提供 A 组，`setRolls(scenes, {reducedMotion?})` 接受 B 编排，`renderAt(t)` 使用全片时间；修改生成块或丢失闭包依赖时预览校验拒绝。
-
-```js
-await HarnessMathProject.ready;
-await HarnessMathProject.renderAt(3);
-const aGroup = await HarnessMathProject.scene('S01');
 ```
 
 ## scene-binding.js
@@ -85,6 +65,16 @@ const aGroup = await HarnessMathProject.scene('S01');
 const binding = HarnessScene.bindScene({start: 0, duration: 8,
   renderAt: t => diagram.renderAt(t), dispose: () => diagram.dispose()});
 await binding.seek(at);
+```
+
+## motion.js
+
+用途：工具级标准动作（出现、退场、强调、移动到、落定、换场）；画幅：16:9、9:16；占层：沿调用节点。参数：`create({card?})` 返回实例，动作为 `appear/exit/emphasize/moveTo/settle/transition(targets, {at, duration?, strength?, stagger?, to?})`，再加卡片独有动作；`menu(card)` 列出合并后的动作清单；返回实例的 `apply(t)` 收全片时间，`dispose()` 恢复样式。卡片动作包（如 `stage-full/stage-motion`）用 `registerCard` 替换实现或加独有动作，不改参数；须在 `runtime/motion.js` 之后加载。同一物体同一属性的时段重叠会直接报错。账号四槽 Motion 已退役，不经过本接口。
+
+```js
+const motion = HarnessMotion.create({card: 'stage-full'});
+motion.appear([box1, box2], {at: 2.4, stagger: {span: 0.3}});
+motion.apply(at);
 ```
 
 ## Background
@@ -155,6 +145,6 @@ Background 的 `renderer:"module"` 供受支持链路共用，声明包内 JS `e
 
 ## Work 语音与 showcase 素材工具
 
-`tts generate` 从当前 Script 生成候选；`tts adopt <hash> --alignment <Work-relative.json>` 只采用全稿及真实字符对齐，接入已有 voice / cues / section_map。提供方配置、替代脚本请求／结果和失败边界见 [README](../../README.md#showcase-补充工具与正式配音)。
+`tts generate` 从当前 Script 生成候选；`tts adopt <hash> --alignment <Work-relative.json>` 只采用全稿及工具测得的字符对齐（`provider-native` 或带 `engine` 的 `forced-alignment`），接入已有 voice / cues / section_map，并写入 `runtime/alignment-report.json`（硬错误拒绝采用，可疑项供逐字核对）；`tts audit` 只读预检。提供方配置、替代脚本请求／结果和失败边界见 [README](../../README.md#showcase-补充工具与正式配音)。
 
 `showcase stage --output <project-relative-dir>` 与 `showcase cast --input <Work-relative-image> --output <project-relative-dir>` 生成可选素材；返回 manifest 含工具版本、参数与文件 hash。生成后将使用的 PNG 作为普通本地媒体接入 Scene，按既有闭包冻结；不自动改 Plan 或接受状态。

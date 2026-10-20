@@ -43,7 +43,8 @@ html, body {
   background: #05070d;
 }
 
-.layer { position: absolute; inset: 0; }
+.layer { position: absolute; inset: 0; pointer-events: none; }
+.layer > * { pointer-events: auto; }
 .layer-background { z-index: 1; }
 .layer-stage { z-index: 2; }
 .layer-overlay { z-index: 3; }

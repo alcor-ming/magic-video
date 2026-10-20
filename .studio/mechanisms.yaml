@@ -8,8 +8,6 @@
       "mechanism": "保留一个位置稳定的对象，让新命题依次附着，观众无需重新寻找视觉起点。",
       "lines": [
         "explainer",
-        "explainer/math-rap",
-        "math",
         "english"
       ],
       "transfer": "跨段保留主卡片或关系节点，只替换当前解释；用 carry 标记核对位置。",
@@ -20,8 +18,6 @@
       "mechanism": "容器先落位，结果内容分层进入，最后保持完整信息的阅读窗口。",
       "lines": [
         "explainer",
-        "explainer/math-rap",
-        "math",
         "english"
       ],
       "transfer": "按语义 cue 分批揭示卡片条目，让图形响应稍晚且幅度更小。",
@@ -32,8 +28,6 @@
       "mechanism": "把一次明确的选择或操作延展为下一场入口，让交接有可见原因。",
       "lines": [
         "explainer",
-        "explainer/math-rap",
-        "math",
         "english"
       ],
       "transfer": "延续被选中对象到下段，媒体、A组和说明文字按不同时间交接。",

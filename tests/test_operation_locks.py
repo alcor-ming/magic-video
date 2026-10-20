@@ -104,7 +104,7 @@ class OperationLocksTest(unittest.TestCase):
                         writer.join(5)
             self.assertFalse(creator.is_alive() or writer.is_alive())
             self.assertEqual([0, 0], sorted(results))
-            work = next((root / 'works/active').iterdir())
+            work = cli.work_paths(root)[0][0]
             work_meta = cli.read_frontmatter(work / 'WORK.md')
             state = cli.read_json(work / 'variants/variant1/variant.yaml')
             self.assertTrue(work_meta['series_workflow']['human_confirmation']['script'])
@@ -116,7 +116,7 @@ class OperationLocksTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             for work in ('work-hyperframes_video-001-a', 'work-hyperframes_video-002-b'):
-                base = root / 'works/active' / work
+                base = root / 'works/one' / work
                 base.mkdir(parents=True)
                 (base / 'WORK.md').write_text('---\n{"id":"'+work+'","workflow":"hyperframes_video"}\n---\n')
                 for variant in ('variant1','variant2'):
@@ -125,7 +125,7 @@ class OperationLocksTest(unittest.TestCase):
                     (path / 'variant.yaml').write_text('{"mode":"english"}')
             def args(work, variant):
                 return argparse.Namespace(command='finalize', work_override=work, variant_override=variant)
-            one,two = sorted((root / 'works/active').iterdir())
+            one,two = sorted((root / 'works/one').iterdir())
             with cli.operation_lock(root,args(one.name,'variant1')):
                 with cli.operation_lock(root,args(one.name,'variant2')):
                     with cli.operation_lock(root,args(two.name,'variant1')):
@@ -136,6 +136,37 @@ class OperationLocksTest(unittest.TestCase):
                         with self.assertRaisesRegex(ValueError,'busy'):
                             with cli.operation_lock(root,work_args):
                                 self.fail('archive raced with rendering')
+
+    def test_other_work_and_catalog_writers_run_beside_a_render(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for work in ('work-hyperframes_video-001-a', 'work-hyperframes_video-002-b'):
+                path = root / 'works/one' / work / 'variants/variant1'
+                path.mkdir(parents=True)
+                (path.parents[1] / 'WORK.md').write_text('---\n{"id":"'+work+'","workflow":"hyperframes_video"}\n---\n')
+                (path / 'variant.yaml').write_text('{"mode":"english"}')
+            one, two = sorted(path.name for path in (root / 'works/one').iterdir())
+            def scoped(work, command, **values):
+                return argparse.Namespace(command=command, work_override=work, variant_override='variant1', **values)
+            freeze = scoped(two, 'request', request_command='freeze')
+            with cli.operation_lock(root, scoped(one, 'finalize')):
+                with cli.operation_lock(root, freeze), cli.operation_lock(root, freeze):
+                    with cli.operation_lock(root, scoped(one, 'request', request_command='export')):
+                        with self.assertRaisesRegex(ValueError, 'busy'):
+                            with cli.operation_lock(root, argparse.Namespace(command='design', design_command='new')):
+                                self.fail('catalog writers overlapped')
+                    with self.assertRaisesRegex(ValueError, 'busy'):
+                        with cli.operation_lock(root, scoped(two, 'request', request_command='accept')):
+                            self.fail('acceptance overlapped a freeze of the same Variant')
+                with cli.operation_lock(root, scoped(two, 'appearance', appearance_command='rebind')):
+                    with self.assertRaisesRegex(ValueError, 'busy'):
+                        with cli.operation_lock(root, scoped(one, 'appearance', appearance_command='rebind')):
+                            self.fail('appearance update raced with rendering')
+                for store in (argparse.Namespace(command='root', root_command='set'),
+                              argparse.Namespace(command='series', operation='move')):
+                    with self.subTest(store=store.command), self.assertRaisesRegex(ValueError, 'busy'):
+                        with cli.operation_lock(root, store):
+                            self.fail('store-wide change overlapped a render')
 
 
 if __name__ == '__main__': unittest.main()

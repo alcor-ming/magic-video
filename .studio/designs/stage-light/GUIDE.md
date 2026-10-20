@@ -8,6 +8,10 @@
 `../shared/stage-rig.js`）。宿主在运行目录放入 `runtime/gsap.min.js`、`runtime/scene-binding.js`、
 `runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`；不联网、不带位图与音频。
 
+**动作**：本卡复用 stage-full 的动作包，物体的出现、退场、强调、移动、落定、换场、归位与默认背景（全屏纸板，`panels:2`）的展开、换景、收起，
+一律用 [MOTION.md](MOTION.md) 里的动作，不手写缓动；Work 里怎么安装和加载也见那里。下面的示例是动作标准化之前的编排示范，
+机制与分组思路照旧可参考，新作品的动作与背景按 MOTION.md 做。
+
 ## 1. 核心原则
 
 - **同一机制，更轻的配置**：`HarnessStageRig.createPaperStage({panels:2})` 只建内板一对（两页式），

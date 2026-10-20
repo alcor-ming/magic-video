@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>stage-full · 纸上灯塔 · 六积木示例</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    #stage-full-kit-demo {
+      --paper-warm-a: #f7ecd8;
+      --paper-warm-b: #e6cfa8;
+      --floor-warm-a: #dcbd8e;
+      --floor-warm-b: #c49a63;
+      --ink: #2a2018;
+      --ink-soft: rgba(42, 32, 24, 0.62);
+      --rim: rgba(255, 255, 255, 0.94);
+      --wall-card-ink: #6f4a22;
+      --wall-card-accent: #e0563c;
+      --prop-face: #f2e2c4;
+      --prop-ink: #7a5730;
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      color: var(--ink);
+      font-family: "SourceHanSansCN", "Noto Sans CJK SC", sans-serif;
+      background: #05070d;
+    }
+    /* 原皮肤的冷色规则限定了旧根 ID，在此为新示例补齐。 */
+    #stage-full-kit-demo.is-cool .hf-rig-wall {
+      background-image:
+        repeating-linear-gradient(90deg, rgba(255,255,255,.4) 0 3px, transparent 3px 64px),
+        linear-gradient(180deg, #dcebf5, #a9c6dd);
+    }
+    #stage-full-kit-demo.is-cool .hf-rig-floor {
+      background-image:
+        repeating-linear-gradient(90deg, rgba(40,70,100,.18) 0 2px, transparent 2px 120px),
+        linear-gradient(180deg, #b9d3e6, #8fb2cd);
+    }
+  </style>
+</head>
+<body>
+<main id="stage-full-kit-demo" data-composition-id="stage-full-kit-demo"
+      data-width="1920" data-height="1080" data-start="0" data-duration="40" data-fps="30">
+  <section class="layer layer-background" data-hf-layer="background" aria-hidden="true"></section>
+  <section class="layer layer-stage" data-hf-layer="stage">
+    <div class="rig-mount" id="rig-wrapper"><div id="rig" style="position:absolute;inset:0;transform-origin:50% 62%"></div></div>
+  </section>
+  <section class="layer layer-overlay" data-hf-layer="overlay" aria-hidden="true" style="pointer-events:none"></section>
+  <section class="layer layer-text" data-hf-layer="text"></section>
+</main>
+<script src="runtime/gsap.min.js"></script>
+<script src="runtime/MotionPathPlugin.min.js"></script>
+<script src="runtime/scene-binding.js"></script>
+<script src="runtime/stage-rig.js"></script>
+<script src="runtime/stage-kit.js"></script>
+<script src="runtime/stage-kit/blocks/slot-text.js"></script>
+<script src="runtime/stage-kit/blocks/prop-stand.js"></script>
+<script src="runtime/stage-kit/blocks/prop-states.js"></script>
+<script src="runtime/stage-kit/blocks/inset-broll.js"></script>
+<script src="runtime/stage-kit/blocks/stack-explode.js"></script>
+<script src="runtime/stage-kit/blocks/rig-rebuild.js"></script>
+<script src="runtime/stage-kit/blocks/disc-scene.js"></script>
+<script src="kit-demo.js"></script>
+</body>
+</html>

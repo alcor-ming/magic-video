@@ -84,7 +84,7 @@ def review_identity(root):
     direct = (config.get("review") is True and str(root) == config.get("work_root"))
     # Old Review copies retain their parent-relative identity; direct roots use resolved scope.
     production = root.parent.parent
-    if not direct and (root.parent.name != "review" or not all((production / "works" / name).is_dir() for name in ("active", "parked", "archive"))):
+    if not direct and (root.parent.name != "review" or not (production / "works").is_dir()):
         raise RequestError("Review requires an independent WorkStore under production/review/<id>")
     if marker.get("review_id") != root.name or marker.get("mode") != "review":
         raise RequestError("Review identity does not match this WorkStore")
@@ -105,8 +105,8 @@ def project_review_root(project):
     for root in Path(project).resolve().parents:
         if (root / ".runtime" / "review.json").is_file():
             review_identity(root)
-            if not Path(project).resolve().is_relative_to(root / "works" / "active"):
-                raise RequestError("Candidate project must be inside the Review active Work")
+            if not Path(project).resolve().is_relative_to(root / "works"):
+                raise RequestError("Candidate project must be inside a Review Work")
             return root
     raise RequestError("Candidate execution requires an isolated Review WorkStore")
 

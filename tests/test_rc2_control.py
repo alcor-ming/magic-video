@@ -63,7 +63,7 @@ class Rc2ControlTest(unittest.TestCase):
         self.assertEqual("新标题", cli.read_frontmatter(work / "WORK.md")["title"])
         cli.account_service(self.root).put("series", "one", {"name": "Renamed"})
         self.assertEqual(1000, cli.identity_state(self.root)["series_highwater"]["one"])
-        self.assertIn("works/active/", (self.root / "浏览目录.md").read_text(encoding="utf-8"))
+        self.assertIn("works/one/", (self.root / "浏览目录.md").read_text(encoding="utf-8"))
 
     def test_semantic_video_title_keeps_numeric_prefix(self):
         work_id = self.new("2026-AI趋势")

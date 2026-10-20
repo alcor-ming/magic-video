@@ -14,13 +14,10 @@ import designs
 
 
 EXPECTED_DEFAULTS = {
-    "math": {"captions": False, "sfx": False},
     "english": {"captions": False, "sfx": False},
-    "pdoom": {"captions": False, "sfx": True},
     "stage-full": {"captions": True, "sfx": True},
     "stage-light": {"captions": True, "sfx": True},
     "collage": {"captions": True, "sfx": True},
-    "starline": {"captions": True, "sfx": True},
 }
 
 
@@ -33,7 +30,8 @@ class DesignCatalogTest(unittest.TestCase):
             with self.subTest(identity=identity):
                 card = catalog[identity]
                 self.assertEqual(identity, card["id"])
-                self.assertEqual(1, card["version"])
+                self.assertIsInstance(card["version"], int)
+                self.assertGreaterEqual(card["version"], 1)
                 self.assertNotIn("author_model", card)
                 self.assertIsInstance(card["compatibility"], dict)
                 values = designs.defaults(identity)
@@ -44,7 +42,7 @@ class DesignCatalogTest(unittest.TestCase):
     def test_adopted_card_is_independent_of_installed_catalog(self):
         import lines
         card = designs.get('stage-full')
-        state = {'line': {'id': 'stage-full', 'version': 1}, 'design_snapshot': card,
+        state = {'line': {'id': 'stage-full', 'version': card['version']}, 'design_snapshot': card,
                  'design_sha256': lines.card_digest(card)}
         with mock.patch.object(designs, 'catalog', side_effect=AssertionError('latest read')):
             self.assertEqual(card, lines.frozen(state))
@@ -66,8 +64,8 @@ class DesignCatalogTest(unittest.TestCase):
             designs.resolve("stage-full", account={"design": "math"})
 
     def test_retired_identities_reselect_and_history_locates(self):
-        for identity, hint in (("explainer", "stage-full"), ("showcase", "pdoom"),
-                               ("showcase/pdoom", "pdoom"), ("science", "collage")):
+        for identity, hint in (("explainer", "stage-full"), ("showcase", None),
+                               ("showcase/pdoom", None), ("science", "collage")):
             with self.subTest(identity=identity), self.assertRaisesRegex(designs.DesignError, "retired"):
                 designs.require(identity)
         with self.assertRaisesRegex(designs.DesignError, "reselect"):
@@ -171,7 +169,7 @@ class DesignCliTest(unittest.TestCase):
                 work_id = self.new_work("Work " + identity, "--design", identity)
                 state = self.variant(work_id)
                 self.assertEqual(identity, state["design"])
-                self.assertEqual({"id": identity, "version": 1}, state["line"])
+                self.assertEqual({"id": identity, "version": designs.get(identity)["version"]}, state["line"])
                 expected = EXPECTED_DEFAULTS[identity]
                 self.assertEqual(expected["captions"], state["captions"])
                 self.assertEqual(expected["sfx"], state["sfx"]["enabled"])

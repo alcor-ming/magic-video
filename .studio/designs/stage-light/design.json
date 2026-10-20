@@ -1,6 +1,6 @@
 {
   "id": "stage-light",
-  "version": 1,
+  "version": 2,
   "type": "design",
   "compatibility": {
     "supersedes": [],
@@ -104,7 +104,8 @@
     "directory": "assets"
   },
   "references": [
-    "stage-full/stage-rig"
+    "stage-full/stage-rig",
+    "stage-full/stage-motion"
   ],
   "runtime": {
     "gsap": "^3.14",

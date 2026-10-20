@@ -3,8 +3,10 @@ from html import escape
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 
+import alignment_audit
 import explainer
 import storage
 import tts
@@ -78,6 +80,29 @@ def voice_block(html, path, duration):
     return html[:at] + block + '\n' + html[at:]
 
 
+def audited_alignment(work, variant, args, text, rows, script_hash):
+    """Shared by audit and adopt: candidate coverage, evidence identity, cue build and mechanical audit."""
+    report = tts.candidate(variant, args.candidate)
+    if report['request']['script_sha256'] != script_hash or report['request']['segments'] != [
+            {**row, 'options': stored['options']} for row, stored in zip(rows, report['request']['segments'])] or len(rows) != len(report['request']['segments']):
+        raise ValueError('Formal speech must cover all current Script anchors; generate a full candidate')
+    alignment_path = storage.scoped_path(work, args.alignment)
+    if not alignment_path.is_file() or alignment_path.stat().st_nlink != 1:
+        raise ValueError('Alignment must be a regular Work-local file')
+    alignment_bytes = alignment_path.read_bytes()
+    evidence = json.loads(alignment_bytes)
+    if not isinstance(evidence, dict) or evidence.get('audio_sha256') != report['files']['audio.wav']:
+        raise ValueError('Alignment must identify this candidate audio SHA-256')
+    problems = alignment_audit.evidence_errors(evidence)
+    if problems:
+        raise ValueError(problems[0])
+    cues, sections = tts.aligned_sections(text, rows, alignment_bytes, report['duration'])
+    checked = alignment_audit.audit(cues['characters'], Path(report['path']) / 'audio.wav', report['duration'])
+    checked = {'schema_version': 1, 'audio_sha256': evidence['audio_sha256'], 'method': evidence['method'],
+               'engine': evidence.get('engine'), 'alignment_sha256': tts.digest(alignment_bytes), **checked}
+    return report, alignment_bytes, evidence, cues, sections, checked
+
+
 def command(root, args, api):
     if not args.work_override or not args.variant_override:
         raise ValueError('TTS requires explicit --work and --variant')
@@ -100,21 +125,16 @@ def command(root, args, api):
             raise ValueError('Script changed during synthesis; candidate retained but not adopted')
         api.print_result(root, args, {key: report[key] for key in ('id', 'path', 'duration', 'status', 'alignment')})
         return
+    if args.tts_command == 'audit':
+        report, alignment_bytes, evidence, cues, _, checked = audited_alignment(work, variant, args, text, rows, script_hash)
+        api.print_result(root, args, {**checked, 'candidate': args.candidate, 'method': evidence['method'],
+                                      'engine': evidence.get('engine')})
+        return
     with api.naming_lock(root), package_write_lock(storage.scoped_path(variant, '.runtime/component-install.lock')):
         state = api.read_json(variant / 'variant.yaml')
-        report = tts.candidate(variant, args.candidate)
-        if report['request']['script_sha256'] != script_hash or report['request']['segments'] != [
-                {**row, 'options': stored['options']} for row, stored in zip(rows, report['request']['segments'])] or len(rows) != len(report['request']['segments']):
-            raise ValueError('Formal speech must cover all current Script anchors; generate a full candidate')
-        alignment_path = storage.scoped_path(work, args.alignment)
-        if not alignment_path.is_file() or alignment_path.stat().st_nlink != 1:
-            raise ValueError('Alignment must be a regular Work-local file')
-        alignment_bytes = alignment_path.read_bytes()
-        evidence = json.loads(alignment_bytes)
-        if (not isinstance(evidence, dict) or evidence.get('audio_sha256') != report['files']['audio.wav']
-                or evidence.get('method') not in {'asr', 'forced-alignment', 'manual-measured', 'provider-native'}):
-            raise ValueError('Alignment must identify this candidate audio SHA-256 and its measured method')
-        cues, sections = tts.aligned_sections(text, rows, alignment_bytes, report['duration'])
+        report, alignment_bytes, evidence, cues, sections, checked = audited_alignment(work, variant, args, text, rows, script_hash)
+        if not checked['ok']:
+            raise ValueError('Alignment audit failed: ' + '; '.join(checked['errors']))
         cues['sources'].update(audio_sha256=evidence['audio_sha256'], method=evidence['method'])
         sections.update(audio_sha256=report['files']['audio.wav'], script_sha256=script_hash)
         project = storage.scoped_path(variant, 'project')
@@ -126,7 +146,8 @@ def command(root, args, api):
         index = storage.scoped_path(project, 'index.html')
         updated = voice_block(index.read_text(encoding='utf-8'), voice_name, report['duration'])
         names = {'runtime/cues.json': tts.json_bytes(cues), 'runtime/section_map.json': tts.json_bytes(sections),
-                 'runtime/voice-alignment.json': alignment_bytes, voice_name: audio_bytes}
+                 'runtime/voice-alignment.json': alignment_bytes, 'runtime/alignment-report.json': tts.json_bytes(checked),
+                 voice_name: audio_bytes}
         runtime = storage.scoped_path(project, 'runtime/cues.js')
         if not runtime.exists():
             names['runtime/cues.js'] = (Path(api.__file__).parent / 'runtime/cues.js').read_bytes() if hasattr(api, '__file__') else (root / '.studio/runtime/cues.js').read_bytes()
@@ -140,6 +161,7 @@ def command(root, args, api):
         before = {path: path.read_bytes() if path.exists() else None for path in paths}
         if tts.digest(api.script_text(script).encode()) != script_hash:
             raise ValueError('Script changed before speech adoption')
+        carried = None
         try:
             for name, data in names.items():
                 target = storage.scoped_path(project, name)
@@ -151,17 +173,24 @@ def command(root, args, api):
                                 'duration': report['duration'], 'candidate': args.candidate, 'script_sha256': script_hash,
                                 'anchors_sha256': tts.digest(tts.json_bytes(rows))},
                          alignment={'path': 'runtime/voice-alignment.json', 'sha256': tts.digest(alignment_bytes),
-                                    'derived': {name: tts.digest(names[name]) for name in ('runtime/cues.json', 'runtime/section_map.json')}},
+                                    'derived': {name: tts.digest(names[name]) for name in
+                                                ('runtime/cues.json', 'runtime/section_map.json', 'runtime/alignment-report.json')}},
                          accepted_preview=None, current_final=None)
-            metadata = {**api.read_frontmatter(plan), **api.plan_metadata(variant, state)}
+            original = api.read_frontmatter(plan)
+            metadata = {**original, **api.plan_metadata(variant, state)}
             metadata['revision'] = max(metadata.get('revision', 1), state.get('plan_revision', 1)) + 1
             metadata['status'] = 'draft'
             state['plan_revision'] = metadata['revision']
+            if metadata.get('reference_memory_sha256'):
+                carried = api.visual_memory.carry(variant, original.get('revision', 1), metadata['revision'],
+                                                  metadata['reference_memory_sha256'])
             api.atomic_write(plan, '---\n' + json.dumps(metadata, ensure_ascii=False) + '\n---\n'
                              + api.plan_metadata_body(api.document_body(plan), metadata))
             api.write_variant(variant, state)
             verify(variant, api)
         except Exception:
+            if carried is not None:
+                shutil.rmtree(carried)
             for path, data in before.items():
                 if data is None:
                     path.unlink(missing_ok=True)
@@ -169,4 +198,6 @@ def command(root, args, api):
                     path.write_bytes(data)
             raise
     api.print_result(root, args, {'status': 'aligned', 'candidate': args.candidate, 'audio': state['audio'],
-                                  'section_map': str(project / 'runtime/section_map.json')})
+                                  'section_map': str(project / 'runtime/section_map.json'),
+                                  'suspects': len(checked['suspects']),
+                                  'alignment_report': str(project / 'runtime/alignment-report.json')})

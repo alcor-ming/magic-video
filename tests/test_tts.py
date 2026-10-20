@@ -358,7 +358,7 @@ class TTSTests(unittest.TestCase):
         (historical / 'accepted.txt').write_text('frozen history')
         text = work_api.script_text(self.variant / 'SCRIPT.md')
         result = tts.generate(self.variant, self.rows, self.config, tts.digest(text.encode()))
-        evidence = {**json.loads(alignment(text)), 'method': 'manual-measured',
+        evidence = {**json.loads(alignment(text)), 'method': 'forced-alignment', 'engine': 'fixture-aligner 1',
                     'audio_sha256': result['files']['audio.wav']}
         (self.work / 'alignment.json').write_bytes(tts.json_bytes(evidence))
         api = SimpleNamespace(**vars(work_api))
@@ -369,6 +369,32 @@ class TTSTests(unittest.TestCase):
         args = SimpleNamespace(work_override='work', variant_override='main', tts_command='adopt',
                                candidate=result['id'], alignment='alignment.json')
         return api, args, project
+
+    def test_adoption_carries_frozen_reference_memory_to_the_new_plan_revision(self):
+        api, args, _ = self.adoption_fixture()
+        memory = work_api.visual_memory
+        frozen = self.variant / 'reference-memory/1'
+        memory.write(frozen / 'references.json', {'revision': 1, 'input': {'references': ['跨线:persistent-anchor']},
+                                                  'references': [], 'seeds': [], 'findings': []})
+        plan = self.variant / 'ANIMATION_PLAN.md'
+        reference_hash = memory.digest(frozen / 'references.json')
+        plan.write_text('---\n' + json.dumps({'revision': 1, 'status': 'accepted', 'reference_memory_sha256': reference_hash})
+                        + '\n---\n## S01\n')
+        with mock.patch.object(api, 'write_variant', side_effect=OSError('fixture adoption failure')):
+            with self.assertRaisesRegex(OSError, 'fixture adoption failure'):
+                work_tts.command(self.root, args, api)
+        self.assertEqual(['1'], sorted(path.name for path in frozen.parent.iterdir()))
+        work_tts.command(self.root, args, api)
+        metadata = work_api.read_frontmatter(plan)
+        self.assertEqual((2, reference_hash), (metadata['revision'], metadata['reference_memory_sha256']))
+        self.assertEqual((frozen / 'references.json').read_bytes(),
+                         (self.variant / 'reference-memory/2/references.json').read_bytes())
+        # Variants adopted before the fix: the bumped revision reads the identical earlier freeze.
+        work_api.shutil.rmtree(self.variant / 'reference-memory/2')
+        self.assertEqual(frozen, memory.located(self.variant, 2, reference_hash))
+        self.assertEqual(self.variant / 'reference-memory/2', memory.located(self.variant, 2, '0' * 64))
+        memory.carry(self.variant, 2, 2, reference_hash)
+        self.assertEqual(reference_hash, memory.digest(self.variant / 'reference-memory/2/references.json'))
 
     def test_formal_adoption_rolls_back_failure_then_guards_stale_script_audio_alignment(self):
         api, args, project = self.adoption_fixture()
@@ -386,7 +412,12 @@ class TTSTests(unittest.TestCase):
         for changes in ({'audio_sha256': '0' * 64}, {'method': 'estimated-per-character'},
                         {'audio_sha256': None}, {'method': None}):
             evidence_path.write_bytes(tts.json_bytes({**json.loads(evidence_bytes), **changes}))
-            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, 'candidate audio SHA-256'):
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, 'candidate audio SHA-256|Alignment method'):
+                work_tts.command(self.root, args, api)
+            self.assertEqual(snapshot(), before)
+        for changes, message in (({'method': 'manual-measured'}, 'no longer accepted'), ({'engine': ''}, 'engine')):
+            evidence_path.write_bytes(tts.json_bytes({**json.loads(evidence_bytes), **changes}))
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, message):
                 work_tts.command(self.root, args, api)
             self.assertEqual(snapshot(), before)
         evidence_path.write_bytes(evidence_bytes)

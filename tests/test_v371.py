@@ -12,8 +12,6 @@ from test_work_cli import WORK_CLI as cli
 import critic
 import lines
 import visual_memory as memory
-import math_chain
-from test_math_chain import plan as math_plan, contract, fixture
 from visual_diagnostics import rhythm_diagnostics
 
 
@@ -229,26 +227,19 @@ class V371Test(unittest.TestCase):
         with self.assertRaises(cli.HarnessError):
             self.call('settings', 'set', 'direction_approval', 'false')
 
-    def test_math_scene_tail_and_visible_other_events(self):
-        cues = fixture()['cues']
-        plan = math_plan(contract())
+    def test_scene_tail_and_visible_other_events(self):
         scenes = [{'id': 'S01', 'start': 0, 'duration': 6}]
-        self.assertEqual('S01', math_chain.plan_findings(plan, cues, 6, scenes=scenes)[0]['scene'])
         def event(time, kind, layer, ident):
             common = dict(id=ident, time=time, duration=.2, kind=kind, layer=layer, scene='S01')
             return [dict(time=time-.001, ready=True, rhythm_candidates=[{**common, 'signature':'before', 'visible': True}]),
                     dict(time=time+.1, ready=True, rhythm_candidates=[{**common, 'signature':'after', 'visible': True}])]
-        samples = event(3, 'math_reveal', 'stage', 'M1')
+        samples = event(3, 'enter', 'stage', 'M1')
         report = rhythm_diagnostics(samples, scenes)
-        self.assertEqual('math_reveal', report['events'][0]['kind'])
+        self.assertEqual('enter', report['events'][0]['kind'])
         self.assertIn((3, 6), [(v['start'], v['end']) for v in report['findings'] if v['kind'] == 'rhythm_gap'])
         samples += event(4.5, 'text_reveal', 'text', 'T1')
         report = rhythm_diagnostics(samples, scenes)
         self.assertNotIn((3, 6), [(v['start'], v['end']) for v in report['findings'] if v['kind'] == 'rhythm_gap'])
-        self.assertIn('math_trailing_gap', [v['code'] for v in math_chain.plan_findings(plan, cues, 6, scenes=scenes)])
-        self.assertFalse(math_chain.plan_findings(plan, cues, 5, scenes=[{**scenes[0], 'duration':5}]))
-        out = math_chain.plan_findings(plan, cues, 6, scenes=[{**scenes[0], 'duration':3}])
-        self.assertIn('math_unresolved_cue', [v['code'] for v in out])
 
     def test_summary_multiple_variants_closure_and_explicit_links(self):
         sample, round_ = self.add_sample()
@@ -323,20 +314,15 @@ class V371Test(unittest.TestCase):
             with self.assertRaises(cli.HarnessError):
                 self.call('sample', 'show', item_id)
 
-    def test_math_multiscene_empty_and_opening_remove_events(self):
-        first, second = contract(), contract()
-        first['cues'][0]['cue'] = 'a'
-        second['cues'][0].update(reveal=[], keep=['u1'])
+    def test_opening_reveal_and_exit_events(self):
         scenes = [{'id':'S01','start':0,'duration':3},{'id':'S02','start':3,'duration':3}]
-        findings = math_chain.plan_findings(math_plan(first) + math_plan(second, 'S02'), fixture()['cues'], 6, scenes=scenes)
-        self.assertEqual({'S01','S02'}, {f['scene'] for f in findings if f['code']=='math_trailing_gap'})
         samples = []
-        for time, kind, before, after, layer, duration in [(0,'math_reveal',True,True,'text',.25),(1,'math_remove',True,False,'stage',0)]:
+        for time, kind, before, after, layer, duration in [(0,'text_reveal',True,True,'text',.25),(1,'exit',True,False,'stage',0)]:
             common = dict(id=kind,time=time,kind=kind,layer=layer,scene='S01',duration=duration)
             for at, visible, signature in [(max(0,time-.001),before,'same' if time==0 else 'before'),(time+duration/2 if duration else time+.001,after,'same' if time==0 else 'after')]:
                 samples.append(dict(time=at,ready=True,rhythm_candidates=[{**common,'visible':visible,'signature':signature}]))
         report=rhythm_diagnostics(samples,scenes)
-        self.assertEqual({'math_reveal','math_remove'}, {e['kind'] for e in report['events']})
+        self.assertEqual({'text_reveal','exit'}, {e['kind'] for e in report['events']})
 
     def test_retro_copy_window_rejects_changed_critic_bytes(self):
         first = self.round()

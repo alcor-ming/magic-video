@@ -70,7 +70,7 @@
     {
       "source": ".studio/designs/stage-light/GUIDE.md",
       "target": "GUIDE.md",
-      "sha256": "30c36c8e5ac3e724dea492b6dce034fd786a171059c6b481656923dcd0cf6811",
+      "sha256": "dad569b47c2e7addd9c25fae584b06a7838df01e6dcbc9c552d3d6210005e011",
       "origin": "Project authored source extraction guide",
       "version": "1",
       "license": "Apache-2.0",
@@ -81,9 +81,22 @@
       ]
     },
     {
+      "source": ".studio/designs/stage-light/MOTION.md",
+      "target": "MOTION.md",
+      "sha256": "4bae3471bbe864543d06b044a9cc9c08c39e19f779db7dc83c72d767024fb47c",
+      "origin": "Project authored card motion menu",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "Motion verbs this card reuses from the stage-full motion pack",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
       "source": ".studio/designs/stage-light/stages/draft.md",
       "target": "stages/draft.md",
-      "sha256": "9444643169a9554c6a1addfa3173599e3606fe442af223e087350eae63517f23",
+      "sha256": "511af89da5442f40c4915f85ffd2d80b944de0d702d6c8a7b72ba8eabcaa43bd",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -96,7 +109,7 @@
     {
       "source": ".studio/designs/stage-light/stages/export.md",
       "target": "stages/export.md",
-      "sha256": "c30ddbda61bb5b5cbdb9bd6c2526ac1150fd7827afe482681cfaa293cc7fd179",
+      "sha256": "f332e9ad935bc3baddc522e37e24e3c95e9b29aaf0520e9a1faa252c7704a5d5",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -109,7 +122,7 @@
     {
       "source": ".studio/designs/stage-light/stages/plan.md",
       "target": "stages/plan.md",
-      "sha256": "359bc8a12c6a9832243815cc871637ca8440a683c0ba0ea6ba2a580be4d7ca01",
+      "sha256": "b0b78b9c6c9616516964badaad5f3b1ffaa06520061567bc62dbcff95572060a",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -200,7 +213,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-rig/stage-rig.js",
       "target": "runtime/stage-rig.js",
-      "sha256": "772802d3d12157638cc0070f04d88e6a11c34f774438cf9d2a008731e5b1c3eb",
+      "sha256": "3b507848271c5ba34249b904d399a1409b3dfde01134ae013e84c09c096ee89a",
       "origin": "Project authored stage folding mechanism; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",

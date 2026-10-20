@@ -358,7 +358,34 @@ export async function inspectFrame(scenes, time) {
     .map(element => ({reason: 'media_canvas_motion_unverified', target: selector(element), time}));
   const module_texts = [...(window.__hfTextSources || [])].flatMap(source => source());
   for (const item of module_texts) if (item.start <= time && time < item.end) texts.push(item);
-  return {texts, module_texts, unverified: [...unverified], timeline, icons, motion_unverified};
+  const stagePainted = [...document.querySelectorAll('[data-hf-layer="stage"] *')].filter(element => {
+    if (!visible(element) || element.closest('[data-hf-ambient]')) return false;
+    const rect = element.getBoundingClientRect();
+    if (!(rect.width > 2 && rect.height > 2)) return false;
+    // Transparent containers do not count: the element must paint pixels itself.
+    if (['IMG', 'SVG', 'VIDEO', 'CANVAS', 'PICTURE'].includes(element.tagName.toUpperCase())) return true;
+    const style = getComputedStyle(element);
+    const alpha = color => { const match = /rgba?\(([^)]+)\)/.exec(color || ''); if (!match) return color && color !== 'transparent' ? 1 : 0; const parts = match[1].split(/[\s,\/]+/).map(Number); return parts.length > 3 ? parts[3] : 1; };
+    if (alpha(style.backgroundColor) > 0 || style.backgroundImage !== 'none' || style.boxShadow !== 'none') return true;
+    if (['Top', 'Right', 'Bottom', 'Left'].some(side => parseFloat(style['border' + side + 'Width']) > 0 && alpha(style['border' + side + 'Color']) > 0)) return true;
+    return [...element.childNodes].some(node => node.nodeType === 3 && node.textContent.trim());
+  });
+  // Foreground coverage: share of a 64x36 grid over the composition whose cell centres fall inside a
+  // painted stage element. Scenery marked data-hf-set (rig walls, floor) is background, not foreground.
+  const frameBox = document.querySelector('[data-width][data-height]')?.getBoundingClientRect()
+    || {x: 0, y: 0, width: innerWidth, height: innerHeight};
+  const columns = 64, rows = 36, covered = new Set();
+  for (const element of stagePainted) {
+    if (element.closest('[data-hf-set]')) continue;
+    const rect = element.getBoundingClientRect();
+    const first = value => Math.max(0, Math.ceil(value - .5)), last = (value, size) => Math.min(size - 1, Math.floor(value - .5));
+    const c0 = first((rect.left - frameBox.x) / frameBox.width * columns), c1 = last((rect.right - frameBox.x) / frameBox.width * columns, columns);
+    const r0 = first((rect.top - frameBox.y) / frameBox.height * rows), r1 = last((rect.bottom - frameBox.y) / frameBox.height * rows, rows);
+    for (let row = r0; row <= r1; row++) for (let column = c0; column <= c1; column++) covered.add(row * columns + column);
+  }
+  return {texts, module_texts, unverified: [...unverified], timeline, icons, motion_unverified,
+    stage_visible: stagePainted.length,
+    stage_coverage: frameBox.width > 0 && frameBox.height > 0 ? +(covered.size / (columns * rows)).toFixed(4) : null};
 }
 
 export async function probe(input) {
@@ -428,9 +455,33 @@ export async function probe(input) {
     result.viewport = {...size};
     const duration = await page.evaluate(() => document.querySelector('hyperframes-player').duration);
     if (!Number.isFinite(duration) || duration <= 0) throw new Error('Invalid Studio duration');
-    if (duration / parameters.step > 2000) throw new Error('Sampling budget exceeded; increase step (maximum 2000 baseline samples)');
+    const last = Math.max(0, duration - 0.001);
+    const span = Array.isArray(input.range) ? [Math.min(last, Math.max(0, +input.range[0])), Math.min(last, Math.max(0, +input.range[1]))] : [0, last];
+    if (!span.every(Number.isFinite) || span[1] < span[0]) throw new Error('Invalid sampling range');
+    const inSpan = time => time >= span[0] - 1e-6 && time <= span[1] + 1e-6;
+    const explicit = Array.isArray(input.times) ? input.times.map(Number).filter(time => Number.isFinite(time) && time >= 0) : null;
+    if ((span[1] - span[0]) / parameters.step > 2000) throw new Error('Sampling budget exceeded; increase step (maximum 2000 baseline samples)');
     const samples = new Map();
     let previousPixels = null;
+    const settle = async (time, remaining) => {
+      await page.waitForFunction(() => {
+        const player = document.querySelector('hyperframes-player'), win = player?.iframeElement?.contentWindow;
+        return player?.ready && win?.document.body && getComputedStyle(player.iframeElement).visibility === 'visible' &&
+          (win.__player || Object.keys(win.__timelines || {}).length);
+      }, remaining());
+      await page.evaluate(time => document.querySelector('hyperframes-player').seek(time), time);
+      await page.waitForFunction(time => {
+        const player = document.querySelector('hyperframes-player');
+        const win = player.iframeElement.contentWindow;
+        const root = win.document.querySelector('[data-composition-id]');
+        const timeline = win.__timelines?.[root?.dataset.compositionId];
+        const actual = win.__player?.getTime?.() ?? timeline?.time?.();
+        return player.ready && Math.abs(player.currentTime - time) < 0.04 &&
+          typeof actual === 'number' && Math.abs(actual - time) < 0.04;
+      }, remaining(), time);
+      await frame.waitForFunction(frameResourcesReady, remaining(), time);
+      await frame.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    };
     const sample = async (requested, measurePixels = false) => {
       if (Date.now() >= deadline) throw new Error('Diagnostic time budget exceeded; browser closed before outer command timeout');
       const time = Math.round(Math.min(duration - 0.001, Math.max(0, requested)) * 1e6) / 1e6;
@@ -443,27 +494,11 @@ export async function probe(input) {
       for (;;) {
         const before = navigation;
         try {
-          await page.waitForFunction(() => {
-            const player = document.querySelector('hyperframes-player'), win = player?.iframeElement?.contentWindow;
-            return player?.ready && win?.document.body && getComputedStyle(player.iframeElement).visibility === 'visible' &&
-              (win.__player || Object.keys(win.__timelines || {}).length);
-          }, remaining());
-          await page.evaluate(time => document.querySelector('hyperframes-player').seek(time), time);
-          await page.waitForFunction(time => {
-            const player = document.querySelector('hyperframes-player');
-            const win = player.iframeElement.contentWindow;
-            const root = win.document.querySelector('[data-composition-id]');
-            const timeline = win.__timelines?.[root?.dataset.compositionId];
-            const actual = win.__player?.getTime?.() ?? timeline?.time?.();
-            return player.ready && Math.abs(player.currentTime - time) < 0.04 &&
-              typeof actual === 'number' && Math.abs(actual - time) < 0.04;
-          }, remaining(), time);
+          await settle(time, remaining);
           value.actual_time = await frame.evaluate(() => {
             const root = document.querySelector('[data-composition-id]');
             return window.__player?.getTime?.() ?? window.__timelines?.[root?.dataset.compositionId]?.time?.();
           });
-          await frame.waitForFunction(frameResourcesReady, remaining(), time);
-          await frame.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
           const box = await iframe.boundingBox();
           if (!box || Math.abs(box.width - size.width) > 1 || Math.abs(box.height - size.height) > 1)
             throw new Error('Composition viewport is clipped or changed');
@@ -482,6 +517,8 @@ export async function probe(input) {
           value.icons = info.icons;
           value.module_texts = info.module_texts;
           value.motion_unverified = info.motion_unverified;
+          value.stage_visible = info.stage_visible;
+          value.stage_coverage = info.stage_coverage;
           if (before !== navigation || !await iframe.evaluate(element => getComputedStyle(element).visibility === 'visible'))
             throw new Error('Studio frame reloaded during sampling');
           value.texts.push(...info.texts);
@@ -518,14 +555,40 @@ export async function probe(input) {
       }
       return value;
     };
-    const times = new Set([0, Math.max(0, duration - 0.001)]);
-    for (let time = parameters.step; time < duration; time += parameters.step) times.add(time);
-    for (const scene of input.scenes || []) if (scene.start >= 0 && scene.start < duration) times.add(scene.start);
+    const times = new Set(explicit || [span[0], span[1]]);
+    if (!explicit) {
+      for (let time = Math.ceil(span[0] / parameters.step - 1e-9) * parameters.step; time < span[1]; time += parameters.step)
+        if (inSpan(time)) times.add(time);
+      for (const scene of input.scenes || []) if (scene.start >= 0 && scene.start < duration && inSpan(scene.start)) times.add(scene.start);
+    }
     for (const time of [...times].sort((a, b) => a - b)) await sample(time, !!input.measurements);
-    if (input.measurements) {
+    if (explicit) result.unverified.push('Explicit sample times: boundary and helper samples skipped.');
+    if (input.measurements && explicit && input.evidence_dir) {
+      // Re-seek each explicit time through both ends of the film and compare pixels with the first capture.
+      result.determinism = [];
+      for (const time of [...times].sort((a, b) => a - b)) {
+        const value = samples.get(Math.round(Math.min(duration - 0.001, Math.max(0, time)) * 1e6) / 1e6);
+        if (!value?.screenshot) continue;
+        const via = [0, last];
+        try {
+          const recheckDeadline = Date.now() + parameters.timeout_ms * 3;
+          const remaining = () => ({timeout: Math.max(1, recheckDeadline - Date.now())});
+          for (const stop of [...via, value.time]) await settle(stop, remaining);
+          const box = await iframe.boundingBox();
+          const again = Buffer.from(await page.screenshot({type: 'png', clip: box}));
+          const first = await fs.readFile(path.join(input.evidence_dir, value.screenshot));
+          const identical = first.equals(again);
+          if (!identical) await fs.writeFile(path.join(input.evidence_dir, value.screenshot.replace(/\.png$/, '-reseek.png')), again);
+          result.determinism.push({time: value.time, via, identical});
+        } catch (error) {
+          result.determinism.push({time: value.time, via, identical: null, detail: error.message});
+        }
+      }
+    }
+    if (input.measurements && !explicit) {
       const boundaries = new Set([...(input.scenes || []).map(scene => scene.start), ...(input.boundaries || [])]);
       for (const time of await frame.evaluate(() => [...(window.__hfRollBoundaries || [])].flatMap(read => read()))) boundaries.add(time);
-      result.boundaries = [...boundaries].filter(time => time >= 0 && time < duration).sort((a, b) => a - b);
+      result.boundaries = [...boundaries].filter(time => time >= 0 && time < duration && inSpan(time)).sort((a, b) => a - b);
       const fps = await page.evaluate(() => window.__hfProbeFps) || input.fps || 60;
       result.fps = fps;
       if (input.fps && input.fps !== fps) result.unverified.push(`Studio sampling fps ${fps} differs from Plan fps ${input.fps}; boundary pairs use Studio frames.`);
@@ -537,8 +600,8 @@ export async function probe(input) {
       }
     }
     // Sample exact helper boundaries, including short actions lost by the baseline grid.
-    for (const value of [...samples.values()]) for (const event of value.rhythm_candidates) {
-      if (event.time < 0 || event.time >= duration) continue;
+    if (!explicit) for (const value of [...samples.values()]) for (const event of value.rhythm_candidates) {
+      if (event.time < 0 || event.time >= duration || !inSpan(event.time)) continue;
       await sample(event.before ?? Math.max(0, event.time - 0.001));
       await sample(event.after ?? event.time + (event.duration > 0 ? event.duration / 2 : 0.001));
     }

@@ -8,9 +8,9 @@
 
 先区分讨论、继续现有 Work/Variant、同内容目标的独立 Variant、临时实验和新生产目标。普通修订留在当前 Variant；同一期新账号适配建立独立 Variant；只有用户明确要求旧归档实体只读、另建同一期实体时使用继任。用途有实质歧义才询问，不从 URL、缺账号或缺 Final 推断实验。
 
-账号属于 Variant；Work 级 Script/Research 由各 Variant 共享，各 Variant 独立维护 Plan、工程与接受结果。显式内容分支按 CLI 定位。新视频显式指定 `--purpose standard|ip|test`，生产用途指定系列；账号与制作版本可以稍后确定。视觉主题、背景、画幅和可选 Motion 按所选设计卡配置；设计身份由设计卡显式选择（公共包 `stage-full`、`stage-light`；其他设计由用户卡目录提供），旧身份只读并提示重选，不隐式套用 `explainer`。Theme 负责字体、语义色与表面，不决定模式、布局或 cue；Variant 使用冻结外观。
+账号属于 Variant；Work 级 Script/Research 由各 Variant 共享，各 Variant 独立维护 Plan、工程与接受结果。显式内容分支按 CLI 定位。新视频显式指定 `--purpose standard|ip|test`，生产用途指定系列；账号与制作版本可以稍后确定。视觉主题、背景和画幅按所选设计卡配置，动作用工具动作与卡片动作包（卡内 `MOTION.md`）；设计身份由设计卡显式选择（公共包 `stage-full`、`stage-light`；其他设计由用户卡目录提供），旧身份只读并提示重选，不隐式套用 `explainer`。Theme 负责字体、语义色与表面，不决定模式、布局或 cue；Variant 使用冻结外观。
 
-系列经验规则按系列 ID 保存在 WorkStore 的系列 `AGENTS.md`，以 `work series rules show <id>` 读取、`work series rules put <id> --file FILE.md` 整份替换（旧版留历史）、`work series rules delete <id>` 撤下当前规则（正文转入历史）；`work status` 的 `series_rules` 给出所属系列规则路径。规则不随 Work 目录、系列浏览文件夹或链接位置查找，开始 Script 前读取；复盘只写回已成立、可复用的结论，合并重复、修正被推翻条目，不堆日志或猜测，也不自动变成系列默认配置。不再使用的系列以 `work series delete <id>` 退役：仍有任何 Work（含归档）归属时拒绝，须先 `series move`；配置、配置历史与规则整体移入 WorkStore `control-plane/deleted/series/`，不硬删，同 ID 可重新创建且版本从 1 起。系列 ID 不可改名，需要新 ID 时新建系列、逐个 `series move` 后删除旧系列。
+WorkStore 按系列物理分层：`works/<系列ID>/<Work>/`，临时实验在 `works/test/`，未登记系列的 Work 在 `works/_未归系列/`；归档与停放只是 Work 内标记，不移动目录，`series move` 会把 Work 目录一并移到新系列文件夹（存活 Studio 先 `preview studio stop`）。旧版 `works/active|parked|archive/` 布局以 `work migrate layout` 预览、`--apply` 执行一次性迁移，可重复执行；Studio 记录是写入它的运行时的绝对路径，生产根须用 Windows 侧 `work.cmd` 执行，WSL 下会拒绝；迁移报告列出仍写着旧绝对路径的工作文件，由使用者下次使用时改正，冻结快照与证据不改写。系列经验规则即系列文件夹内的 `works/<系列ID>/AGENTS.md`，以 `work series rules show <id>` 读取、`work series rules put <id> --file -` 从标准输入整份替换（也可给文件路径；`series put <id> --file -` 同样从标准输入读配置 JSON；不要在 WorkStore 根目录落请求草稿；旧版与历史留在 control-plane）、`work series rules delete <id>` 撤下当前规则（正文转入历史）；`work status` 的 `series_rules` 给出所属系列规则路径。读写一律经系列 ID 的 CLI，不从 Work 的上级目录或链接位置推断，开始 Script 前读取；复盘只写回已成立、可复用的结论，合并重复、修正被推翻条目，不堆日志或猜测，也不自动变成系列默认配置。不再使用的系列以 `work series delete <id>` 退役：仍有任何 Work（含归档）归属时拒绝，须先 `series move`；系列文件夹除 `AGENTS.md` 外仍有内容时也拒绝；配置、配置历史与规则整体移入 WorkStore `control-plane/deleted/series/` 并移除空系列文件夹，不硬删，同 ID 可重新创建且版本从 1 起。系列 ID 不可改名，需要新 ID 时新建系列、逐个 `series move` 后删除旧系列。
 
 设计身份与可改默认值以所选设计卡为准（内置卡或用户卡目录）：Plan 模板、阶段规则、Brief 字段、主体默认值、资产范围与豁免随卡片维护；Variant 创建时记录身份，制作中读取实时卡片；提交 Draft 时复制卡片文件及引用资产并记录摘要。status 与预览提示卡片变化，`variant design-update` 显式更新本 Variant 快照，保留工程副本并报告待重新安装资产；重新提交 Draft 后沿用原接受流程。已有旧 JSON 快照继续按原语义读取。旧 `explainer/math-rap` 及其他仍支持链路的冻结身份按原语义读取，不自动迁移。card 已移除制作与渲染支持，历史文件、接受快照与成片保留；继续内容须显式采用到受支持的新版本，不配送兼容实现。`talking_head` 是 Template。本版本只提供视频制作；已退役或未知 Work 不继续制作，也不阻断无关视频的定位。
 
@@ -22,7 +22,7 @@
 
 复用合格 Script、录音、对齐与材料。Script 只来自用户提供的文稿或用户撰写；Script 为空时整理用户文稿，不提供下载或转录提取，正文改动须用户批准。用 `work script text` 排除 Scene 索引，避免重复对齐处理。Script 稳定后通过 `work name` 补语义标题。
 
-数学沿用原片声音与人工核对歌词；英语使用原创教学稿和公共 TTS。TTS 提供方通过配置选择、不静默回退；先生成候选，再明确采用正式声音，最后以提供方可信原生时间证据完成字词对齐，缺少原生时间证据时明确报告缺失。未对齐处不估时，候选生成不等于声音采用或内容接受。正文或声音变化仅重做受影响的新制作范围，保留旧接受快照。
+英语使用原创教学稿和公共 TTS。TTS 提供方通过配置选择、不静默回退；先生成候选，再明确采用正式声音，最后以提供方可信原生时间证据完成字词对齐，缺少原生时间证据时明确报告缺失。未对齐处不估时，候选生成不等于声音采用或内容接受。正文或声音变化仅重做受影响的新制作范围，保留旧接受快照。
 
 Research 按段落或 Anchor 记录事实与来源、B-roll 候选（可定位位置及取得状态）、比喻与例子。先理解完整段落，再定点补具体材料缺口；它不是另一份脚本或必上屏清单。事实冲突交用户判断相关表达，不擅改原音。共享输入变化只更新受影响研究及引用。
 
@@ -58,7 +58,7 @@ critic 提供方为 off 时仍生成证据和 ledger，不生成提示词。开�
 
 ## 4. 导出、封面与归档
 
-生产 Variant 从准确 Accepted Draft 的闭合快照进入 Finalize，输出最终 MP4 与封面；test-work 不进入任何视频导出链。成功编码、QA、成片提升及收据完成后，MP4 与封面复制到聚合导出架，Variant 保持 active 可继续修改；归档与重开显式执行，不改等待事项或兄弟版本的归档状态。零版本与部分归档不算整期完成。导出与归档不包含上传/发布。
+封面按账号配置组成（风格 + 角色 + 标题 + 一句话，见 [creative.md](spec/creative.md)），Draft 登记时用已采用的标题、一句话和角色渲染。生产 Variant 从准确 Accepted Draft 的闭合快照进入 Finalize，输出最终 MP4 与封面；test-work 不进入任何视频导出链。成功编码、QA、成片提升及收据完成后，MP4 与封面复制到聚合导出架，Variant 保持 active 可继续修改；归档与重开显式执行，不改等待事项或兄弟版本的归档状态。零版本与部分归档不算整期完成。导出与归档不包含上传/发布。
 
 编码 QA 检查规格、原音时长、全量解码、代表帧及必要听音；首次跨引擎输出核对构图、中文边缘、字体、颜色、透明合成与声音。失败不归档，保留复现及旧 Final。成片已成功而导出复制或收据写入中断时，从同次收据恢复，不重复编码或增加历史条目。历史成片与当次 manifest 一起保存；旧散装 MP4 缺收据时标明历史来源未知，不猜配、不自动删除。
 
@@ -68,7 +68,7 @@ Work 是内容容器，各 Variant 平级；`required_variants` 不再作为第�
 
 `work --work <Work-ID> archive --variant-id <Variant-ID>` 可手动收起未导出的版本，显示未导出，不冒充交付成功。归档和恢复保持物理路径稳定。`park` 只暂停 Work，`resume` 解除暂停；二者不搬目录、不改等待事项或兄弟版本的归档状态，已打开的 Studio 会话继续定位原路径。旧搬移布局只在能保持会话、Current 与原状态完整的兼容路径中处理。
 
-`list` 默认展示 active（含 parked），`list --archived` 查看归档，`list --all` 查看全部；`list --tree` 与可重建的 `浏览目录.md` 使用同一展示数据。按标题、系列号、版本归档数、当前焦点及最近导出定位，工程与成片链接指向准确对象。查看归档不等于重新激活。
+`list` 默认展示 active（含 parked），`list --archived` 查看归档，`list --all` 查看全部；`list --tree` 与可重建的 `浏览目录.md` 使用同一展示数据；`浏览目录.md` 按系列分组，附系列文件夹与系列规则链接，归档 Work 在所属系列内标为已归档。按标题、系列号、版本归档数、当前焦点及最近导出定位，工程与成片链接指向准确对象。查看归档不等于重新激活。
 
 `work storage inspect` 按 Work 盘点空间，`work storage cleanup` 默认仅预览，加 `--apply` 才执行；均可用 `--work <Work-ID>` 限定目标。容量按需统计，无法读取时报告未知。回收只处理已证明归属、可重建、无引用且相关进程已停止的缓存；源、原媒体、接受快照、历史成片、未知内容及失败证据保留，归档本身不触发删除。
 
@@ -82,7 +82,7 @@ Work 是内容容器，各 Variant 平级；`required_variants` 不再作为第�
 
 ## 画面复盘与样片记忆
 
-找问题由用户指定，优秀只由用户标记。复盘不修改作品源、Plan、Current 和接受记录。数学的复盘之外仍遵守原只读边界。只使用登记 Draft 快照与 PNG，不导出视频，不调用外部服务。
+找问题由用户指定，优秀只由用户标记。复盘不修改作品源、Plan、Current 和接受记录。只使用登记 Draft 快照与 PNG，不导出视频，不调用外部服务。
 
 显式传 `--work <Work ID> --variant <Variant ID>` 后运行 `retro open <Draft ID>`；有匹配且 hash 完整的 critic 包时复制证据，否则加 `--hyperframes-cli` 和 `--browser` 从冻结快照采样，不写 critic ledger。记录在 `retro/<Draft ID>/VISUAL.md`，重开保留内容，不同 Draft 独立保存。`retro check <Draft ID>` 校验字段和枚举，不判断归因。
 

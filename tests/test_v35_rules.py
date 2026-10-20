@@ -73,7 +73,7 @@ class V35RulesTests(unittest.TestCase):
         release = importlib.util.module_from_spec(spec)
         loader.exec_module(release)
         files = [".studio/runtime/" + name for name in
-                 ("appearance.js", "scene-binding.js", "cues.js", "captions.js", "figures.js")]
+                 ("appearance.js", "scene-binding.js", "motion.js", "cues.js", "captions.js", "figures.js")]
         files += [".studio/explainer.py", ".studio/sfx_import.py"]
         files += ["AGENTS.md", ".studio/workflow.md", ".studio/spec/visual-design.md",
                   ".studio/templates/WINDOWS_AGENTS.md", ".studio/templates/ANIMATION_PLAN.template.md",

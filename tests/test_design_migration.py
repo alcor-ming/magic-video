@@ -24,7 +24,7 @@ class DesignMigrationTest(unittest.TestCase):
         recipe = self.root / 'migration-overrides.json'
         recipe.write_text('{}')
         args = ('--work', identity, '--variant', 'alternate', 'migrate', 'design',
-                '--design', 'stage-light', '--design-version', '1', '--no-account', '--overrides', str(recipe),
+                '--design', 'stage-light', '--design-version', str(cli.designs.get('stage-light')['version']), '--no-account', '--overrides', str(recipe),
                 '--source-sha256', cli.file_sha256(variant / 'variant.yaml'))
         self.assertEqual('preview', json.loads(self.invoke(*args))['status'])
         with patch.object(cli, 'write_variant', side_effect=OSError('injected write failure')):
@@ -49,7 +49,8 @@ class DesignMigrationTest(unittest.TestCase):
         package.write_text(json.dumps({'dependencies': {'remotion': '4.0.0'}}))
         before = (variant / 'variant.yaml').read_bytes()
         result = json.loads(self.invoke('--work', identity, '--variant', 'variant1', 'migrate', 'design',
-                                        '--design', 'stage-full', '--design-version', '1', '--no-account'))
+                                        '--design', 'stage-full', '--design-version',
+                                        str(cli.designs.get('stage-full')['version']), '--no-account'))
         self.assertEqual('needs-native-adaptation', result['status'])
         self.assertEqual(before, (variant / 'variant.yaml').read_bytes())
         self.invoke('--work', identity, '--variant', 'variant1', 'migrate', 'retire', '--note', 'Preserve history',

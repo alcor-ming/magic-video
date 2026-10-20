@@ -3,7 +3,7 @@
 import math
 import re
 
-from math_chain import parse_scene_blocks
+from visual_plan import parse_scene_blocks
 
 
 def _text(value):

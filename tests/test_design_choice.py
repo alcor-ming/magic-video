@@ -81,7 +81,7 @@ class ChoiceTest(unittest.TestCase):
         work,_=cli.locate_work(self.root,first)
         prior=cli.read_json(work/'variants/variant1/variant.yaml')
         cli.account_service(self.root).put('account','a',{'name':'A changed','overrides':{'sfx':{'enabled':True}}})
-        latest=designs.get('stage-light');latest['version']=2;latest['defaults']['sfx']['enabled']=True
+        latest=designs.get('stage-light');latest['version']+=1;latest['defaults']['sfx']['enabled']=True
         real=designs._read
         with patch.object(designs,'_read',side_effect=lambda identity:latest if identity=='stage-light' else real(identity)):
             second=self.new('second','--variant-id','variant1')
@@ -89,7 +89,7 @@ class ChoiceTest(unittest.TestCase):
             current=cli.read_json(second_work/'variants/variant1/variant.yaml')
         self.assertNotIn('design_snapshot', prior)
         self.assertNotIn('design_sha256', current)
-        self.assertEqual(2, current['design_version'])
+        self.assertEqual(latest['version'], current['design_version'])
         self.assertEqual(prior['account_revision'],current['account_revision'])
         self.assertFalse(current['sfx']['enabled'])
         self.assertEqual(first,current['selection_source_work'])

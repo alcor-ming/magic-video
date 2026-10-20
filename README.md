@@ -1,4 +1,4 @@
-# HyperFrames AI Harness
+# Magic Video Harness
 
 v4.2 开放设计卡脚手架：一张设计卡包含设计指导、阶段配方、范例和自己的资产库；素材卡只提供资产，不进入制作设计选择。公共包内置 `stage-full`、`stage-light` 两张只读卡；用户卡保存在工具之外的 `design_root`，由使用者直接编辑。
 
@@ -8,13 +8,13 @@ Work 管一期内容，Variant 管独立制作版本。设计卡在制作中实�
 
 资产选型使用 `component list` 查询卡内资产，按用途、类型、标签或画幅筛选，再通过 interface 阅读用法。来源卡缺失或引用断链时明确报告；单张无效或同 ID 冲突的卡只停用自身。`--design <card>` 只列该卡 Variant 可用的资产，`usable_by` 与安装/绑定的实际范围一致；`component trace` 只读核对卡—引用—账号—Work 关系，分开报告缺源、未安装与旧冻结副本。设计卡声明 Plan、阶段指导、资产范围和豁免；素材卡只被引用或本地化，不能用作 Variant 的设计。
 
-五层宿主与 A/B-roll 按所选卡的合同取用，不以四模式或执行模型限制设计选择。字幕、音效和封面由设计默认值与各层覆盖决定；数学、英语等用户设计的专属规则随卡维护。旧 `explainer`、`showcase`、`science`、`card` 身份提示重选，不静默回退。
+五层宿主与 A/B-roll 按所选卡的合同取用，不以四模式或执行模型限制设计选择。字幕、音效和封面由设计默认值与各层覆盖决定；英语等用户设计的专属规则随卡维护。旧 `explainer`、`showcase`、`science`、`card`、`math`、`explainer/math-rap` 身份提示重选，不静默回退。
 
 公共 TTS 默认火山引擎，可配置替代脚本；切换提供方不改 Script / Plan。候选音频、正式声音采用与字词对齐分开记录，只采用提供方原生时间证据；缺少原生时间证据时明确报告缺失，不以估时或替代流程补齐。凭据不进入源码、日志、缓存与发行包，服务失败不自动换供应商。真实合成与听校须有各自证据。
 
 card 链路从 repo 和产品配送中删除，不保留制作、编辑或渲染兼容实现。旧作品、接受快照和成片保留；继续内容须显式采用到受支持的新版本。显式或配置中的旧 card 值报告来源，不静默改为 explainer；普通卡片式画面仍可用于其他链路。
 
-数学链路复用 `cues build --alignment <文件>` 的歌词逐字对齐，不对未对齐字插值。正式声音已有且 cue 已建立后，使用 `./work --work <id> --variant <id> beats build --audio <Work相对音频路径> --beats-per-bar <每小节拍数> --first-downbeat <零基拍点索引>`；锁定上游提取拍点，拍号和首个强拍须人工明确，弱起不猜测，生成的网格绑定音频摘要。`plan check` 报告数学职责、符号一致性和收尾空档，不替代观看或接受。
+按音乐拍点编排时，正式声音已有且 cue 已建立后，使用 `./work --work <id> --variant <id> beats build --audio <Work相对音频路径> --beats-per-bar <每小节拍数> --first-downbeat <零基拍点索引>`；锁定上游提取拍点，拍号和首个强拍须人工明确，弱起不猜测，生成的网格绑定音频摘要，cue 可用 `{bar, beat}` 引用拍点。
 
 `./work --work <id> --variant <id> review package <审查ID> --manifest <Work相对JSON路径>` 将当前 Plan、字级时间/节拍和声明文件复制到 WorkStore 的 `review/<审查ID>`。声明格式为 `{"scenes":["variants/<版本>/project/scene.html"],"screenshots":[{"time":1.5,"path":"materials/frame.png"}],"contact_sheet":"materials/contact-sheet.png"}`；截图先通过官方 Studio/snapshot 取得，命令只复制，不导出视频、不扫描未声明素材。审查输出使用【图】【码】【未实现】证据、严重度表与推荐分镜表。
 
@@ -67,9 +67,9 @@ card 链路从 repo 和产品配送中删除，不保留制作、编辑或渲染
 
 Studio 对 current 的修改同步原文案真源或暂停对应再生成，旧 MP4 / QA 不继续代表新源码。登记版本的独立审阅副本文件只读，不支持 Studio 保存；打开时先校验，副本变化则新建目录并保留旧副本，不放宽诊断完整性检查。`reference` Plan 没有虚构的可播放工程，直接审阅其资产引用。
 
-数学首批积木使用同 Scene 的 `math-plan` 定义单元与 cue，`math` 块只定义对应布局和冻结字体。安装用户卡中的 `math/math-kit`（兼容旧 `math-kit@v1`）后运行 `./work --work <id> --variant <id> math build --browser <Chromium路径>`；方向参考使用 `math build --purpose plan --scene S03`，保留完整 Plan、只准备该 Scene 的 HTML，并以相同 Scene 范围登记。构建复用锁定 Puppeteer 与 Chromium，检查真实字形、系统字体回退和文本容量，再更新受保护挂载。接口、九种积木、导出与闭包约定见 数学设计卡内的积木接口卡。开发仓只做隔离验证，Windows 原生和部署后带声效果验收另报。
+数学卡已于 2026-10-20 退役，`math build`、数学图积木与数学 Plan 检查一并删除。旧数学 Work 只读：状态、列表、预览列表与诊断照常，制作、登记、导出等命令报错；要继续做，用 `variant reselect` 换到其他卡。账号不受影响，换绑别的卡后照常使用。
 
-对已打开的准确目标运行 `./work --work <id> --variant <id> preview diagnose <current或Plan/Draft-ID>`，支持 executable 登记（`plan-vNNN` / `draft-vNNN`），拒绝静态 `reference` 和 `layout`。只读输出上屏照搬、Plan 信息缺失/截短、其他实现偏离和静止疑点，不作 QA 通过判断。Plan 支持新 `screen` 信息块与旧表格格式。登记 Plan/Draft 使用同版冻结的 Script、Research、Plan 与工程，当前文稿的跨版本差异另列；输入在诊断期间变化则报告过期。单 Scene Plan 参考沿用登记的 `sample_scenes`，其他 Scene 列入 `d1.out_of_scope`（不在本参考范围），不报缺失或未验证。文字按 `data-info-id` 或与唯一信息块的精确文本匹配归属；无法唯一归属时按元素列为待核验，相关信息不报缺失。多信息 Scene 可在信息块容器上标注可选的 `data-info-id`。参数及明确引用例外见 `preview diagnose --help`。范围内未采样状态、无法确认 ready 的媒体/子画面及图片内文字保留未验证，仍需按 [Draft QA](.studio/spec/hyperframes.md#draft-qa) 连续观看；诊断不导出视频或修改接受状态。
+对已打开的准确目标运行 `./work --work <id> --variant <id> preview diagnose <current或Plan/Draft-ID>`，支持 executable 登记（`plan-vNNN` / `draft-vNNN`），拒绝静态 `reference` 和 `layout`。只读输出上屏照搬、Plan 信息缺失/截短、其他实现偏离和静止疑点，不作 QA 通过判断。Plan 支持新 `screen` 信息块与旧表格格式。登记 Plan/Draft 使用同版冻结的 Script、Research、Plan 与工程，当前文稿的跨版本差异另列；输入在诊断期间变化则报告过期。单 Scene Plan 参考沿用登记的 `sample_scenes`，其他 Scene 列入 `d1.out_of_scope`（不在本参考范围），不报缺失或未验证。文字按 `data-info-id` 或与唯一信息块的精确文本匹配归属；无法唯一归属时按元素列为待核验，相关信息不报缺失。多信息 Scene 可在信息块容器上标注可选的 `data-info-id`。参数及明确引用例外见 `preview diagnose --help`。制作中可用 `--range` / `--times` 只采样正在做的段，`--frames` 把采样帧存到 Variant `.runtime/diagnose-frames/` 供执行者自看（不作交付证据，交付前仍全片诊断）。范围内未采样状态、无法确认 ready 的媒体/子画面及图片内文字保留未验证，仍需按 [Draft QA](.studio/spec/hyperframes.md#draft-qa) 连续观看；诊断不导出视频或修改接受状态。
 
 画面复盘使用 `./work --work <id> --variant <id> retro open <Draft-ID>` 与 `retro check`。记录按 Draft 保存；用户确认的样片和缺陷分别通过 `sample`、`defect` 管理，跨片机械统计用 `retro summary`。制作在 Plan 中引用样片段，`plan refresh` 固定参考帧与设置，Draft 和 critic 继承同组证据。详情及完整命令见 [画面复盘与样片记忆](.studio/workflow.md#画面复盘与样片记忆)。生产根 `sample-library/`、`known-defects/`、`retro-summary/` 属于用户内容，不进入 Git、发行包或部署管理清单。
 
@@ -87,7 +87,7 @@ Draft 与 Final 生命周期：
 
 ## 归档、反悔与导航
 
-`work list` 默认展示 active（含 parked），`--archived` 看归档、`--all` 看全部；`--tree` 和 WorkStore 的 `浏览目录.md` 展示同一份标题、系列号、版本归档数、焦点、等待事项与最近导出。工程、最新和历史成片均链接到准确对象，容量按需盘点，未知不当成 0。
+`work list` 默认展示 active（含 parked），`--archived` 看归档、`--all` 看全部；`--tree` 和 WorkStore 的 `浏览目录.md`（按系列分组）展示同一份标题、系列号、版本归档数、焦点、等待事项与最近导出。工程、最新和历史成片均链接到准确对象，容量按需盘点，未知不当成 0。
 
 ```bash
 ./work list --archived --tree
@@ -109,13 +109,13 @@ Draft 与 Final 生命周期：
 
 系列、用途与账号通过 Work CLI 管理。新 Variant 用 `--design <id>` 明确选择设计，可用 `--account <id>` 或 `--no-account`；素材卡不能作为设计选择。账号、系列、Work 与 Variant 的覆盖值按既有优先级解析，设计身份不绑定执行模型。旧身份只读并提示重选，不默认选择 explainer。
 
-Theme/Background/Motion 使用单资产合同与工程内的精确 vendor/lock。外观变更仍使用 `appearance rebind`，旧冻结工程不因卡片编辑而自动换配。字段与参数见 [资产合同](.studio/spec/hyperframes-assets.md)。
+Theme/Background 使用单资产合同与工程内的精确 vendor/lock；账号级 Motion 已退役，动作用工具级 `runtime/motion.js` 与设计卡的卡片动作包（卡内 `MOTION.md`），旧冻结 Work 里的四槽 Motion 照常校验与播放。外观变更仍使用 `appearance rebind`，旧冻结工程不因卡片编辑而自动换配。字段与参数见 [资产合同](.studio/spec/hyperframes-assets.md)。
 
-Motion v3 增加风格入退场、一次性强调与转场、back-out/spring 及 cue 相位 hold_fps；允许不同槽混用 v2/v3，新 lock 采用最高能力版本，旧冻结 Work 不自动升级。完整账号外观指定 Theme/Background/Motion；跨账号风格叠加省略 theme，保留各自账号 Theme。B-roll module 可通过 `component list --broll-role hook|concept|transition --tag <style>` 查询，接口卡显示完整挂载示例和插槽；Scene 手动接既有 A/B 编排，Binding schema 不变。合同与生产源自检见 [镜头创作指南](.studio/spec/broll-assets.md)。
+Motion v3 增加风格入退场、一次性强调与转场、back-out/spring 及 cue 相位 hold_fps；允许不同槽混用 v2/v3，新 lock 采用最高能力版本，旧冻结 Work 不自动升级。完整账号外观指定 Theme/Background；跨账号风格叠加省略 theme，保留各自账号 Theme。B-roll module 可通过 `component list --broll-role hook|concept|transition --tag <style>` 查询，接口卡显示完整挂载示例和插槽；Scene 手动接既有 A/B 编排，Binding schema 不变。合同与生产源自检见 [镜头创作指南](.studio/spec/broll-assets.md)。
 
 所有新视频 Work 默认把 Script/Research 放在 `shared/`，各 Variant 通过 `shared_inputs` 引用同一源，Plan/工程/接受/Final 各自独立。`variant add --from <variant-id>` 显式创建内容分支，不是仅为了新增账号而必需；旧 Variant 内文稿仍按原位置读取。创建隔离测试可用 `work new "联动测试" --workflow hyperframes_video --purpose test --batch <batch-id>`，只进行 Studio 验证，不导出视频。
 
-RC2 视频 Work 的全局 ID 与系列号独立递增且不封顶于 999；`name` 与 `series move <id>` 不改 ID/目录，旧系列号保留为查询别名。`list --tree`、`find --series <id> --number <n> [--account <id>]`、`account get <id>` 和可重建的 WorkStore `浏览目录.md` 用于定位。系列经验规则用 `series rules show|put <id>` 按系列 ID 读写 WorkStore 内的系列 `AGENTS.md`，不经 Work 目录或链接定位；`series rules delete <id>` 撤下当前规则，`series delete <id>` 把无 Work 归属的系列连同历史与规则归档到 `control-plane/deleted/series/`。旧视频 Work 的一次性改名只经 `migrate dry-run --output <map.json>` 审阅映射，再由 `migrate apply --mapping <map.json>` 显式执行；缺用途或含糊标题可用 `--purpose-overrides` / `--title-overrides` JSON 映射重做 dry-run。若一项被阻断，可用重复的 `--only <old-id>` 生成安全子集映射；同系列须按旧 ID 顺序迁移。映射文件必须新建于 WorkStore 外。迁移只在 WSL 合成 WorkStore 验证，尚未对生产 WorkStore dry-run/apply；工具部署状态以目标根的部署收据为准。
+RC2 视频 Work 的全局 ID 与系列号独立递增且不封顶于 999；Work 目录按系列分层为 `works/<系列ID>/<Work>/`（实验 `works/test/`，未归系列 `works/_未归系列/`），归档只是标记；`name` 不改 ID/目录，`series move <id>` 把 Work 目录移入新系列文件夹，旧系列号保留为查询别名。旧 `works/active|parked|archive/` 布局用 `migrate layout [--apply]` 迁移，默认只预览。`list --tree`、`find --series <id> --number <n> [--account <id>]`、`account get <id>` 和可重建的 WorkStore `浏览目录.md` 用于定位。系列经验规则用 `series rules show|put <id>` 按系列 ID 读写 `works/<系列ID>/AGENTS.md`（`put --file -` 读标准输入），历史留在 control-plane；`series rules delete <id>` 撤下当前规则，`series delete <id>` 把无 Work 归属的系列连同历史与规则归档到 `control-plane/deleted/series/`。旧视频 Work 的一次性改名只经 `migrate dry-run --output <map.json>` 审阅映射，再由 `migrate apply --mapping <map.json>` 显式执行；缺用途或含糊标题可用 `--purpose-overrides` / `--title-overrides` JSON 映射重做 dry-run。若一项被阻断，可用重复的 `--only <old-id>` 生成安全子集映射；同系列须按旧 ID 顺序迁移。映射文件必须新建于 WorkStore 外。迁移只在 WSL 合成 WorkStore 验证，尚未对生产 WorkStore dry-run/apply；工具部署状态以目标根的部署收据为准。
 
 三项入口、四阶段及历史兼容见 [v3.3 合同](docs/PRD/hyperframes-v33-production-contract.md)，RC2 范围见 [RC2 执行方案](docs/PRD/hyperframes-rc2-execution-plan.md)。HyperFrames 是唯一时间轴、预览与渲染宿主；工具安装不等于 Windows 原生 Studio 预览、真实生产 Finalize/缓存复用或新 Work 内容验收；这些结果须分别取得证据，不以 mock 或文档冒充完成。除 RC2 明确的一次性旧视频 Work 身份迁移外，不批量迁移旧作品、接受快照与 Final。
 
@@ -132,6 +132,7 @@ v3.x 生命周期与旧资产库合同、v4.0 设计身份及 v4.1 增量见 [PR
 ./work --work <work-id> --variant <variant-id> showcase cast --input materials/actor.png --kind sheet --output assets/cast/actor
 ./work --work <work-id> --variant <variant-id> tts generate
 ./work --work <work-id> --variant <variant-id> tts generate --config <provider.json> --anchor P001
+./work --work <work-id> --variant <variant-id> tts audit <candidate-sha256> --alignment materials/alignment.json
 ./work --work <work-id> --variant <variant-id> tts adopt <candidate-sha256> --alignment materials/alignment.json
 ```
 
@@ -139,11 +140,13 @@ TTS 读取已批准或无需批准的当前 Script 正文与稳定 Anchor，排�
 
 替代提供方配置示例：`{"provider":"script","model":"your-model","command":["/absolute/python","/absolute/adapter.py"],"options":{}}`。命令为程序或解释器＋脚本的参数数组；宿主追加 `--request <json> --result <json>`，不经过 shell。请求含 `schema_version:1`、`anchor`、`text`、`model`、`options`、`output:"audio.wav"`，工作目录为本次临时段目录；脚本写入 PCM WAV，并在结果文件返回 `{"audio":"audio.wav","model":"your-model","options":{}}`，实际模型与参数须等于请求（不同则拒绝采用）。越界路径、软／硬链接、坏音频、混合采样格式或非零退出都失败，不切换其他服务。凭据由脚本从环境读取；本期不安装其他语音引擎。
 
-候选仅保存在 Variant 的 `materials/tts/<hash>/`，按提供方、模型、正文与生效参数区分。单 Anchor 可试听；正式采用须覆盖当前全稿，并提供实测对齐 JSON，顶层 `audio_sha256` 必须等于候选音频 hash，`method` 为 `provider-native`、`forced-alignment` 或 `manual-measured`，缺少提供方原生时间证据时明确报告缺失、不以估时补齐；`characters[]` 含单字符 `text`/`char`、以全片秒数记录的 `start`、`end`；不能均分时长伪造。采用会接入 voice 音轨、cues 与 section_map，将 Plan 退回待检查状态并清空当前接受关联；旧快照不变。Script、正式音频或时间数据变化须重新采用和检查。坏请求、合成失败与采用失败保留已有结果。
+候选仅保存在 Variant 的 `materials/tts/<hash>/`，按提供方、模型、正文与生效参数区分。单 Anchor 可试听；正式采用须覆盖当前全稿，并提供由工具测得的对齐 JSON，顶层 `audio_sha256` 必须等于候选音频 hash，`method` 为 `provider-native` 或 `forced-alignment`（须带 `engine` 记录对齐引擎与版本）；手工测量的 `manual-measured` 不再接受，缺少提供方原生时间证据时明确报告缺失、不以估时补齐；`characters[]` 含单字符 `text`/`char`、以全片秒数记录的 `start`、`end`。采用前对照候选音频做机械审计：字时长呈均分特征直接拒绝；落在静音里的字、无字覆盖的长语音段、过短或过长的字列为可疑项，写入 `project/runtime/alignment-report.json`，逐字核对只处理这些可疑项。`tts audit` 只读输出同一份审计结果，供采用前自查。采用会接入 voice 音轨、cues 与 section_map，将 Plan 退回待检查状态并清空当前接受关联；旧快照不变。Script、正式音频或时间数据变化须重新采用和检查。坏请求、合成失败与采用失败保留已有结果。
 
 ## 外观、资产与研究入口
 
 同一 Variant 可显式原位换配，不必新建版本身份。先检查差异，再用 `--apply` 提交；已知旧 runtime 另加 `--upgrade-runtime`，未知或用户修改的 runtime 不覆盖。中断遗留 journal 时用同目标 `appearance recover` 恢复，不手删记录。账号默认、正文与历史 preview/Final 保留，变化后的外观清空当前接受及 Final 关联，不能沿用旧交付作为新外观接受。
+
+若升级后没有 pending rebind，但 Variant 外观锁相对工程锁仅增加了 `capabilities.checks`（及相应摘要），停止该 Variant 的 Studio 后运行 `./work --work <work-id> --variant <variant-id> appearance recover --sync-checks`。命令校验两锁和已安装资产，备份旧工程锁后原子同步至 Variant 锁；保留工程其他文件、vendor、历史快照及现有接受记录。删减检查项、其他外观差异或损坏的锁均拒绝同步；有 pending rebind 时先运行不带此选项的 `appearance recover`。
 
 ```bash
 ./work --work <work-id> --variant <variant-id> appearance rebind --theme <theme-id>@vN
@@ -191,7 +194,7 @@ work --work <Work-ID> --variant <Variant-ID> variant design-update
 
 新设计卡以 `capabilities` 描述能力，不必填写 `mode`：`layers.required/optional` 声明 background/stage/overlay/text；`rolls` 决定是否安装 A/B 运行时（为 true 时需声明 subjects）；`bindings` 分别声明 theme/background/motion 的 required/optional/none；`checks` 选择已注册的检查，`research_template` 和 `plan_template` 优先读取卡内同名模板，再使用工具默认模板。字幕默认值只读 `defaults.captions.enabled`。
 
-`optional` 继承账户但允许留空，`none` 不继承账户但允许显式选择；两张内置舞台卡的三个绑定均为 optional。`motion=required` 至少配置一个槽位；`showcase stage/cast` 可由任意设计卡显式调用。旧卡、旧 Lock 和旧 Variant 仍按固定兼容映射读取，不原地改写。新外观 Lock 保存能力声明及其摘要，诊断只报告 required 层的缺失。
+`optional` 继承账户但允许留空，`none` 不继承账户但允许显式选择；两张内置舞台卡的三个绑定均为 optional。`bindings.motion` 只对旧锁有意义（账号级 Motion 已退役，新 Work 不再选动作槽）；`showcase stage/cast` 可由任意设计卡显式调用。旧卡、旧 Lock 和旧 Variant 仍按固定兼容映射读取，不原地改写。新外观 Lock 保存能力声明及其摘要，诊断只报告 required 层的缺失。
 
 `localize` 要求先在本卡 `design.json.references` 声明引用，复制后记录在 `borrowed.json`。`compare` 只列差异，不自动合并。`preview` 的范例与摘要见输出目录；新建空骨架须先补齐范例及 `example-manifest.json`。卡内安装使用 `component install <card>/<asset> --binding-file <JSON>`；Binding 可以写卡资产身份，安装后 lock 记录准确版本与内容摘要，不要求库级 accept。
 
@@ -211,13 +214,13 @@ work --work <Work-ID> --variant <Variant-ID> variant design-update
 
 ## Windows 安装与升级（GitHub Release）
 
-公共安装包以 GitHub Release 发布：每个 `harness-YYYY.MM.PATCH` 版本附带 `hyperframes-ai-harness-<版本>-windows-x64.zip` 与同名 `.sha256`。这是带锁定运行时的完整包，在纯 Windows 上即可安装和升级，不需要 WSL。以下用 `D:\HyperFrames` 作安装根、`D:\HyperFrames-Data` 作作品与用户卡目录、`D:\hf-packages` 作解包目录，可换成任意本地路径；解包目录必须在安装根之外，并尽量取短路径。
+公共安装包以 GitHub Release 发布：每个 `harness-YYYY.MM.PATCH` 版本附带 `magic-video-harness-<版本>-windows-x64.zip` 与同名 `.sha256`。这是带锁定运行时的完整包，在纯 Windows 上即可安装和升级，不需要 WSL。以下用 `D:\HyperFrames` 作安装根、`D:\HyperFrames-Data` 作作品与用户卡目录、`D:\hf-packages` 作解包目录，可换成任意本地路径；解包目录必须在安装根之外，并尽量取短路径。
 
 ```powershell
 # 1. 下载两个附件后核对摘要：输出须等于 .sha256 文件的第一列
-(Get-FileHash .\hyperframes-ai-harness-2026.10.0-windows-x64.zip -Algorithm SHA256).Hash.ToLower()
-Unblock-File .\hyperframes-ai-harness-2026.10.0-windows-x64.zip   # 去掉下载标记，避免包内程序被拦截
-Expand-Archive .\hyperframes-ai-harness-2026.10.0-windows-x64.zip -DestinationPath D:\hf-packages
+(Get-FileHash .\magic-video-harness-2026.10.0-windows-x64.zip -Algorithm SHA256).Hash.ToLower()
+Unblock-File .\magic-video-harness-2026.10.0-windows-x64.zip   # 去掉下载标记，避免包内程序被拦截
+Expand-Archive .\magic-video-harness-2026.10.0-windows-x64.zip -DestinationPath D:\hf-packages
 
 # 2. 仅首次安装：先建 WorkStore 与用户卡目录，再写根配置（work_root、asset_root 必填，均为绝对路径）
 New-Item -ItemType Directory -Force D:\HyperFrames-Data\works\active, D:\HyperFrames-Data\asset-library\designs
@@ -245,9 +248,9 @@ git tag harness-2026.10.0
 git push origin main harness-2026.10.0
 python3 release build harness-2026.10.0 --runtime-cache .studio/.runtime/windows-runtime-cache
 gh release create harness-2026.10.0 \
-  dist/hyperframes-ai-harness-2026.10.0-windows-x64.zip \
-  dist/hyperframes-ai-harness-2026.10.0-windows-x64.zip.sha256 \
-  --title "HyperFrames AI harness 2026.10.0" --notes "<本版变化>"
+  dist/magic-video-harness-2026.10.0-windows-x64.zip \
+  dist/magic-video-harness-2026.10.0-windows-x64.zip.sha256 \
+  --title "Magic Video harness 2026.10.0" --notes "<本版变化>"
 ```
 
 正式构建总是 public 内容，不接受 `--personal-source`；GitHub 单个附件上限 2 GiB。

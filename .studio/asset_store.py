@@ -66,7 +66,7 @@ def _guard_source(source: Path) -> None:
         return
     review = os.environ.get("HYPERFRAMES_AI_ASSET_REVIEW_ROOT")
     work = os.environ.get("HYPERFRAMES_AI_WORK_ROOT")
-    roots = ([Path(review) / "sources"] if review else []) + ([Path(work) / "works/active"] if work else [])
+    roots = ([Path(review) / "sources"] if review else []) + ([Path(work) / "works"] if work else [])
     if not any(source.resolve().is_relative_to(path.resolve()) for path in roots):
         raise ComponentError("Review source must be an isolated source copy or Review Work-local directory")
 

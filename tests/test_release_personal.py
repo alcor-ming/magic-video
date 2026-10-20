@@ -8,6 +8,27 @@ sys.path.insert(0,str(Path(__file__).parent))
 from test_release_cli import RELEASE
 
 class PersonalPackageTest(unittest.TestCase):
+    def test_card_validation_cleans_expected_locks_and_rejects_other_writes(self):
+        for locks in [('operations.lock',), ('operations.lock', 'catalog.lock'),
+                      ('operations.lock', 'catalog.lock', 'unexpected.json')]:
+            with self.subTest(locks=locks), tempfile.TemporaryDirectory() as tmp, \
+                    patch.object(RELEASE, 'check_env', return_value={}):
+                root = Path(tmp)
+                (root / '.studio').mkdir()
+                (root / '.studio/work.py').write_text(
+                    'from pathlib import Path\n'
+                    'root = Path(".studio/.runtime")\n'
+                    'root.mkdir()\n'
+                    f'for name in {locks!r}: (root / name).touch()\n'
+                    'print(\'{"ok": true}\')\n')
+                if 'unexpected.json' in locks:
+                    with self.assertRaisesRegex(RELEASE.ReleaseError, 'Card validation wrote'):
+                        RELEASE.validate_cards(root)
+                    self.assertTrue((root / '.studio/.runtime/unexpected.json').exists())
+                else:
+                    RELEASE.validate_cards(root)
+                    self.assertFalse((root / '.studio/.runtime').exists())
+
     def test_personal_skill_exclusions_filter_files_and_lock_without_changing_public(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -252,6 +273,25 @@ class PersonalPackageTest(unittest.TestCase):
             with self.assertRaises(RELEASE.ReleaseError): RELEASE.stage_personal(root/'other',source)
             with self.assertRaises(RELEASE.ReleaseError): RELEASE.stage_personal(root/'other',root/'missing')
             self.assertEqual(RELEASE.stage_personal(stage,None),{})
+
+    def test_check_personal_reports_without_writing_the_source(self):
+        import contextlib, io
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp)
+            (source / 'personal').mkdir()
+            tool = source / 'personal/tool.py'; tool.write_text('print("fixture")')
+            manifest = {'version': '1.0.0', 'compatibility': {'product': RELEASE.PRODUCT_VERSION},
+                        'files': {'personal/tool.py': RELEASE.sha256(tool)}}
+            (source / 'release-sources.json').write_text(json.dumps(manifest))
+            before = sorted(p.relative_to(source).as_posix() for p in source.rglob('*'))
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(0, RELEASE.main(['check-personal', '--personal-source', str(source)]))
+            self.assertEqual(manifest['files'], json.loads(output.getvalue())['files'])
+            self.assertEqual(before, sorted(p.relative_to(source).as_posix() for p in source.rglob('*')))
+            tool.write_text('changed')
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(1, RELEASE.main(['check-personal', '--personal-source', str(source)]))
 
     def test_private_root_files_pin_their_public_base_and_product_version(self):
         with tempfile.TemporaryDirectory() as tmp:

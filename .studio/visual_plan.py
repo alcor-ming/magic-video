@@ -67,6 +67,39 @@ def markdown_structure_lines(text):
         yield match
 
 
+def parse_scene_blocks(text, language, *, required=True):
+    headings = [m for m in markdown_structure_lines(text) if re.match(r'^## ', m[0])]
+    result, seen = {}, set()
+    for index, heading in enumerate(headings):
+        match = re.fullmatch(r'## (S[0-9]+[A-Z]*)(?:\s+.*)?', heading[0])
+        if not match:
+            continue
+        scene = match[1]
+        if scene in seen:
+            raise ValueError(f'{scene}: duplicate_scene')
+        seen.add(scene)
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
+        blocks, fence, lines = [], None, []
+        for line in text[heading.end():end].splitlines():
+            marker = re.fullmatch(r' {0,3}(`{3,}|~{3,})(.*)', line)
+            if fence:
+                if marker and marker[1][0] == fence[0][0] and len(marker[1]) >= len(fence[0]) and not marker[2].strip():
+                    if fence[1] == language:
+                        blocks.append(json.loads('\n'.join(lines)))
+                    fence = None
+                else:
+                    lines.append(line)
+            elif marker:
+                fence, lines = (marker[1], marker[2].strip()), []
+        if len(blocks) > 1 or required and not blocks or fence and fence[1] == language:
+            raise ValueError(f'{scene}: expected_one_{language.replace("-", "_")}')
+        if blocks:
+            result[scene] = blocks[0]
+    if required and not result:
+        raise ValueError('missing_' + language.replace('-', '_'))
+    return result
+
+
 def plan_scene_rows(plan_text):
     """Parse Scene-local design only; overview tables are never design authority."""
     metadata = re.match(r'\A---\s*\n(.*?)\n---(?:\n|$)', plan_text, re.S)
@@ -164,39 +197,6 @@ def plan_scene_rows(plan_text):
                 raise VisualPlanError(f'{sid}: unknown continuation information ID {identity}')
             row['screens'][identity] = information[identity]
         row['信息 ID'] = ', '.join(row['screens'])
-    from math_kit import parse_plan as parse_math_kit
-    try:
-        math_blocks = parse_math_kit(plan_text)
-    except ValueError as error:
-        raise VisualPlanError(str(error)) from error
-    import lines
-    is_math = lines.is_math(meta)
-    if math_blocks and not is_math:
-        raise VisualPlanError('math blocks require the math line or frozen explainer/math-rap')
-    for sid, block in math_blocks.items():
-        rows[sid]['math'] = block
-    if is_math:
-        from math_chain import parse_plan
-        try:
-            contracts = parse_plan(plan_text)
-        except ValueError as error:
-            raise VisualPlanError(str(error)) from error
-        for sid, contract in contracts.items():
-            if lines.has_check(meta, 'math-complete'):
-                required_text = [*contract['symbols'].values(), *contract['invariants']]
-                required_text += [value for unit in contract['units'] for value in unit.values()]
-                required_text += [value for check in contract['zero_basics'] for value in check.values()]
-                if (any(not contract[key] for key in ('units', 'symbols', 'invariants', 'zero_basics', 'cues'))
-                        or any(not value.strip() or re.search(r'<[^>]+>|__\w+__', value) for value in required_text)):
-                    raise VisualPlanError(f'{sid}: incomplete_math_plan')
-            rows[sid]['math_plan'] = contract
-            kinds = {item['id']: item['kind'] for item in math_blocks.get(sid, {}).get('items', [])}
-            for event in contract['cues']:
-                for action in ('reveal', 'remove'):
-                    for target in event[action]:
-                        layers = ([4] if kinds[target] in ('formula', 'equals') else [2, 4]) if target in kinds else [2]
-                        rows[sid]['events'].extend({'cue': event['cue'], 'layer': layer, 'target': target,
-                                                   'change': 'math_' + action, 'derived': True} for layer in layers)
     if english:
         import english_plan
         try:

@@ -4,7 +4,6 @@ from html.parser import HTMLParser
 import json
 import os
 from pathlib import Path
-import socket
 import subprocess
 from urllib.parse import unquote, urlsplit
 from urllib.request import ProxyHandler, build_opener
@@ -15,12 +14,17 @@ from visual_plan import VisualPlanError
 def private_browser_profile(project):
     profile = project.parent / ".runtime" / "studio-browser"
     preferences = profile / "Default" / "Preferences"
-    if preferences.exists():
-        if json.loads(preferences.read_text(encoding="utf-8")).get("enable_do_not_track") is not True:
-            raise VisualPlanError("Studio browser profile no longer has Do Not Track enabled; use a new isolated profile")
-    else:
+    # Chrome rewrites Preferences and may drop the flag; restore it before every launch.
+    try:
+        data = json.loads(preferences.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = None
+    if not isinstance(data, dict):
+        data = {}
+    if data.get("enable_do_not_track") is not True:
+        data["enable_do_not_track"] = True
         preferences.parent.mkdir(parents=True, exist_ok=True)
-        preferences.write_text(json.dumps({"enable_do_not_track": True}), encoding="utf-8")
+        preferences.write_text(json.dumps(data), encoding="utf-8")
     return profile
 
 
@@ -89,11 +93,9 @@ def start(cli, project, port=0, *, no_open=False, layout=False):
         raise VisualPlanError("Pinned HyperFrames does not support the required Studio lifecycle/context flags; no legacy fallback was started")
     if not 0 <= port < 65536:
         raise VisualPlanError("Studio port must be between 0 and 65535")
-    if port == 0:
-        with socket.socket() as sock:
-            sock.bind(("127.0.0.1", 0))
-            port = sock.getsockname()[1]
-    arguments = ["--background", "--json", "--port", str(port)]
+    # Without an explicit port the official CLI reuses this project's running server;
+    # a fresh random port would be rejected as a port mismatch.
+    arguments = ["--background", "--json", *(["--port", str(port)] if port else [])]
     profile = private_browser_profile(project)
     if no_open:
         arguments.append("--no-open")

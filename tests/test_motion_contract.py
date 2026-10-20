@@ -138,7 +138,7 @@ class MotionContractTest(unittest.TestCase):
             project.mkdir()
             shutil.copyfile(REPO / "windows-runtime.lock.json", harness / "windows-runtime.lock.json")
             with mock.patch.dict(os.environ, {"HYPERFRAMES_AI_ASSET_ROOT": str(store), "HYPERFRAMES_AI_ROOT": str(harness)}):
-                account = {"motion": {}}
+                account, legacy = {}, {}
                 for kind, payload in (("theme", {"tokens": {"colors": {"accent": "#ff2200"}}}), ("background", {"renderer": "transparent", "parameters": {}}), ("motion", motion_payload())):
                     source = root / kind
                     source.mkdir()
@@ -151,18 +151,22 @@ class MotionContractTest(unittest.TestCase):
                     asset_store.accept_component(store, candidate["component_ref"], candidate["package_sha256"], "Isolated Motion contract test", runtime_root=harness)
                     ref = {"ref": candidate["component_ref"], "kind": kind, "package_sha256": candidate["package_sha256"]}
                     if kind == "motion":
-                        account["motion"] = {slot: {"asset": ref, "entry": slot} for slot in appearance.SLOTS}
+                        legacy = {slot: {"asset": ref, "entry": slot} for slot in appearance.SLOTS}
                     else:
                         account[kind] = ref
                 overrides = {"parameters": {"motion": {"reveal": {"slots.reveal.duration": 0, "slots.reveal.hide_before": False}}}}
-                lock = appearance.resolve(harness, account, overrides)
+                for retired in ({**account, "motion": legacy}, account):
+                    with self.assertRaisesRegex(appearance.AppearanceError, "Account-level Motion is retired"):
+                        appearance.resolve(harness, retired, {} if "motion" in retired else {"motion": legacy})
+                # 旧 Work 的冻结锁里已有的四槽动作：只经 legacy_motion 原样带入。
+                lock = appearance.resolve(harness, account, overrides, legacy_motion=legacy)
                 self.assertEqual((2, 2, 1), tuple(lock[key] for key in ("schema_version", "contract_version", "resolver_version")))
                 self.assertEqual(0, lock["parameters"]["motion"]["reveal"]["slots.reveal.duration"])
                 self.assertIs(False, lock["parameters"]["motion"]["reveal"]["slots.reveal.hide_before"])
                 with self.assertRaisesRegex(appearance.AppearanceError, "selected slot"):
-                    appearance.resolve(harness, account, {"motion": {"reveal": {**account["motion"]["reveal"], "entry": "exit"}}})
+                    appearance.resolve(harness, account, {}, legacy_motion={**legacy, "reveal": {**legacy["reveal"], "entry": "exit"}})
                 with self.assertRaisesRegex(appearance.AppearanceError, "Unknown appearance parameter"):
-                    appearance.resolve(harness, account, {"parameters": {"motion": {"reveal": {"slots.reveal.unknown": 1}}}})
+                    appearance.resolve(harness, account, {"parameters": {"motion": {"reveal": {"slots.reveal.unknown": 1}}}}, legacy_motion=legacy)
                 disabled = appearance.resolve(harness, account, {"motion": dict.fromkeys(appearance.SLOTS)})
                 self.assertEqual(1, disabled["schema_version"])
                 appearance.materialize(harness, project, lock)
@@ -183,16 +187,17 @@ class MotionContractTest(unittest.TestCase):
                 motion3 = accepted("motion3", "motion", v3, 3)
                 theme2 = accepted("theme2", "theme", {"tokens": {"colors": {"accent": "#116633"}}}, 1)
                 background2 = accepted("background2", "background", {"renderer": "solid", "parameters": {"color": "#ffffff"}}, 1)
-                overlay = {"background": background2, "motion": {"emphasis": {"asset": motion3, "entry": "emphasis"}}}
+                overlay = {"background": background2}
+                legacy3 = {**legacy, "emphasis": {"asset": motion3, "entry": "emphasis"}}
                 accounts = (account, {**account, "theme": theme2})
-                locks = [appearance.resolve(harness, item, overlay) for item in accounts]
+                locks = [appearance.resolve(harness, item, overlay, legacy_motion=legacy3) for item in accounts]
                 self.assertEqual([item["theme"] for item in accounts], [item["selection"]["theme"] for item in locks])
                 self.assertEqual(locks[0]["selection"]["motion"], locks[1]["selection"]["motion"])
                 for mixed in locks:
                     self.assertEqual((3, 3), (mixed["schema_version"], mixed["contract_version"]))
                     self.assertEqual(background2, mixed["selection"]["background"])
-                    self.assertEqual(account["motion"]["reveal"], mixed["selection"]["motion"]["reveal"])
-                full = appearance.resolve(harness, account, {**overlay, "theme": theme2})
+                    self.assertEqual(legacy["reveal"], mixed["selection"]["motion"]["reveal"])
+                full = appearance.resolve(harness, account, {**overlay, "theme": theme2}, legacy_motion=legacy3)
                 self.assertEqual(theme2, full["selection"]["theme"])
                 new_project = root / "project-v3"
                 new_project.mkdir()

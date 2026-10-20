@@ -23,27 +23,15 @@ REQUIRED_HARNESS = [
     "work",
     "work-wsl.sh",
     ".studio/work_wsl.py",
-    ".studio/math_chain.py",
-    ".studio/math_kit.py",
-    ".studio/math_build.py",
-    ".studio/math_kit_assets.py",
-    ".studio/math_kit_check.mjs",
-    ".studio/runtime/math-kit.js",
-    ".studio/runtime/math-kit.css",
-    ".studio/runtime/math-project.js",
-    ".studio/spec/math-kit.md",
-    ".studio/math_audio.py",
+    ".studio/beat_grid.py",
     ".studio/review_bundle.py",
     ".studio/seek_check.py",
     ".studio/seek_check.cjs",
     ".studio/spec/showcase.md",
-    ".studio/spec/showcase-pdoom.md",
     ".studio/spec/showcase-science.md",
-    ".studio/spec/math-rap.md",
     ".studio/templates/CLAUDE.template.md",
     ".studio/templates/SHOWCASE_PLAN.template.md",
     ".studio/templates/VISUAL_RETRO.template.md",
-    ".studio/templates/MATH_RESEARCH.template.md",
     ".studio/spec/visual-design.md",
     ".studio/work.py",
     ".studio/lines.py",
@@ -78,6 +66,7 @@ REQUIRED_HARNESS = [
     ".studio/runtime/appearance.js",
     ".studio/runtime/broll.js",
     ".studio/runtime/scene-binding.js",
+    ".studio/runtime/motion.js",
     ".studio/runtime/cues.js",
     ".studio/runtime/captions.js",
     ".studio/runtime/figures.js",
@@ -89,7 +78,6 @@ REQUIRED_HARNESS = [
     ".studio/work_tts.py",
     ".studio/english_plan.py",
     ".studio/spec/english.md",
-    ".studio/templates/MATH_PLAN.template.md",
     ".studio/templates/ENGLISH_PLAN.template.md",
 ]
 
@@ -101,7 +89,7 @@ def rule_link_errors(repo: Path) -> list[str]:
              ".studio/spec/visual-design.md", ".studio/spec/privacy.md",
              ".studio/templates/WINDOWS_AGENTS.md", ".studio/templates/STUDIO_AGENTS.md"]
     paths += [str(path.relative_to(repo)) for path in (repo / '.studio/spec').glob('hyperframes*.md')]
-    paths += ['.studio/spec/runtime-interfaces.md', '.studio/spec/showcase.md', '.studio/spec/math-rap.md',
+    paths += ['.studio/spec/runtime-interfaces.md', '.studio/spec/showcase.md',
               '.studio/templates/CLAUDE.template.md']
     for relative in paths:
         path = repo / relative

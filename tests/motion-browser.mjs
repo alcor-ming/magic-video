@@ -55,11 +55,12 @@ for name in ('theme','second','background','motion','fade-cut'):
  refs[name]={'ref':candidate['component_ref'],'kind':kind,'package_sha256':candidate['package_sha256']}
 for name in ('normal','zero','second','disabled','fade-cut'):
  project=root/('project-'+name); project.mkdir()
- account={'id':'fixture','revision':1,'theme':refs['second' if name=='second' else 'theme'],'background':refs['background'],'ratio':'16:9','motion':{slot:{'asset':refs['fade-cut' if name=='fade-cut' else 'motion'],'entry':slot} for slot in slots}}
+ account={'id':'fixture','revision':1,'theme':refs['second' if name=='second' else 'theme'],'background':refs['background'],'ratio':'16:9'}
+ legacy={slot:{'asset':refs['fade-cut' if name=='fade-cut' else 'motion'],'entry':slot} for slot in slots}
  overrides={}
  if name=='zero': overrides={'parameters':{'motion':{'reveal':{'slots.reveal.duration':0,'slots.reveal.hide_before':False,'reduced_motion.reveal.duration':0,'reduced_motion.reveal.hide_before':False}}}}
  if name=='disabled': overrides={'motion':dict.fromkeys(slots)}
- lock=appearance.resolve(harness,account,overrides); appearance.materialize(harness,project,lock); appearance.verify(project,lock)
+ lock=appearance.resolve(harness,account,overrides,legacy_motion=legacy); appearance.materialize(harness,project,lock); appearance.verify(project,lock)
 shutil.rmtree(assets)
 `, repo, output, process.env.TEST_CHINESE_FONT || '/usr/share/fonts/opentype/unifont/unifont.otf', process.env.TEST_CHINESE_FONT_LICENSE || '/usr/share/doc/fonts-unifont/copyright'], { encoding: 'utf8' });
 assert.equal(build.status, 0, build.stderr);

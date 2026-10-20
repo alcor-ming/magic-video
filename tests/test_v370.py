@@ -22,11 +22,6 @@ def plan(mode='explainer', spec=None):
             '\n## 分镜表\n| 段 | 起点口播词 | 观众看到什么 | 本段任务 | 主体 | 交接例外 | 延续 |\n'
             '|---|---|---|---|---|---|---|\n| S01·A1 | 词 | 卡片 | 解释 | | | node |\n'
             '| S01·B1 | 证据 | 媒体 | 证明 | | cut | node |\n| S01·A2 | 所以 | 卡片 | 总结 | | | |\n## S01\n')
-    if spec == 'math-rap':
-        from test_math_chain import contract
-        intent = contract()
-        intent['cues'][0]['cue'] = '词'
-        document += '```math-plan\n' + json.dumps(intent) + '\n```\n'
     return document
 
 
@@ -42,9 +37,9 @@ class V370Test(unittest.TestCase):
         for value in ({'unknown': True}, {'direction_approval': 1}, {'critic.max_rounds': True}, {'critic.model': '   '}):
             with self.assertRaises(ValueError):
                 settings.validate(value, 'user')
-        for mode, suffix in (('explainer', None), ('explainer', 'math-rap'), ('showcase', 'pdoom'), ('showcase', 'science')):
+        for mode, suffix in (('explainer', None), ('showcase', 'science')):
             state = {'mode': mode, 'submodule': suffix, 'series_binding': {'spec': suffix} if mode == 'explainer' and suffix else {}}
-            if mode == 'showcase' and not (Path(lines.__file__).with_name('designs') / 'pdoom/design.json').is_file():
+            if mode == 'showcase' and not (Path(lines.__file__).with_name('designs') / 'collage/design.json').is_file():
                 continue
             values = settings.effective({'line': lines.bind(state)})
             self.assertTrue(values['direction_approval']['value'])
@@ -68,7 +63,6 @@ class V370Test(unittest.TestCase):
         self.assertEqual('第2层动态图解或第4层文字', row['segments'][0]['subject'])
         self.assertEqual('第2层媒体', row['segments'][1]['subject'])
         plan_scene_rows(plan('explainer'))
-        plan_scene_rows(plan('explainer', 'math-rap'))
         self.assertEqual([], plan_scene_rows('---\n{"plan_format":"3.5.2"}\n---\n## S01\n')['S01']['events'])
         cases = [plan().replace('**禁止项：** 说明', ''), plan().replace('S01·A1', 'S01·B1'),
                  plan().replace('S01·A2', 'S01·B2'), plan().replace('## S01\n', '## S02\n'),

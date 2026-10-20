@@ -258,14 +258,14 @@ class ControlPlaneTest(unittest.TestCase):
         written = json.loads(self.run_cli("series", "rules", "put", "fixture", "--file", str(rules)))
         self.assertTrue(written["changed"])
         path = Path(written["path"])
-        self.assertEqual(cli.runtime_root(self.root) / "control-plane/series/fixture/AGENTS.md", path)
+        self.assertEqual(self.root / "works/fixture/AGENTS.md", path)
         self.assertFalse(json.loads(self.run_cli("series", "rules", "put", "fixture", "--file", str(rules)))["changed"])
         rules.write_text("# Fixture\n\n- 第二版\n", encoding="utf-8")
         self.run_cli("series", "rules", "put", "fixture", "--file", str(rules))
         shown = json.loads(self.run_cli("series", "rules", "show", "fixture"))
         self.assertEqual("# Fixture\n\n- 第二版\n", shown["content"])
         self.assertEqual(2, shown["revisions"])
-        self.assertIn("避免重复的开场", (path.parent / "history/1.md").read_text(encoding="utf-8"))
+        self.assertIn("避免重复的开场", (cli.runtime_root(self.root) / "control-plane/series/fixture/history/1.md").read_text(encoding="utf-8"))
         self.assertEqual(["fixture"], [row["id"] for row in json.loads(self.run_cli("series", "list"))])
 
         # A Work reached through a linked series folder still resolves rules from WORK.md metadata.

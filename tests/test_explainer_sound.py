@@ -62,9 +62,8 @@ class ExplainerCliTests(unittest.TestCase):
     def test_english_build_from_approved_narration_and_installed_sound(self):
         self.check_sound_build("english")
 
-    @unittest.skipUnless((fixture.REPO / '.studio/designs/math/design.json').is_file(), 'Personal math card not installed')
-    def test_math_without_account_builds_and_checks_closure(self):
-        self.check_sound_build("math", no_account=True)
+    def test_build_without_account_checks_closure(self):
+        self.check_sound_build("explainer", no_account=True)
 
     def check_sound_build(self, mode, no_account=False):
         design = "stage-full" if mode == "explainer" else mode
@@ -119,7 +118,6 @@ class ExplainerCliTests(unittest.TestCase):
         self.assertIn('data-start="0.9"', (project / "index.html").read_text())
         self.assertEqual(sound, json.loads((project / "sound.json").read_text()))
         if no_account:
-            self.assertNotIn('appearance_lock', cli.read_json(variant / 'variant.yaml'))
             closure = project / 'COMPONENT_LOCK.json'
             original_closure = closure.read_bytes()
             closure.write_text('{}')

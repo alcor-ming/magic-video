@@ -1,10 +1,12 @@
-# HyperFrames AI v4.2 PRD Master
+# Magic Video v4.2 PRD Master
 
 状态：v4.2 开放设计卡与卡内资产脚手架；开发实现与验证以当前任务记录为准，未打包、未部署，Windows 原生和生产验收另记。
 
 当前设计：内置卡＋用户卡双根 Catalog、设计卡/素材卡、跨卡引用与本地化、Draft 文件快照与按 Variant 更新。更新保留工程副本并报告待重新安装资产。现行使用合同见 [README](../../README.md)、[工作流](../../.studio/workflow.md) 和 [资产合同](../../.studio/spec/hyperframes-assets.md)。
 
 开发设计记录（本地、不配送）：[本任务 PRD](../../.trellis/tasks/10-10-hyperframes-docs-discipline-extension/prd.md) 与 [脚手架细则](../../.trellis/tasks/10-10-hyperframes-docs-discipline-extension/scaffold-design.md)。P9 卡片迁移、P10 历史清理另行授权。
+
+数学卡已于 2026-10-20 退役（卡、`math build`、数学图积木与数学检查一并删除；旧数学 Work 只读，`variant reselect` 换卡后可继续），下文 v3.x 关于数学链路的描述只作历史背景。
 
 现行生产入口与恢复协议见 [生产会话接口](production-session-interface.md)。历史 ledger（含 `component-authoring-m0-m1.md` D8）、v3.x Skill 旧名及客户端/模型分工已被该接口取代；历史原文仅保留背景，不构成现行入口或执行限制。
 

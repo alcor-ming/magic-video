@@ -42,10 +42,46 @@ def tree_identity(directory):
     return appearance.digest(entries)
 
 
-def recover(variant, api):
+def sync_checks(variant, api):
+    project = safe(variant, "project")
+    path = safe(project, "appearance-lock.json")
+    target = api.read_json(variant / "variant.yaml").get("appearance_lock")
+    appearance._check_lock(target)
+    frozen = api.read_json(path)
+    appearance.verify(project, frozen)
+    if frozen == target:
+        return {"status": "unchanged"}
+    if "capabilities" not in frozen or "capabilities" not in target:
+        raise appearance.AppearanceError("Check sync requires capability-based appearance locks")
+    expected = deepcopy(frozen)
+    old_checks = frozen["capabilities"]["checks"]
+    new_checks = target["capabilities"]["checks"]
+    expected["capabilities"]["checks"] = new_checks
+    expected["capabilities_sha256"] = appearance.digest(expected["capabilities"])
+    expected["sha256"] = appearance.digest({key: value for key, value in expected.items() if key != "sha256"})
+    if expected != target or not set(old_checks).issubset(new_checks):
+        raise appearance.AppearanceError("Check sync only permits added checks; other frozen appearance differences require inspection")
+    studio = api.studio_record(variant, "current")
+    if studio.exists():
+        record = api.read_json(studio)
+        if not record.get("stopped_at") and not api.storage.process_stopped(record.get("pid")):
+            raise appearance.AppearanceError("Stop this Variant's current Studio before syncing checks")
+    if path.stat().st_nlink != 1:
+        raise appearance.AppearanceError("Check sync cannot replace a linked appearance lock")
+    history = safe(variant, f".runtime/appearance-history/{uuid.uuid4().hex}")
+    history.mkdir(parents=True)
+    shutil.copy2(path, history / "appearance-lock.json")
+    api.write_json(path, target)
+    return {"status": "checks-synced", "history": str(history),
+            "before_sha256": frozen["sha256"], "after_sha256": target["sha256"]}
+
+
+def recover(variant, api, *, sync=False):
     marker = journal_path(variant)
     if not marker.exists():
-        return {"status": "no-pending-rebind"}
+        return sync_checks(variant, api) if sync else {"status": "no-pending-rebind"}
+    if sync:
+        raise appearance.AppearanceError("Appearance recovery pending; run appearance recover without --sync-checks first")
     record = api.read_json(marker)
     identity = record.get("id", "")
     if not isinstance(identity, str) or len(identity) != 32 or any(c not in "0123456789abcdef" for c in identity):
@@ -101,6 +137,7 @@ def rebind(root, work, variant, state, args, api):
     effective_mode = overrides.get("mode", account.get("mode") if args.account else (current or {}).get("mode", account.get("mode")))
     if not modern and getattr(args, "captions", None) is not None:
         appearance.check_mode(effective_mode)
+    legacy_motion = None
     if current and not args.account:
         choices = {**current["selection"], **{key: current[key] for key in ("mode", "ratio", "width", "height", "fps", "seed") if key in current},
                    "parameters": deepcopy(current["overrides"]["explicit"])}
@@ -112,10 +149,14 @@ def rebind(root, work, variant, state, args, api):
             for dimension in ("width", "height"):
                 if dimension not in overrides:
                     choices.pop(dimension, None)
+        # Frozen account Motion slots carry forward unchanged; a rebind may only switch them off.
+        legacy_motion = choices.pop("motion")
         if "motion" in overrides:
             if not isinstance(overrides["motion"], dict):
                 raise appearance.AppearanceError("Motion selections must be an object")
-            overrides["motion"] = {**choices["motion"], **overrides["motion"]}
+            if any(value is not None for value in overrides["motion"].values()):
+                raise appearance.AppearanceError(appearance.MOTION_RETIRED)
+            legacy_motion = {**legacy_motion, **overrides.pop("motion")}
         if "parameters" in overrides:
             if not isinstance(overrides["parameters"], dict):
                 raise appearance.AppearanceError("Appearance parameters must be an object")
@@ -139,9 +180,7 @@ def rebind(root, work, variant, state, args, api):
         overrides.setdefault("captions", state.get("captions", False))
     if (current or {}).get('card_fonts'):
         overrides['card_fonts'] = current['card_fonts']
-    lock = appearance.resolve(root, account, overrides)
-    if lines.is_math(state) and (not lock["selection"].get("captions") or not modern and lock.get("mode") not in {"math", "explainer"}):
-        raise appearance.AppearanceError("Mathematics requires lyric captions enabled")
+    lock = appearance.resolve(root, account, overrides, legacy_motion=legacy_motion)
     project = safe(variant, "project")
     runtime_updates = {}
     for name, known in (("appearance.js", KNOWN_RUNTIMES), ("cues.js", KNOWN_CUE_RUNTIMES), ("broll.js", KNOWN_BROLL_RUNTIMES), ("figures.js", KNOWN_FIGURE_RUNTIMES)):
@@ -240,5 +279,5 @@ def command(root, args, api):
         api.require_workflow(work, "hyperframes_video")
         variant, state = api.selected_variant(root, work, args)
         with package_write_lock(safe(variant, ".runtime/component-install.lock")):
-            result = recover(variant, api) if args.appearance_command == "recover" else rebind(root, work, variant, state, args, api)
+            result = recover(variant, api, sync=args.sync_checks) if args.appearance_command == "recover" else rebind(root, work, variant, state, args, api)
     print(json.dumps(result, ensure_ascii=False, indent=2))

@@ -60,8 +60,6 @@ def command(root, arguments):
                 keys.add("revision")
             if parsed.command == "component" and getattr(parsed, "candidate", False):
                 keys.add("component")
-            if parsed.command == "component" and parsed.component_command in {"math-kit-source"}:
-                keys.add("target")
             positional_paths = {str(getattr(parsed, key)) for key in keys if getattr(parsed, key, None) is not None}
     root = root.resolve()
     result = [convert(root, "work.cmd")]
