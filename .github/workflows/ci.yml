@@ -27,6 +27,8 @@ jobs:
           node-version: '22'
       - name: System tools
         run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+      - name: Python image dependency
+        run: python3 -m pip install Pillow==12.3.0
       - name: Tool parser
         run: npm ci --prefix .studio/parser --ignore-scripts --no-audit --no-fund
       - name: Dependency parser from the Windows pins
