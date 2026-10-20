@@ -1,9 +1,10 @@
-"""Render editable SuperCollider or jsfxr SFX recipes into verified WAV and MP3 assets."""
+"""Render SFX from editable SuperCollider/jsfxr recipes or the earshot sound bank into verified WAV and MP3 assets."""
 from pathlib import Path
 import argparse
 import json
 import math
 import os
+import re
 import subprocess
 import tempfile
 
@@ -13,7 +14,49 @@ from windows_runtime import validate_review_path
 from component_harness import package_write_lock
 
 
-def generate(source, parameters, output, *, engine='supercollider', sclang='sclang', node='node', ffmpeg='ffmpeg'):
+EARSHOT_ID = re.compile(r'[a-z0-9_]+/[a-z0-9_]+')
+EARSHOT_KEYS = {'id', 'seed', 'duration', 'apex', 'pitch', 'peak_db'}
+
+
+def earshot_parameters(parameters):
+    """Bank id plus the knobs earshot edits in the recipe itself; nothing is resampled."""
+    if not isinstance(parameters, dict) or set(parameters) - EARSHOT_KEYS or not isinstance(parameters.get('id'), str):
+        raise ValueError('earshot SFX needs a bank id and only seed/duration/apex/pitch/peak_db')
+    if not EARSHOT_ID.fullmatch(parameters['id']):
+        raise ValueError('earshot id must be <category>/<member>; list them with earshot sfx list')
+    for key, low, high in [('duration', 0.02, 30), ('apex', 0, 30), ('peak_db', -60, 0)]:
+        value = parameters.get(key)
+        if value is not None and (type(value) not in (int, float) or not math.isfinite(value) or not low <= value <= high):
+            raise ValueError('Invalid SFX ' + key)
+    if 'seed' in parameters and (type(parameters['seed']) is not int or not 0 <= parameters['seed'] <= 2147483647):
+        raise ValueError('SFX seed must be a nonnegative 31-bit integer')
+    if 'pitch' in parameters and (not isinstance(parameters['pitch'], (str, int, float)) or isinstance(parameters['pitch'], bool)):
+        raise ValueError('Invalid SFX pitch')
+    return dict(parameters)
+
+
+def render_earshot(params, wav, stage, earshot):
+    flags = {'seed': '--seed', 'duration': '--dur', 'apex': '--apex', 'pitch': '--pitch', 'peak_db': '--peak'}
+    command = [earshot, 'sfx', 'render', params['id'], '-o', str(wav), '--json']
+    for key, flag in flags.items():
+        if key in params:
+            command += [flag, str(params[key])]
+    result = subprocess.run(command, cwd=stage, stdin=subprocess.DEVNULL, capture_output=True, timeout=300)
+    (stage / 'render.log').write_bytes(result.stdout + result.stderr)
+    if result.returncode:
+        raise ValueError('earshot SFX rendering failed: ' + result.stderr.decode(errors='replace')[-1200:])
+    meta = json.loads(result.stdout)['meta']
+    listing = subprocess.run([earshot, 'sfx', 'list', '--json', '--category', params['id'].split('/')[0]],
+                             cwd=stage, stdin=subprocess.DEVNULL, capture_output=True, timeout=120)
+    if listing.returncode:
+        raise ValueError('earshot sfx list failed: ' + listing.stderr.decode(errors='replace')[-600:])
+    return 'earshot bank ' + json.loads(listing.stdout)['version'], meta
+
+
+def generate(source, parameters, output, *, engine='supercollider', sclang='sclang', node='node', ffmpeg='ffmpeg',
+             earshot='earshot'):
+    if engine == 'earshot':
+        return generate_earshot(parameters, output, earshot=earshot, ffmpeg=ffmpeg)
     if engine not in {'supercollider', 'jsfxr'}:
         raise ValueError('Unknown SFX engine')
     allowed = {'kind', 'seed', 'gain'} | ({'duration'} if engine == 'supercollider' else set())
@@ -88,10 +131,48 @@ def generate(source, parameters, output, *, engine='supercollider', sclang='scla
     return {**manifest, 'path': str(output)}
 
 
+def generate_earshot(parameters, output, *, earshot='earshot', ffmpeg='ffmpeg'):
+    params = earshot_parameters(parameters)
+    output = Path(output).absolute()
+    validate_review_path(output)
+    if output.exists():
+        raise ValueError('SFX output already exists; choose a new candidate')
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with package_write_lock(output.parent / ('.' + output.name + '.lock')), tempfile.TemporaryDirectory(prefix='.sfx-', dir=output.parent) as temporary:
+        if output.exists():
+            raise ValueError('SFX output already exists; choose a new candidate')
+        stage = Path(temporary)
+        wav = stage / 'audio.wav'
+        version, meta = render_earshot(params, wav, stage, earshot)
+        info = wav_info(wav)
+        subprocess.run([ffmpeg, '-nostdin', '-v', 'error', '-i', str(wav), '-codec:a', 'libmp3lame',
+                        '-q:a', '2', str(stage / 'audio.mp3')], check=True, capture_output=True, timeout=60)
+        # The loudest 5 ms is where a whoosh passes, a riser lands or an impact hits: align that to the cue.
+        offset = meta['peak_s']
+        if type(offset) not in (int, float) or not 0 <= offset <= info['duration']:
+            raise ValueError('earshot reported no usable peak time')
+        category = params['id'].split('/')[0]
+        manifest = {'engine': 'earshot', 'engine_version': version, 'parameters': {**params, 'seed': meta['seed']},
+                    'files': {name: digest((stage / name).read_bytes()) for name in ('audio.wav', 'audio.mp3')},
+                    **info, 'hit_offset': offset, 'tail_seconds': info['duration'] - offset,
+                    'audit': meta.get('checks'), 'listening': 'unverified', 'bgm': False}
+        (stage / 'manifest.json').write_bytes(json_bytes(manifest))
+        identity = category.replace('_', '-') + '-generated'
+        (stage / 'asset.json').write_bytes(json_bytes({'schema_version': 2, 'id': identity,
+            'version': 1, 'kind': 'media', 'entry': 'audio.mp3', 'contract_version': 1,
+            'parameters': {}, 'compatibility': {}, 'purpose': params['id'] + ' earshot SFX',
+            'description': params['id'] + ' rendered from the earshot sound bank', 'tags': [category],
+            'license': 'CREDITS.md', 'hit_offset': offset, 'hit_offset_estimated': True, 'audio_role': 'sfx'}))
+        (stage / 'CREDITS.md').write_text('Rendered with earshot (MIT, https://github.com/Leonxlnx/earshot), '
+            + version + ', sound ' + params['id'] + '. The bank stores synthesis recipes, not recordings.\n')
+        stage.rename(output)
+    return {**manifest, 'path': str(output)}
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, default=None)
-    parser.add_argument('--engine', choices=['supercollider', 'jsfxr'], default='supercollider')
+    parser.add_argument('--engine', choices=['supercollider', 'jsfxr', 'earshot'], default='supercollider')
     parser.add_argument('--parameters', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()

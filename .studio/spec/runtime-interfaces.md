@@ -135,6 +135,12 @@ Background 的 `renderer:"module"` 供受支持链路共用，声明包内 JS `e
 
 `await HarnessFigures.load(lock)` 从闭包加载角色，提供 `figure(el, characterRef)` / `image(el)`，支持 enter/exit/idle/bounce/squash/pan/zoom/point/state(cue,id)/talk(intervals)。动作按 `{start,duration,fn(localT)}` 登记，由 `renderAt(t)` 合成 transform 与状态图，不依赖 tween 回调。talk 使用 cue 数据中相邻已对齐字符间隔小于 0.35 秒合并的人声活动段，不做骨骼或口型。Helper 与所用资源复制进工程并随快照冻结，不读取安装根活跃源码。
 
+`work component generate-sfx --engine earshot|supercollider|jsfxr --parameters <json> --output <AssetSource 下新目录> [--recipe <配方>]` 渲染一条音效为可编辑 media 源（WAV + MP3 + manifest + asset.json），不自动 accept；同名输出拒绝覆盖。earshot 调外部 `earshot sfx render <类别/成员>`（可执行文件由 `HYPERFRAMES_EARSHOT` 指定，默认 PATH 上的 `earshot`），参数为 `id` 及可选 `seed`、`duration`、`apex`、`pitch`、`peak_db`；只用其音效库的纯 DSP 渲染，不加载听审模型。manifest 记录音效库版本、实际 seed 与渲染自带的无模型审计 `audit`，`hit_offset` 取 earshot 实测的最响 5 ms 时刻（whoosh 掠过、riser 到顶、impact 命中）。earshot 只需 numpy、scipy、soundfile、soxr，`pip install --no-deps` 安装其源码即可，不进发行包。
+
+`work component import-bgm --file <下载的曲目> --source <AssetSource 根> --id <id> --title <曲名> --library <曲库> --source-url <曲目页> --license <许可> --attribution <署名> [--mood <情绪>]...` 把开源曲库的一首现成曲目转为 MP3 media 源，写 `audio_role: bgm`、`source_url`、`rights{library,license,attribution,non_commercial,share_alike}` 与 CREDITS.md，不自动 accept。ND 许可与缺许可拒收。声明 `bgm.enabled` 的卡上，`sound build` 在冻结值不是 true 时拒绝带 BGM 的 Plan，并要求 BGM 引用 `audio_role: bgm` 的资产；未声明该字段的卡与旧 Work 不变。
+
+`work account character add <账号> --name <角色名> --image <PNG> --prompt <提示词> --model <模型> [--reference <已有角色名>]... [--replace]` 登记生图得到的封面角色：只收带透明通道的 PNG，复制到 `control-plane/account-assets/<账号>/cover-characters/<角色名>-<sha12>.png`，同名 `.json` 记录工具、模型、提示词、账号 `cover.character_style` 与参考角色 sha256，并写回账号 `overrides.cover.characters`（账号修订历史照常保留）。
+
 `work component import-sfx --from <hyperframes 包根> --source <AssetSource 根>` 读取本机 `dist/skills/media-use/audio/assets/sfx/manifest.json` 与 `CREDITS.md`，生成带 purpose/tags/license/hit_offset 的可编辑 media 源，不自动 accept。ffmpeg `silencedetect` 的 -40 dB 门限求首个非静音点；检测失败用 0 并标注 `hit_offset_estimated:false`。第三方音效不进入仓库或发行包，WSL 测试仅使用合成夹具。
 
 优先复用 timestamps 与 `section_map.json`。语义 cue 定位 Anchor、字符范围或明确 occurrence，未可靠对齐的字符不均匀插值。源片段采用半开区间，按 `timeline_in + (source_time - source_in) / rate` 映射；多 take 明确选择，被删除词无有效 cue。单 Scene 预览减去 crop 起点而不改原对齐，仅在输出 fps 时量化。

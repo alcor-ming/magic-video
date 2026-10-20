@@ -163,6 +163,55 @@ class AccountService:
         sources[0][0].replace(target / sources[0][1])
         return {"series": series, "deleted": True, "archive": str(target)}
 
+    def add_cover_character(self, account: str, name: str, image: Path, *, prompt: str, model: str,
+                            references=(), replace: bool = False) -> dict:
+        """Register one generated character image in the account's cover library, with how it was made."""
+        import hashlib
+        import json
+        import shutil
+        from designs import FILE_MAP_KEY
+        record = self.get("account", account)
+        if not isinstance(name, str) or not FILE_MAP_KEY.fullmatch(name):
+            raise self.api.HarnessError("Character name must be 1-40 letters, digits, _ or -")
+        for label, value in (("prompt", prompt), ("model", model)):
+            if not isinstance(value, str) or not value.strip():
+                raise self.api.HarnessError(f"Character registration requires the image {label}")
+        image = Path(image).absolute()
+        if not image.is_file() or image.is_symlink():
+            raise self.api.HarnessError("Character image must be a local file")
+        data = image.read_bytes()
+        if not png_has_alpha(data):
+            raise self.api.HarnessError("Character image must be a PNG with transparency; generate with background: transparent")
+        overrides = dict(record.get("overrides") or {})
+        cover = dict(overrides.get("cover") or {})
+        library = dict(cover.get("characters") or {})
+        if name in library and not replace:
+            raise self.api.HarnessError(f"Character {name} already exists; pass --replace to point it at the new image")
+        missing = [item for item in references if item not in library]
+        if missing:
+            raise self.api.HarnessError("Unknown reference characters: " + ", ".join(missing))
+        sha = hashlib.sha256(data).hexdigest()
+        folder = self.directory / "account-assets" / self.api.validate_id(account, "account") / "cover-characters"
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder / f"{name}-{sha[:12]}.png"
+        if not target.exists():
+            temporary = target.with_name("." + target.name + ".tmp")
+            shutil.copyfile(image, temporary)
+            if hashlib.sha256(temporary.read_bytes()).hexdigest() != sha:
+                temporary.unlink()
+                raise self.api.HarnessError("Character image changed while copying")
+            temporary.replace(target)
+        provenance = {"name": name, "sha256": sha, "tool": "generate_image", "model": model.strip(), "prompt": prompt,
+                      "background": "transparent", "character_style": cover.get("character_style"),
+                      "references": {item: library[item]["sha256"] for item in references}}
+        target.with_suffix(".json").write_text(json.dumps(provenance, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        library[name] = {"path": str(target), "sha256": sha}
+        overrides["cover"] = {**cover, "characters": library}
+        saved = self.put("account", account, {**{key: value for key, value in record.items()
+                                                 if key not in {"id", "revision"}}, "overrides": overrides})
+        return {"account": account, "character": name, **library[name], "provenance": str(target.with_suffix(".json")),
+                "revision": saved["revision"]}
+
     def design(self, identity) -> dict | None:
         if identity is None:
             return None
@@ -205,6 +254,24 @@ class AccountService:
                 raise self.api.HarnessError("Theme does not support the requested ratio")
             return theme
         return {}
+
+
+def png_has_alpha(data: bytes) -> bool:
+    """True for a PNG whose colour type carries alpha or that declares a tRNS transparency chunk."""
+    if data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
+        return False
+    if data[25] in (4, 6):
+        return True
+    position = 8
+    while position + 8 <= len(data):
+        length = int.from_bytes(data[position:position + 4], "big")
+        kind = data[position + 4:position + 8]
+        if kind == b"tRNS":
+            return True
+        if kind in (b"IDAT", b"IEND"):
+            return False
+        position += 12 + length
+    return False
 
 
 def input_path(api: Any, directory: Path, name: str) -> Path:

@@ -1,6 +1,6 @@
 {
   "id": "stage-light",
-  "version": 2,
+  "version": 3,
   "type": "design",
   "compatibility": {
     "supersedes": [],
@@ -72,6 +72,9 @@
     "sfx": {
       "enabled": true
     },
+    "bgm": {
+      "enabled": false
+    },
     "cover": {
       "enabled": true
     }
@@ -80,6 +83,8 @@
     "captions.enabled",
     "sfx.enabled",
     "sfx.policy",
+    "bgm.enabled",
+    "bgm.policy",
     "cover.enabled",
     "cover.template",
     "cover.theme",

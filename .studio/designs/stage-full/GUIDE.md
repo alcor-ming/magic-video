@@ -95,11 +95,20 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 - **闭包**：示例只依赖宿主放好的 `runtime/gsap.min.js`、`runtime/scene-binding.js`、`runtime/stage-rig.js`
   与 `media/SourceHanSansCN-Regular.otf`；无图片、音频、字体下载与新依赖；所有道具与布景为原创内联 SVG/CSS 剪贴。
 
-## 8. 声音
+## 8. 声音与封面
 
-示例静音，便于对照编排。若某 Variant 需要音效：**只**为结构重击与关键 hit 配音效
-（如 S4 折叠的落定、S3 归位的轻点），**不要**给普通入场自动配音效、不要 BGM；
-所有 cue 必须对应同帧可见事件，并按 `data-start` 调度以保证 seek 安全。
+示例静音，便于对照编排。
+
+- **音效**：**只**为结构重击与关键 hit 配音效（如 S4 折叠的落定、S3 归位的轻点），**不要**给普通入场自动配音效。
+  来源是 earshot 音效库渲染（`work component generate-sfx --engine earshot`，可按动作调时长与峰值时刻）、
+  SuperCollider / jsfxr 配方，或 HyperFrames 自带音效导入。
+- **BGM**：账号开启 `bgm.enabled` 时可铺一条 BGM，按账号 `bgm.policy` 的曲库与情绪偏好，从开源曲库选现成曲目，
+  用 `work component import-bgm` 带许可导入；**不用**音乐模型或代码合成 BGM。整片一条、不随 Scene 换曲，口播区间自动避让。
+  账号未开启时 sound 块不写 bgm。
+- 所有 cue 必须对应同帧可见事件，并按 `data-start` 调度以保证 seek 安全。
+- **封面**：每个 Work 用 `work cover render` 按账号模板合成（风格 + 角色 + 标题 + 一句话），不为单个 Work 生图。
+  账号角色库的图片用生图 MCP 生成（`generate_image`，`background: transparent`，提示词按账号 `cover.character_style`，
+  已有角色作 `reference_images` 保持一致），再用 `work account character add` 登记到账号。
 
 ## 9. 六种做坏方式（开工前、交付前各对一遍）
 

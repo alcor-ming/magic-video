@@ -8,7 +8,7 @@
 - 业务背景与需求：[README.md](README.md)、[docs/PRD/PRD_MASTER.md](docs/PRD/PRD_MASTER.md)。产品能力、当前需求与历史方案索引，按主题查阅。
 - 架构与技术方案：[docs/PRD/](docs/PRD/)、[.studio/spec/runtime-interfaces.md](.studio/spec/runtime-interfaces.md)。职责划分、资产与部署设计、运行时接口；以 PRD 主索引标明的当前合同为准。
 - 通用组件与规范：[.studio/spec/hyperframes-assets.md](.studio/spec/hyperframes-assets.md)、[.studio/spec/broll-assets.md](.studio/spec/broll-assets.md)、[.studio/templates/](.studio/templates/)。资产复用、组件创作与文档模板。
-- 三方对接：[README.md](README.md)、[.studio/spec/hyperframes.md](.studio/spec/hyperframes.md)。TTS / ASR 接入、对齐数据完整性、HyperFrames 唯一宿主实现。
+- 三方对接：[README.md](README.md)、[.studio/spec/hyperframes.md](.studio/spec/hyperframes.md)、[.studio/spec/runtime-interfaces.md](.studio/spec/runtime-interfaces.md)。TTS / ASR 接入、对齐数据完整性、HyperFrames 唯一宿主实现；earshot 音效引擎、开源 BGM 导入与生图角色登记的命令合同。
 - 业务规范：[.studio/workflow.md](.studio/workflow.md)、[.studio/spec/](.studio/spec/)。Work / Variant 生命周期、创作、视觉、隐私与交付规则；开发验证使用隔离副本。
 
 ### 知识落盘规范

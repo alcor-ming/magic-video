@@ -68,7 +68,11 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 - **布局**：固定 1920×1080；第 3 层读行不遮挡第 4 层文字；文字只在阅读窗口内稳定。
 - **闭包**：只依赖宿主放好的四个 runtime/media 文件；无图片、音频、字体下载与新依赖；道具与布景为原创内联 SVG/CSS 剪贴。
 
-## 7. 声音
+## 7. 声音与封面
 
 示例静音。若某 Variant 需要音效：**只**为结构重击与关键 hit 配音效（如 S4 折叠落定），
-**不要**给普通入场自动配音效、不要 BGM；cue 对应同帧可见事件并按 `data-start` 调度，保证 seek 安全。
+**不要**给普通入场自动配音效；音效来自 earshot 音效库渲染、SuperCollider / jsfxr 配方或 HyperFrames 自带音效导入。
+账号开启 `bgm.enabled` 时可铺一条开源曲库的现成 BGM（按账号 `bgm.policy`，`work component import-bgm` 带许可导入），
+不用音乐模型或代码合成 BGM。cue 对应同帧可见事件并按 `data-start` 调度，保证 seek 安全。
+
+封面与 stage-full 相同：每个 Work 按账号模板合成，账号角色库图片由生图 MCP 生成后用 `work account character add` 登记。

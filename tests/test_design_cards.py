@@ -50,10 +50,13 @@ class DesignCatalogTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'snapshot changed'):
             lines.frozen(state)
 
-    def test_bgm_is_an_unknown_field(self):
-        self.assertNotIn("bgm", designs.SCHEMA)
-        with self.assertRaisesRegex(designs.DesignError, "Unknown override field: bgm"):
-            designs.resolve("stage-full", variant={"bgm": {"enabled": True}})
+    def test_bgm_is_overridable_only_on_cards_that_declare_it(self):
+        self.assertEqual(True, designs.resolve("stage-full", account={"bgm": {"enabled": True}})["values"]["bgm.enabled"])
+        card = designs.require("stage-full")
+        card = {**card, "defaults": {key: value for key, value in card["defaults"].items() if key != "bgm"},
+                "fields": [field for field in card["fields"] if not field.startswith("bgm.")]}
+        with self.assertRaisesRegex(designs.DesignError, "does not declare override field: bgm.enabled"):
+            designs.resolve("stage-full", card=card, account={"bgm": {"enabled": True}})
 
     def test_identity_version_and_declarations_are_separate_from_overrides(self):
         card = designs.get("stage-full")
@@ -211,7 +214,7 @@ class DesignCliTest(unittest.TestCase):
 
     def test_unknown_account_override_rejects(self):
         with self.assertRaisesRegex(cli.HarnessError, "Unknown override field"):
-            cli.account_service(self.root).put("account", "c", {"name": "C", "overrides": {"bgm": {"enabled": True}}})
+            cli.account_service(self.root).put("account", "c", {"name": "C", "overrides": {"music": {"enabled": True}}})
 
 
 if __name__ == "__main__":

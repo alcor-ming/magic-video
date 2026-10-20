@@ -337,10 +337,14 @@ def command_explainer_build(root: Path, args: argparse.Namespace) -> None:
         if (isinstance(sound, dict) and sound.get('sfx')
                 and state.get('design_values', {}).get('sfx.enabled') is False):
             raise HarnessError('SFX are disabled in the frozen configuration; reselect with sfx.enabled=true before building this sound Plan')
+        # Cards that declare bgm.* take BGM only when the account turned it on, and only from an imported library track.
+        library_bgm = 'bgm.enabled' in state.get('design_values', {})
+        if isinstance(sound, dict) and sound.get('bgm') and library_bgm and state['design_values']['bgm.enabled'] is not True:
+            raise HarnessError('BGM is off in the frozen configuration; enable bgm.enabled on the account and reselect before building a BGM sound Plan')
         assets = explainer.installed_assets(project, check_mounts=False)
         for asset in assets.values():
             asset["path"] = str(storage.scoped_path(project, f'{asset["vendor_path"]}/{asset["metadata"]["entry"]}'))
-        elements, tracks = explainer.sound_elements(sound, cues, assets)
+        elements, tracks = explainer.sound_elements(sound, cues, assets, library_bgm=library_bgm)
         index = storage.scoped_path(project, "index.html")
         updated = explainer.insert_sound(index.read_text(encoding="utf-8"), elements)
         config_path = storage.scoped_path(project, "project-config.json")
@@ -367,6 +371,28 @@ def command_explainer_build(root: Path, args: argparse.Namespace) -> None:
 def command_import_sfx(root: Path, args: argparse.Namespace) -> None:
     from sfx_import import import_sfx
     print(json.dumps(import_sfx(Path(args.package), Path(args.source)), ensure_ascii=False, indent=2))
+
+
+def command_import_bgm(root: Path, args: argparse.Namespace) -> None:
+    from bgm_import import import_bgm
+    print(json.dumps(import_bgm(Path(args.file), Path(args.source), args.id, library=args.library,
+                                source_url=args.source_url, license_name=args.license, attribution=args.attribution,
+                                title=args.title, moods=args.mood or ()), ensure_ascii=False, indent=2))
+
+
+def command_generate_sfx(root: Path, args: argparse.Namespace) -> None:
+    import sfx_generate
+    tools = {'sclang': os.environ.get('HYPERFRAMES_SCLANG', 'sclang'), 'node': os.environ.get('HYPERFRAMES_NODE', 'node'),
+             'ffmpeg': os.environ.get('HYPERFRAMES_FFMPEG_PATH', 'ffmpeg'), 'earshot': os.environ.get('HYPERFRAMES_EARSHOT', 'earshot')}
+    result = sfx_generate.generate(Path(args.recipe) if args.recipe else None, read_json(Path(args.parameters)),
+                                   Path(args.output), engine=args.engine, **tools)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+def command_account_character(root: Path, args: argparse.Namespace) -> None:
+    result = account_service(root).add_cover_character(args.identity, args.name, Path(args.image), prompt=args.prompt,
+                                                       model=args.model, references=args.reference or (), replace=args.replace)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
 def input_path(directory: Path, name: str) -> Path:
@@ -579,6 +605,7 @@ def adopted_settings(root: Path, args: argparse.Namespace, work: Path | None = N
                       "selection_source_work": prior['work'] if prior else None,
                       "captions": values.get("captions.enabled", False),
                       "sfx": {"enabled": values.get("sfx.enabled"), "policy": values.get("sfx.policy")},
+                      **({"bgm": {"enabled": values["bgm.enabled"], "policy": values.get("bgm.policy")}} if "bgm.enabled" in values else {}),
                       "cover": {"enabled": values.get("cover.enabled")}}
     appearance_overrides = {key: value for key, value in (account.get("overrides") or {}).items()
                             if key in ("theme", "background", "motion")}
@@ -4836,6 +4863,18 @@ def build_parser() -> argparse.ArgumentParser:
             if operation == "put":
                 operation_parser.add_argument("--file", required=True, help="JSON file, or - for stdin")
             operation_parser.set_defaults(handler=command_config)
+        if kind == "account":
+            character = operations.add_parser("character", help="Account cover character library")
+            character_operations = character.add_subparsers(dest="character_operation", required=True)
+            character_add = character_operations.add_parser("add", help="Register a generated transparent PNG with its prompt")
+            character_add.add_argument("identity")
+            character_add.add_argument("--name", required=True)
+            character_add.add_argument("--image", required=True, help="PNG with transparency from generate_image")
+            character_add.add_argument("--prompt", required=True, help="Prompt the image was generated with")
+            character_add.add_argument("--model", required=True, help="Image model the tool reported")
+            character_add.add_argument("--reference", action="append", help="Existing character used as reference_images; repeatable")
+            character_add.add_argument("--replace", action="store_true", help="Point an existing name at the new image")
+            character_add.set_defaults(handler=command_account_character)
         if kind == "series":
             rules = operations.add_parser("rules", help="Read or replace the series AGENTS.md rules by series identity")
             rules_operations = rules.add_subparsers(dest="rules_operation", required=True)
@@ -4997,6 +5036,23 @@ def build_parser() -> argparse.ArgumentParser:
     sfx.add_argument("--from", dest="package", required=True)
     sfx.add_argument("--source", required=True)
     sfx.set_defaults(handler=command_import_sfx)
+    bgm = component_commands.add_parser("import-bgm", help="Import one downloaded open-library music track as an editable BGM source")
+    bgm.add_argument("--file", required=True, help="Downloaded mp3/wav/ogg/flac/m4a track")
+    bgm.add_argument("--source", required=True, help="AssetSource root; the track lands in <source>/<id>")
+    bgm.add_argument("--id", required=True)
+    bgm.add_argument("--title", required=True)
+    bgm.add_argument("--library", required=True, help="Open music library the track came from")
+    bgm.add_argument("--source-url", required=True, help="Track page in that library")
+    bgm.add_argument("--license", required=True, help="Exact license, e.g. CC BY 4.0; no-derivatives is refused")
+    bgm.add_argument("--attribution", required=True, help="Credit line as the license asks for it")
+    bgm.add_argument("--mood", action="append", help="Mood tag; repeatable")
+    bgm.set_defaults(handler=command_import_bgm)
+    generate_sfx = component_commands.add_parser("generate-sfx", help="Render one SFX (earshot bank, SuperCollider or jsfxr) into a new editable source")
+    generate_sfx.add_argument("--engine", choices=("earshot", "supercollider", "jsfxr"), required=True)
+    generate_sfx.add_argument("--parameters", required=True, help="JSON parameters; earshot takes id plus seed/duration/apex/pitch/peak_db")
+    generate_sfx.add_argument("--output", required=True, help="New directory under an AssetSource root")
+    generate_sfx.add_argument("--recipe", help="SuperCollider/jsfxr recipe file instead of the bundled one")
+    generate_sfx.set_defaults(handler=command_generate_sfx)
     component_validate = component_commands.add_parser("validate")
     component_validate.add_argument("component")
     component_validate.add_argument("--candidate", action="store_true", help="Validate a package path without declaring it accepted or production-ready")
@@ -5306,7 +5362,7 @@ def execute_command(target_root: Path, args: argparse.Namespace) -> int:
         if (args.command in {"new", "successor", "name", "wait", "resume", "park", "archive", "reopen", "finalize", "storage", "use"}
                 or args.command == "variant" and args.variant_command in {"add", "name", "use"}
                 or args.command == "series" and args.operation in {"put", "move"}
-                or args.command == "account" and args.operation == "put"
+                or args.command == "account" and args.operation in {"put", "character"}
                 or args.command == "preview" and args.preview_command == "accept"
                 or args.command == "migrate" and args.migrate_command == "apply" and args.migration_applied):
             try:

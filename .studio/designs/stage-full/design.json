@@ -1,6 +1,6 @@
 {
   "id": "stage-full",
-  "version": 7,
+  "version": 8,
   "type": "design",
   "compatibility": {
     "supersedes": [
@@ -75,6 +75,9 @@
     "sfx": {
       "enabled": true
     },
+    "bgm": {
+      "enabled": false
+    },
     "cover": {
       "enabled": true
     }
@@ -83,6 +86,8 @@
     "captions.enabled",
     "sfx.enabled",
     "sfx.policy",
+    "bgm.enabled",
+    "bgm.policy",
     "cover.enabled",
     "cover.template",
     "cover.theme",

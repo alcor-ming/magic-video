@@ -70,7 +70,7 @@
     {
       "source": ".studio/designs/stage-light/GUIDE.md",
       "target": "GUIDE.md",
-      "sha256": "dad569b47c2e7addd9c25fae584b06a7838df01e6dcbc9c552d3d6210005e011",
+      "sha256": "f964967a876251e494665ce91444ce7708da718ee9495f1159b0fc40c8372989",
       "origin": "Project authored source extraction guide",
       "version": "1",
       "license": "Apache-2.0",
@@ -96,7 +96,7 @@
     {
       "source": ".studio/designs/stage-light/stages/draft.md",
       "target": "stages/draft.md",
-      "sha256": "511af89da5442f40c4915f85ffd2d80b944de0d702d6c8a7b72ba8eabcaa43bd",
+      "sha256": "ddb48e7626d76926bcd500f80aba50997ab07a41f7c237ff4fe64ef9d6fe3d69",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
