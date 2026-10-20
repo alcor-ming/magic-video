@@ -25,6 +25,48 @@ def _cue(value):
                  and 0 <= value['within'][0] <= value['within'][1]))
 
 
+def _spans(parts, word):
+    """Letter spans of parts that spell ``word`` in order, or None."""
+    if ''.join(part['letters'] for part in parts).lower() != word.lower():
+        return None
+    spans, at = [], 0
+    for part in parts:
+        spans.append((at, at + len(part['letters'])))
+        at += len(part['letters'])
+    return spans
+
+
+def _mnemonic_blocks(word, mnemonic, fail):
+    """Keyword method: dictionary syllables with stress, and display blocks whose keyword hooks a stressed syllable.
+
+    A homophone block carries a Chinese keyword that sounds like its letters (``zh`` + ``pinyin``); a morphology
+    block carries the meaning of its morpheme (``zh`` only); a bare ``letters`` block is spelled but not hooked.
+    """
+    syllables, blocks = mnemonic.get('syllables'), mnemonic['blocks']
+    if (not isinstance(syllables, list) or not syllables
+            or any(not isinstance(item, dict) or set(item) != {'letters', 'ipa', 'stressed'}
+                   or not isinstance(item['letters'], str) or not re.fullmatch(r'[A-Za-z]+', item['letters'])
+                   or not _text(item['ipa']) or type(item['stressed']) is not bool for item in syllables)
+            or not any(item['stressed'] for item in syllables)):
+        fail('invalid_english_mnemonic_syllables')
+    homophone = mnemonic['kind'] == 'homophone'
+    hooks = {'zh', 'pinyin'} if homophone else {'zh'}
+    if (not isinstance(blocks, list) or not blocks
+            or any(not isinstance(block, dict) or 'letters' not in block or set(block) - {'letters'} not in (set(), hooks)
+                   or not isinstance(block['letters'], str) or not re.fullmatch(r'[A-Za-z]+', block['letters'])
+                   or not all(_text(block[key]) for key in set(block) - {'letters'}) for block in blocks)
+            or not any('zh' in block for block in blocks)):
+        fail('invalid_english_mnemonic_blocks')
+    syllable_spans, block_spans = _spans(syllables, word), _spans(blocks, word)
+    if syllable_spans is None or block_spans is None:
+        fail('english_mnemonic_spelling_mismatch')
+    if homophone and not any(
+            'zh' in block and start < end_s and start_s < end
+            for block, (start, end) in zip(blocks, block_spans)
+            for item, (start_s, end_s) in zip(syllables, syllable_spans) if item['stressed']):
+        fail('english_mnemonic_misses_stressed_syllable')
+
+
 def parse_plan(text):
     plans = parse_scene_blocks(text, 'english-plan')
     from visual_plan import markdown_structure_lines
@@ -61,10 +103,13 @@ def parse_plan(text):
                 fail('invalid_english_pronunciation_source')
             if 'mnemonic' in item:
                 mnemonic = item['mnemonic']
-                if (not isinstance(mnemonic, dict) or set(mnemonic) != {'kind', 'text'}
-                        or mnemonic['kind'] not in ('homophone', 'association', 'spelling')
+                if (not isinstance(mnemonic, dict) or not {'kind', 'text'} <= mnemonic.keys()
+                        or set(mnemonic) - {'kind', 'text', 'syllables', 'blocks'}
+                        or mnemonic['kind'] not in ('homophone', 'morphology', 'association', 'spelling')
                         or not _text(mnemonic['text'])):
                     fail('invalid_english_mnemonic')
+                if 'blocks' in mnemonic:
+                    _mnemonic_blocks(word, mnemonic, fail)
             if 'example' in item:
                 example = item['example']
                 if (not isinstance(example, dict) or set(example) != {'text', 'meaning', 'fictional'}
@@ -82,6 +127,9 @@ def parse_plan(text):
                     or not _cue(event['cue']) or not _text(event['target'])
                     or event['action'] not in ('pronounce', 'reveal', 'emphasize', 'hide', 'answer')):
                 fail('invalid_english_cue')
+            if event['action'] == 'emphasize' and event['word'] not in pronounced:
+                # The real pronunciation is heard before any keyword hook.
+                fail('english_mnemonic_before_pronunciation')
             if event['action'] == 'pronounce':
                 token = event['cue'] if isinstance(event['cue'], str) else event['cue']['token']
                 if not re.search(r'(?<![A-Za-z])' + re.escape(event['word']) + r'(?![A-Za-z])', token, re.I):

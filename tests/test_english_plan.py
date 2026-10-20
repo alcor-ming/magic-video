@@ -18,9 +18,13 @@ def lesson():
                         'target': 'I01', 'start_cue': '试', 'end_cue': '答'}]}
 
 
+CARD = Path(__file__).resolve().parents[1] / '.studio/designs/english/design.json'
+
+
 def plan(value=None):
-    return ('---\n{"plan_format":"3.7.0","mode":"english","line":{"id":"english","version":1}}\n---\n'
-            '## S01\n```english-plan\n' + json.dumps(value if value is not None else lesson()) + '\n```\n'
+    version = json.loads(CARD.read_text())['version'] if CARD.is_file() else 1
+    return ('---\n{"plan_format":"3.7.0","mode":"english","line":{"id":"english","version":%d}}\n---\n' % version
+            + '## S01\n```english-plan\n' + json.dumps(value if value is not None else lesson()) + '\n```\n'
             '### I01 · P001\n```screen\ncat\n猫\n```\n')
 
 
@@ -31,8 +35,12 @@ def cues():
                            for i, char in enumerate(text)], 'speech_intervals': [[0, 4.5]]}
 
 
-@unittest.skipUnless((Path(__file__).resolve().parents[1] / '.studio/designs/math/design.json').is_file(), 'Personal card contract; checked in personal assembly')
+NEEDS_CARD = unittest.skipUnless(CARD.is_file(),
+                                 'Needs the english card; checked in personal assembly')
+
+
 class EnglishPlanTest(unittest.TestCase):
+    @NEEDS_CARD
     def test_lesson_projects_without_storyboard_and_preserves_recall_pause(self):
         text = plan()
         row = plan_scene_rows(text)['S01']
@@ -55,6 +63,50 @@ class EnglishPlanTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'invalid_english_plan'):
             english_plan.parse_plan(plan({'words': [], 'cues': [], 'recall': []}))
 
+    def test_keyword_blocks_hook_the_stressed_syllable_of_the_dictionary_split(self):
+        data = lesson()
+        data['words'][0].update(word='diligent', spelling='diligent')
+        data['cues'][0]['cue'] = data['recall'][0]['answer'] = data['recall'][0]['word'] = 'diligent'
+        data['cues'][0]['word'] = 'diligent'
+        syllables = [{'letters': 'dil', 'ipa': 'ˈdɪl', 'stressed': True}, {'letters': 'i', 'ipa': 'ɪ', 'stressed': False},
+                     {'letters': 'gent', 'ipa': 'dʒənt', 'stressed': False}]
+        blocks = [{'letters': 'di', 'zh': '地', 'pinyin': 'di'}, {'letters': 'li', 'zh': '里', 'pinyin': 'li'},
+                  {'letters': 'gent', 'zh': '耕田', 'pinyin': 'geng tian'}]
+        mnemonic = data['words'][0]['mnemonic'] = {'kind': 'homophone', 'text': '宽松联想，非词源',
+                                                   'syllables': syllables, 'blocks': blocks}
+        english_plan.parse_plan(plan(data))
+        # A keyword may cover only part of the word, as long as it hooks the stressed syllable.
+        mnemonic['blocks'] = [{'letters': 'dili', 'zh': '地里', 'pinyin': 'di li'}, {'letters': 'gent'}]
+        english_plan.parse_plan(plan(data))
+        mnemonic['kind'] = 'morphology'
+        mnemonic['blocks'] = [{'letters': 'dili', 'zh': '珍视'}, {'letters': 'gent', 'zh': '…的'}]
+        english_plan.parse_plan(plan(data))
+        mnemonic['kind'] = 'homophone'
+        for change, message in (
+                ({'blocks': [{'letters': 'dili'}, {'letters': 'gent', 'zh': '耕田', 'pinyin': 'geng tian'}]},
+                 'misses_stressed_syllable'),
+                ({'blocks': blocks[:2]}, 'english_mnemonic_spelling_mismatch'),
+                ({'syllables': syllables[:2]}, 'english_mnemonic_spelling_mismatch'),
+                ({'syllables': [{**item, 'stressed': False} for item in syllables]}, 'invalid_english_mnemonic_syllables'),
+                ({'syllables': None}, 'invalid_english_mnemonic_syllables'),
+                ({'blocks': [{**blocks[0], 'pinyin': ''}, *blocks[1:]]}, 'invalid_english_mnemonic_blocks'),
+                ({'blocks': [{'letters': 'di', 'zh': '地'}, *blocks[1:]]}, 'invalid_english_mnemonic_blocks'),
+                ({'blocks': [{'letters': 'diligent'}]}, 'invalid_english_mnemonic_blocks')):
+            broken = {**mnemonic, 'syllables': syllables, 'blocks': blocks, **change}
+            broken = {key: value for key, value in broken.items() if value is not None}
+            case = {**data, 'words': [{**data['words'][0], 'mnemonic': broken}]}
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, message):
+                english_plan.parse_plan(plan(case))
+
+    def test_keyword_emphasis_waits_for_the_real_pronunciation(self):
+        data = lesson()
+        data['cues'].insert(0, {'word': 'cat', 'cue': '试', 'target': 'I01', 'action': 'emphasize'})
+        with self.assertRaisesRegex(ValueError, 'english_mnemonic_before_pronunciation'):
+            english_plan.parse_plan(plan(data))
+        data['cues'].append(data['cues'].pop(0))
+        english_plan.parse_plan(plan(data))
+
+    @NEEDS_CARD
     def test_declared_targets_and_recall_answers_are_checked(self):
         data = lesson()
         data['cues'][0]['target'] = 'I99'
@@ -89,6 +141,7 @@ class EnglishPlanTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'invalid_english_cue'):
             english_plan.parse_plan(plan(data))
 
+    @NEEDS_CARD
     def test_later_scene_can_hold_recall_without_fixed_ab_or_word_quota(self):
         first, second = lesson(), lesson()
         first['recall'] = []
