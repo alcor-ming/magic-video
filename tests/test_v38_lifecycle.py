@@ -229,6 +229,63 @@ class LifecycleTest(fixtures.WorkCliTest):
         self.assertEqual(b'unknown', unknown.read_bytes())
         self.assertEqual(b'one', old_video.read_bytes())
 
+    def test_storage_reclaims_stopped_studio_browser_caches_only(self):
+        import os
+        work_id, work = self.new_work()
+        variant = work / 'variants/main'
+        current = variant / '.runtime/studio-browser'
+        review = variant / '.runtime/studio-review-abc/.runtime/studio-browser'
+        for profile in (current, review):
+            (profile / 'Default/Cache').mkdir(parents=True)
+            (profile / 'Default/Cache/data_0').write_bytes(b'12345')
+            (profile / 'Default/Preferences').write_text('{"enable_do_not_track": true}')
+        (current / 'GrShaderCache').mkdir()
+        (current / 'GrShaderCache/index').write_bytes(b'123')
+        record = api.studio_record(variant, 'current')
+        api.write_json(record, {'target': 'current', 'pid': os.getpid()})
+        report = json.loads(self.invoke('storage', 'cleanup', '--apply'))
+        self.assertEqual([], report['removed'])
+        self.assertIn('Studio may still be running', report['skipped'][0])
+        api.write_json(record, {'target': 'current', 'pid': os.getpid(), 'stopped_at': 'now'})
+        (review / 'lockfile').write_bytes(b'')
+        report = json.loads(self.invoke('storage', 'inspect'))
+        self.assertEqual(8, report['reclaimable_bytes'])
+        self.assertEqual({'browser_cache'}, {item['kind'] for item in report['reclaimable']})
+        self.assertIn('browser still holds studio-review-abc/.runtime/studio-browser', report['skipped'][0])
+        self.assertGreater(report['categories']['browser_profiles'], 8)
+        self.invoke('storage', 'cleanup', '--apply')
+        self.assertFalse((current / 'Default/Cache').exists())
+        self.assertFalse((current / 'GrShaderCache').exists())
+        self.assertTrue((review / 'Default/Cache/data_0').exists())
+        for profile in (current, review):
+            self.assertEqual('{"enable_do_not_track": true}', (profile / 'Default/Preferences').read_text())
+
+    def test_storage_keeps_linked_or_locked_browser_profiles(self):
+        import os
+        import socket
+        work_id, work = self.new_work()
+        runtime = work / 'variants/main/.runtime'
+        outside = self.root / 'outside-profile'
+        (outside / 'Cache').mkdir(parents=True)
+        (outside / 'Cache/data_0').write_bytes(b'keep')
+        linked = runtime / 'studio-browser'
+        linked.mkdir(parents=True)
+        os.symlink(outside, linked / 'Default', target_is_directory=True)
+        locked = runtime / 'studio-review-abc/.runtime/studio-browser'
+        (locked / 'Default/Cache').mkdir(parents=True)
+        (locked / 'Default/Cache/data_0').write_bytes(b'keep')
+        os.symlink(f'{socket.gethostname()}-{os.getpid()}', locked / 'SingletonLock')
+        report = json.loads(self.invoke('storage', 'cleanup', '--apply'))
+        self.assertEqual([], report['removed'])
+        self.assertTrue(any('Default/Cache is behind a link' in reason for reason in report['skipped']))
+        self.assertTrue(any('browser still holds studio-review-abc' in reason for reason in report['skipped']))
+        self.assertEqual(b'keep', (outside / 'Cache/data_0').read_bytes())
+        self.assertEqual(b'keep', (locked / 'Default/Cache/data_0').read_bytes())
+        (locked / 'SingletonLock').unlink()
+        os.symlink('other-host-1', locked / 'SingletonLock')
+        self.invoke('storage', 'cleanup', '--apply')
+        self.assertTrue((locked / 'Default/Cache').exists())
+
 
     def test_v38_legacy_resume_recovers_wait_after_interrupted_write(self):
         import shutil

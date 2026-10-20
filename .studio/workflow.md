@@ -70,7 +70,7 @@ Work 是内容容器，各 Variant 平级；`required_variants` 不再作为第�
 
 `list` 默认展示 active（含 parked），`list --archived` 查看归档，`list --all` 查看全部；`list --tree` 与可重建的 `浏览目录.md` 使用同一展示数据；`浏览目录.md` 按系列分组，附系列文件夹与系列规则链接，归档 Work 在所属系列内标为已归档。按标题、系列号、版本归档数、当前焦点及最近导出定位，工程与成片链接指向准确对象。查看归档不等于重新激活。
 
-`work storage inspect` 按 Work 盘点空间，`work storage cleanup` 默认仅预览，加 `--apply` 才执行；均可用 `--work <Work-ID>` 限定目标。容量按需统计，无法读取时报告未知。回收只处理已证明归属、可重建、无引用且相关进程已停止的缓存；源、原媒体、接受快照、历史成片、未知内容及失败证据保留，归档本身不触发删除。
+`work storage inspect` 按 Work 盘点空间，`work storage cleanup` 默认仅预览，加 `--apply` 才执行；均可用 `--work <Work-ID>` 限定目标。容量按需统计，无法读取时报告未知。回收只处理已证明归属、可重建、无引用且相关进程已停止的缓存；Studio 私有浏览器配置（`.runtime/studio-browser`，含审片副本内的）单列 `browser_profiles` 容量，仅在该 Variant 的 Studio 已停止、浏览器不再占用配置时回收其中的 Chrome 缓存目录，`Preferences`（DNT）等配置保留，跳过原因列在 `skipped`；源、原媒体、接受快照、历史成片、未知内容及失败证据保留，归档本身不触发删除。
 
 ## 复用与交接
 

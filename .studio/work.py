@@ -1760,12 +1760,19 @@ def refresh_browser(root: Path) -> None:
 
 def command_storage(root: Path, args: argparse.Namespace) -> None:
     work, _ = selected_work(root, args, allow_archive=True)
-    candidates, errors = [], []
+    candidates, errors, skipped = [], [], []
     for variant in variant_paths(work):
         try:
             names = reclaim_final_candidates(variant, apply=False)
-            candidates.extend({"variant": variant.name, "path": str(variant / ".runtime" / name),
+            candidates.extend({"variant": variant.name, "kind": "final_candidate", "path": str(variant / ".runtime" / name),
                                "bytes": (variant / ".runtime" / name).stat().st_size} for name in names)
+        except (HarnessError, storage.StorageError, OSError) as exc:
+            errors.append(str(exc))
+        try:
+            caches, reasons, failures = reclaim_browser_caches(variant, apply=False)
+            candidates.extend(caches)
+            skipped.extend(reasons)
+            errors.extend(failures)
         except (HarnessError, storage.StorageError, OSError) as exc:
             errors.append(str(exc))
     removed = []
@@ -1776,9 +1783,15 @@ def command_storage(root: Path, args: argparse.Namespace) -> None:
                 removed.extend(str(variant / ".runtime" / name) for name in reclaim_final_candidates(variant))
             except (HarnessError, storage.StorageError, OSError) as exc:
                 errors.append(str(exc))
+            try:
+                caches, _, failures = reclaim_browser_caches(variant)
+                removed.extend(item["path"] for item in caches)
+                errors.extend(failures)
+            except (HarnessError, storage.StorageError, OSError) as exc:
+                errors.append(str(exc))
     usage = work_storage.measure(work)
     usage.update(measured_at=now(), reclaimable_bytes=sum(item["bytes"] for item in candidates) if not errors else None,
-                 reclaimable=candidates, cleanup_errors=errors, removed=removed)
+                 reclaimable=candidates, skipped=skipped, cleanup_errors=errors, removed=removed)
     write_json(work / ".runtime/storage.json", usage)
     print_result(root, args, usage)
 
@@ -3908,6 +3921,73 @@ def reclaim_final_candidates(variant: Path, completed: Path | None = None, *, ap
     if removed and apply:
         write_json(registry_path, registry)
     return removed
+
+
+# Rebuildable Chrome caches in Studio's private profiles; Preferences (DNT) and other profile state stay.
+STUDIO_BROWSER_CACHES = ("Default/Cache", "Default/Code Cache", "Default/GPUCache", "Default/DawnGraphiteCache",
+                         "Default/DawnWebGPUCache", "Default/Service Worker/CacheStorage",
+                         "Default/Service Worker/ScriptCache", "GrShaderCache", "GraphiteDawnCache", "ShaderCache")
+
+
+def browser_profile_in_use(profile: Path) -> bool:
+    """Unreadable or foreign locks count as in use."""
+    # Windows Chrome holds `lockfile` with delete-on-close; POSIX Chrome links SingletonLock to "<host>-<pid>".
+    try:
+        (profile / "lockfile").lstat()
+        return True
+    except FileNotFoundError:
+        pass
+    try:
+        host, _, pid = os.readlink(profile / "SingletonLock").rpartition("-")
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return True
+    return not (host == socket.gethostname() and pid.isdigit() and storage.process_stopped(int(pid)))
+
+
+def reclaim_browser_caches(variant: Path, *, apply: bool = True) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+    """Run only under the store-exclusive lock; a possibly live Studio or browser keeps every cache."""
+    variant = storage.scoped_path(variant.parent.parent, "variants/" + variant.name)
+    runtime = variant / ".runtime"
+    if not runtime.is_dir():
+        return [], [], []
+    for path in sorted(runtime.glob("studio-*.json")):
+        record = read_json(storage.scoped_path(variant, ".runtime/" + path.name))
+        if (("pid" in record or "target" in record) and not record.get("stopped_at")
+                and not storage.process_stopped(record.get("pid"))):
+            return [], [f"{variant.name}: Studio may still be running ({path.name}); run preview studio stop first"], []
+    reclaimed, skipped, errors = [], [], []
+    for profile in [runtime / "studio-browser", *sorted(runtime.glob("studio-review-*/.runtime/studio-browser"))]:
+        relative = profile.relative_to(runtime).as_posix()
+        try:
+            storage.scoped_path(variant, ".runtime/" + relative)
+            if not profile.is_dir():
+                continue
+            if browser_profile_in_use(profile):
+                skipped.append(f"{variant.name}: browser still holds {relative}")
+                continue
+        except (storage.StorageError, OSError) as exc:
+            errors.append(f"{variant.name}: {relative}: {exc}")
+            continue
+        for name in STUDIO_BROWSER_CACHES:
+            try:
+                # Re-resolve every level (links and Windows junctions) immediately before deletion.
+                cache = storage.scoped_path(variant, f".runtime/{relative}/{name}")
+                if not cache.is_dir():
+                    continue
+                if any(child.is_symlink() for child in cache.rglob("*")):
+                    skipped.append(f"{variant.name}: {relative}/{name} contains a link")
+                    continue
+                size = work_storage.tree_bytes(cache)
+                if apply:
+                    shutil.rmtree(cache)
+                reclaimed.append({"variant": variant.name, "kind": "browser_cache", "path": str(cache), "bytes": size})
+            except storage.StorageError:
+                skipped.append(f"{variant.name}: {relative}/{name} is behind a link")
+            except OSError as exc:
+                errors.append(f"{variant.name}: {relative}/{name}: {exc}")
+    return reclaimed, skipped, errors
 
 
 def complete_final_lifecycle(root: Path, work: Path, variant: Path) -> None:
