@@ -48,6 +48,17 @@ class WorkWslTest(unittest.TestCase):
             with self.subTest(args=args):
                 self.assertEqual(work_wsl.command(self.root, args)[6:], args)
 
+    def test_tts_alignment_stays_work_relative(self):
+        for action in ('adopt', 'audit'):
+            for option in (['--alignment', 'audio/alignment.json'],
+                           ['--alignment=audio/alignment.json']):
+                args = ['tts', action, 'a' * 64, *option]
+                with self.subTest(action=action, option=option):
+                    self.assertEqual(work_wsl.command(self.root, args)[6:], args)
+            for path in ('../alignment.json', '/tmp/alignment.json', 'D:\\alignment.json'):
+                with self.subTest(action=action, path=path), self.assertRaises(ValueError):
+                    work_wsl.command(self.root, ['tts', action, 'a' * 64, '--alignment', path])
+
     def test_external_traversal_symlink_and_metacharacters_rejected(self):
         (self.root / "escape").symlink_to(self.base, target_is_directory=True)
         for value in (str(self.base / "outside.json"), "../outside.json", "escape/outside.json", "C:\\outside.json"):
