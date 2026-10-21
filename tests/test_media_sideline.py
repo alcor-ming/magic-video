@@ -56,12 +56,13 @@ class AccountCharacterTest(unittest.TestCase):
                                                  str(opaque), '--prompt', 'p', '--model', 'm', status=2))
             calm = png(root / 'calm.png', 6)
             added = json.loads(invoke('account', 'character', 'add', 'account', '--name', 'calm', '--image', str(calm),
-                                      '--prompt', '站立微笑', '--model', 'gpt-image-2.5'))
+                                      '--prompt', '站立微笑', '--model', 'gpt-image-2.5', '--tool', 'generate_image'))
             self.assertNotEqual(str(calm), added['path'])
             self.assertEqual(cover.digest(calm.read_bytes()), added['sha256'])
             provenance = json.loads(Path(added['provenance']).read_text())
-            self.assertEqual(('gpt-image-2.5', '站立微笑', '剪纸舞台风，暖色', {}),
-                             (provenance['model'], provenance['prompt'], provenance['character_style'], provenance['references']))
+            self.assertEqual(('generate_image', 'gpt-image-2.5', '站立微笑', '剪纸舞台风，暖色', {}),
+                             (provenance['tool'], provenance['model'], provenance['prompt'], provenance['character_style'],
+                              provenance['references']))
             self.assertIn('already exists', invoke('account', 'character', 'add', 'account', '--name', 'calm', '--image',
                                                    str(calm), '--prompt', 'p', '--model', 'm', status=2))
             self.assertIn('Unknown reference', invoke('account', 'character', 'add', 'account', '--name', 'grin', '--image',
@@ -69,7 +70,8 @@ class AccountCharacterTest(unittest.TestCase):
             grin = png(root / 'grin.png', 6, shade=0x40)
             second = json.loads(invoke('account', 'character', 'add', 'account', '--name', 'grin', '--image',
                                        str(grin), '--prompt', '大笑', '--model', 'm', '--reference', 'calm'))
-            self.assertEqual({'calm': added['sha256']}, json.loads(Path(second['provenance']).read_text())['references'])
+            second_provenance = json.loads(Path(second['provenance']).read_text())
+            self.assertEqual(({'calm': added['sha256']}, None), (second_provenance['references'], second_provenance['tool']))
             account = cli.account_service(root).get('account', 'account')
             self.assertEqual({'calm', 'grin'}, set(account['overrides']['cover']['characters']))
             self.assertEqual('剪纸舞台风，暖色', account['overrides']['cover']['character_style'])

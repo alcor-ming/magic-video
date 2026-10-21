@@ -10,29 +10,29 @@
 
 ## 0. 分轨：背景轨与前景轨
 
-本卡按层分工，不按模型分档。
+本卡按层分工。
 
 - **背景轨**：第 1 层、rig 布景件（墙板、地面）与换景动作。
-  - **默认背景**：标准背景动作，即 `HarnessStageRig.createBackdrop` 的全屏纸板：展开后背板铺满地平线以上、台面铺满地平线以下，单层、不垫第二层底；开场 `unfold`，换地点 `refold`（折起、换皮、原地展开），收尾 `fold`（见 [MOTION.md](MOTION.md)「背景动作」）。任何模型都可以按默认使用，不需要另做设计。
+  - **默认背景**：标准背景动作，即 `HarnessStageRig.createBackdrop` 的全屏纸板：展开后背板铺满地平线以上、台面铺满地平线以下，单层、不垫第二层底；开场 `unfold`，换地点 `refold`（折起、换皮、原地展开），收尾 `fold`（见 [MOTION.md](MOTION.md)「背景动作」）。按默认使用即可，不需要另做设计。
   - **进阶背景**：有自备布景位图时用 `disc.scene` 加 `board`：圆盘半周换景，转正后纸板展开铺满全屏，小素材再逐件落上去，三个动作在同一层背景里。用了进阶就不再另放 `createBackdrop`。旧的 `rig.rebuild`（舞台式纸布景、整台后退重搭）仍可用，但不是默认。
-  - **定制背景**：按 Work 设计，可以整体替换默认背景，只要守住下面的接口。v6 起不限模型：能读图、能按「自看循环」自己看帧的执行模型都可以做（Work 071 的银河虚空由 DeepSeek V4.1 完成并获批）。先在 Work 的 `materials/tests/<名>/` 做成独立小样、自看通过，再并入工程；不能读图的执行模型仍用默认背景。
+  - **定制背景**：按 Work 设计，可以整体替换默认背景，只要守住下面的接口。执行者要能按「自看循环」自己看帧：先在 Work 的 `materials/tests/<名>/` 做成独立小样、自看通过，再并入工程；无法看帧时仍用默认背景。
   - **背景给前景的接口**：台面区（默认 x 120–1800、y 200–900，字幕安全带以上）；换景时刻清单（前景在换景开始前退场，换景完成后入场）；布景件带 `data-hf-set`（stage-rig 的墙板与地面已自带），诊断据此把布景与前景分开。
-  - **WebGL / 粒子背景**（银河、黑洞、虚空这类，Work 071 实测可行）：全屏 canvas 固定 1920×1080，放在第 1 层，不进前景 3D 叠层、不随叠层旋转；只由主时间线驱动（时间线 `onUpdate` 里按当前时刻 `render`），不用 rAF、Date、`Math.random`（随机用固定种子）；`window.__timelines` 仍只注册一条。无 GPU 时 Studio 与渲染走 SwiftShader，先实测单帧耗时，预算约 250 ms：逐像素着色器先降内部分辨率（Work 071 黑洞满分辨率 3.1 s/帧，0.35 倍约 0.36 s/帧）再降步数；GLSL 里注入的数字一律带小数点（int 字面量不能初始化 `const float`）。
-- **前景轨**：第 2 层的物与道具、第 3 层强调、第 4 层文字。普通模型（含 DeepSeek）也能做，按下面的顺序走，只读本节、`stages/plan.md`、`stages/draft.md`，用到哪个积木再读它的 `blocks/*.md`：
+  - **WebGL / 粒子背景**（银河、黑洞、虚空这类）：全屏 canvas 固定 1920×1080，放在第 1 层，不进前景 3D 叠层、不随叠层旋转；只由主时间线驱动（时间线 `onUpdate` 里按当前时刻 `render`），不用 rAF、Date、`Math.random`（随机用固定种子）；`window.__timelines` 仍只注册一条。无 GPU 时 Studio 与渲染走 SwiftShader，先实测单帧耗时，预算约 250 ms：逐像素着色器先降内部分辨率（满分辨率可能要数秒一帧，降到约 0.35 倍通常回到预算内）再降步数；GLSL 里注入的数字一律带小数点（int 字面量不能初始化 `const float`）。
+- **前景轨**：第 2 层的物与道具、第 3 层强调、第 4 层文字。按下面的顺序走，只读本节、`stages/plan.md`、`stages/draft.md`，用到哪个积木再读它的 `blocks/*.md`：
   1. 写画面表（`stages/plan.md`「轨道镜头表」）：每个 Scene 先用一句话说清主物、它做什么、结束时什么样，再逐镜填表；
   2. 本期专属的物（闸门、卡纸堆、抽屉……）用 `prop.states` 写成多部件、多状态的道具，通用动作（立起、纸框、写牌、光、托盘、剖切、阅读窗）用对应积木；
   3. 先静后动：先让每个 Scene 停在结束状态，用 `preview diagnose --range … --times … --frames` 取这一段的帧，自己看构图，主物大小、位置定下来再补动作；
   4. 自看循环（`stages/draft.md`「自看循环」）：每做完一段，只采样这一段、自己读图修正，不为取帧登记 Draft、不开 `critic round`、不重跑全片诊断；高难镜头先在 Work 的 `materials/tests/<名>/` 做独立小样，用 `tools/sample-frames.mjs` 自看，成立后再并入工程；
   5. 整片前景做完：登记一次 Draft，跑一次全片 `preview diagnose` 与登记前自检（`stages/draft.md`「前景自检」），再 `critic round` 交独立审片，用 `critic record` 记录实际结论；修不了的逐项写进交付说明未处理项。自检与审片只定位问题，不新增审批门；三道人工门以 workflow 为准。
 
-  执行模型不能读图时，第 3、4 步改为登记 Draft，请能看图的一方（用户或 critic）看帧条。
+  执行者无法看图时，第 3、4 步改为登记 Draft，请能看图的一方（用户或 critic）看帧条。
 
 ## 1. 来源机制（授权提取）
 
 | 来源 | 机制 | 本卡如何用 |
 |---|---|---|
 | 折叠装置机制 | `.set` perspective > slide > wall + floor + props：四块 480px 墙板铺满 1920；内对锚在中线 folding ±86°；外板挂在内板上、反向 ±172°；先内后外分级展开并锁定；地面桥绕上边从 -90° 立起；道具脚绕上边从 88° 立起。旧景道具先塌、外/内板再折、整台后退，新地点在视野里搭起。父级 rig 拥有铰链旋转，scene inner wrapper 拥有其他变换 | 共享机制全部落在卡内资产 `assets/stage-rig/stage-rig.js`，本卡 `example/scene.js` 只喂 `{inner, outer, floor, prop}` |
-| 圆盘换景与逐件装配机制 | 一个刚性 4400 px 圆盘、两半各载一景、每次整盘转 180°、转正后按件类型（地板立起 / 天幕落下 / 墙板立起 / 梁架下降 / 道具侧入 / 悬挂件下降）0.65 s 冲击 + 0.16 s 回弹逐件装配 | 卡内资产 `assets/stage-kit/blocks/disc-scene.js`，机制来自卡主人自己的 Work 59 背景装置（已授权提取），布景位图不随卡配送 |
+| 圆盘换景与逐件装配机制 | 一个刚性 4400 px 圆盘、两半各载一景、每次整盘转 180°、转正后按件类型（地板立起 / 天幕落下 / 墙板立起 / 梁架下降 / 道具侧入 / 悬挂件下降）0.65 s 冲击 + 0.16 s 回弹逐件装配 | 卡内资产 `assets/stage-kit/blocks/disc-scene.js`，机制已授权提取，布景位图由工程自备，不随卡配送 |
 | 舞台方向 | 台口小、内容聚焦；幕布只做开场/收尾；无逐段整幕擦除、无常驻侧房；不拿整体淡出/平移替代折叠重建 | 幕布只在 0.80 开、15.40 合；重建是一次真实折叠 |
 | 分层舞台机制 | 微型分层舞台（后墙 / 布景 / 主体 / 前景 / 标牌 / 灯光）；幕布开场收尾；因果道具交接与引导光池；剪贴白边 + 偏移投影 | 第 1–4 层分层、`#spot-a/#spot-b` 两支光池、托盘因果指示线、纸盒白边 + `drop-shadow` + 偏移 `box-shadow` |
 | 交错入场机制 | 交错入场与空间对比，用实际动作完成转场 | 六个纸盒交错入场、两簇空间对比、重建由折叠动作完成 |
@@ -82,7 +82,7 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 - **Research**：本卡不产出；机制来自已授权的只读提取（§1）。
 - **Plan**：§4 表即 Plan；引用机制并声明铰链归属与阅读窗口。
 - **Draft**：`example/index.html` + `style.css` + `scene.js` + 卡内 `assets/stage-rig/stage-rig.js` 即 Draft 级示范；`example/kit-demo.html` + `kit-demo.js` 是六个积木的出场示范。
-- **Export**：由工作流与宿主渲染；本卡不持有成片、不导出、不做 Windows 验收。
+- **Export**：由工作流与宿主渲染；本卡不持有成片、不导出、不做成片验收。
 
 ## 7. 技术检查
 
@@ -102,13 +102,11 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 - **音效**：**只**为结构重击与关键 hit 配音效（如 S4 折叠的落定、S3 归位的轻点），**不要**给普通入场自动配音效。
   来源是 earshot 音效库渲染（`work component generate-sfx --engine earshot`，可按动作调时长与峰值时刻）、
   SuperCollider / jsfxr 配方，或 HyperFrames 自带音效导入。
-- **BGM**：账号开启 `bgm.enabled` 时可铺一条 BGM，按账号 `bgm.policy` 的曲库与情绪偏好，从开源曲库选现成曲目，
+- **BGM**：配置开启 `bgm.enabled` 时可铺一条 BGM，按 `bgm.policy` 的曲库与情绪偏好，从开源曲库选现成曲目，
   用 `work component import-bgm` 带许可导入；**不用**音乐模型或代码合成 BGM。整片一条、不随 Scene 换曲，口播区间自动避让。
-  账号未开启时 sound 块不写 bgm。
+  未开启时 sound 块不写 bgm。
 - 所有 cue 必须对应同帧可见事件，并按 `data-start` 调度以保证 seek 安全。
-- **封面**：每个 Work 用 `work cover render` 按账号模板合成（风格 + 角色 + 标题 + 一句话），不为单个 Work 生图。
-  账号角色库的图片用生图 MCP 生成（`generate_image`，`background: transparent`，提示词按账号 `cover.character_style`，
-  已有角色作 `reference_images` 保持一致），再用 `work account character add` 登记到账号。
+- **封面**：本卡不规定封面，按工具的封面合同（`.studio/spec/creative.md`）用 `work cover render` 合成，不为单个 Work 生图。
 
 ## 9. 六种做坏方式（开工前、交付前各对一遍）
 

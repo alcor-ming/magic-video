@@ -164,7 +164,7 @@ class AccountService:
         return {"series": series, "deleted": True, "archive": str(target)}
 
     def add_cover_character(self, account: str, name: str, image: Path, *, prompt: str, model: str,
-                            references=(), replace: bool = False) -> dict:
+                            tool: str | None = None, references=(), replace: bool = False) -> dict:
         """Register one generated character image in the account's cover library, with how it was made."""
         import hashlib
         import json
@@ -201,7 +201,7 @@ class AccountService:
                 temporary.unlink()
                 raise self.api.HarnessError("Character image changed while copying")
             temporary.replace(target)
-        provenance = {"name": name, "sha256": sha, "tool": "generate_image", "model": model.strip(), "prompt": prompt,
+        provenance = {"name": name, "sha256": sha, "tool": tool.strip() if tool and tool.strip() else None, "model": model.strip(), "prompt": prompt,
                       "background": "transparent", "character_style": cover.get("character_style"),
                       "references": {item: library[item]["sha256"] for item in references}}
         target.with_suffix(".json").write_text(json.dumps(provenance, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

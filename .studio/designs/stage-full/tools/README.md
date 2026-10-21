@@ -50,7 +50,7 @@ node sample-frames.mjs <小样目录> <输出目录> --times 0,2.5,7 [--timeline
 ```
 
 - 小样目录要有 `index.html`，一条 paused GSAP 主时间线注册到 `window.__timelines`；`--timeline` 缺省取根 `data-composition-id`，再取第一条。
-- 浏览器缺省取 `HYPERFRAMES_BROWSER_PATH`；puppeteer-core 缺省从小样目录和本工具目录向上找 `runtime/npm/node_modules/puppeteer-core`（生产根布局）。
+- 浏览器缺省取 `HYPERFRAMES_BROWSER_PATH`；puppeteer-core 缺省从小样目录和本工具目录向上找 `runtime/npm/node_modules/puppeteer-core`（部署包布局）。
 - 浏览器配置放系统临时目录，结束即删；网络盘或 9p 上的 profile 会让 Chromium 启动即退出。
 - seek 用 `seek(t, false)`，由 `onUpdate` 驱动的 WebGL 背景也按该时刻重画。
 - 输出目录写 `t<秒>.png`、重 seek 不一致时的 `-reseek.png` 与 `qa.json`；标准输出一行摘要。退出码：0 无错误；1 页面错误、重 seek 不一致、参数或启动失败。出画文字只作提示（`textOutsideAt`）。

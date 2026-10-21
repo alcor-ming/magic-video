@@ -4,7 +4,7 @@
 
 - 开发仓管理工具源码、规则、模板、Skill、依赖与安装器；生产根保存用户作品、卡片、资产、输出和运行状态。开发与生产按会话角色区分，不按操作系统区分：WSL 制作会话也是生产会话，通过同根 `work-wsl.sh` 操作已授权 Work；开发任务只使用隔离夹具，不读取或修改生产 Current、Work、Variant、接受记录、资产或默认配置。
 - 用户卡与工具分开维护；旧 Work 的 vendor、Binding、Lock 与 Accepted Snapshot 保持闭合，不原地覆盖。工具复现使用独立最小副本，不用 hardlink / symlink 暴露冻结源。
-- 三仓分工（仓库所有者自用部署）：公开仓管工具与固定的两张公共卡；私有工具来源管自用工具与部署锁，其 `release-sources.json` 的 `cards` 锁定私有卡仓的完整 commit 与卡片 ID；私有卡仓是私人卡唯一真源。personal 包从锁定 commit 的 Git 对象把私人卡装进 `.studio/designs/<id>/` 作为受管理文件，该自用部署的生产侧不再编辑卡片。公共包使用者（含在 Windows 侧编辑的第三方）不受此限，仍在 `design_root` 直接创作用户卡。开发会话在卡仓 clone 上、通过 `design_root` 指向该 clone 的隔离夹具创作与校验卡片，不写生产 `design_root`。工具不封装 Git 写操作。私有来源替换的根规则与入口须在 `bases` 登记对照的公共模板摘要，公共模板一变构建即拒绝，先合并公共改动再更新摘要；`compatibility.product` 须等于产品版本。
+- 三仓分工（仓库所有者自用部署）：公开仓管工具与固定的两张公共卡；私有工具来源管自用工具与部署锁，其 `release-sources.json` 的 `cards` 锁定私有卡仓的完整 commit 与卡片 ID；私有卡仓是私人卡唯一真源。personal 包从锁定 commit 的 Git 对象把私人卡装进 `.studio/designs/<id>/` 作为受管理文件，该自用部署的生产侧不再编辑卡片。公共包使用者（含在 Windows 侧编辑的第三方）不受此限，仍在 `design_root` 直接创作用户卡。开发会话在卡仓 clone 上、通过 `design_root` 指向该 clone 的隔离夹具创作与校验卡片，不写生产 `design_root`。工具不封装 Git 写操作。私有来源替换的根规则与入口须在 `bases` 登记对照的公共模板摘要，公共模板一变构建即拒绝，先合并公共改动再更新摘要；`compatibility.product` 须等于产品版本。公共卡只保留脱敏标准版，不写具体 Work、生产历史、运行环境、模型或账号约定；所有者的定制放私有卡仓的 `<公共卡 ID>-my` 个人卡，用 `references` 与公共阶段文档复用公共卡，只写差别。
 - 开发仓不保存生产文稿、媒体、工程或真实作品盘点。个人路径、会话接线和模型偏好见私有来源 `personal/dev-notes.md`（如存在则读取）；该说明不配送。
 
 ## 授权边界

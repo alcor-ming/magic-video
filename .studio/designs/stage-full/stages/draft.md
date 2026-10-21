@@ -18,12 +18,12 @@
 
 - 确定性 seek：正放、倒放、随机 seek、重复 seek 一致；对 `[t3, 0, t1, t3]` 抓帧比较同一时刻。
 - 释放：`dispose()` 解绑并 kill 时间线后不再响应 seek。
-- 声音：示例静音；若某 Variant 需要音效，只为结构重击与关键 hit（如 S4 折叠落定、S3 归位轻点）配音效，不给普通入场自动配音效；BGM 只在账号开启 `bgm.enabled` 时用一条开源曲库导入的现成曲目，不合成 BGM；所有 cue 对应同帧可见事件并按 `data-start` 调度以保证 seek 安全。
+- 声音：示例静音；若某 Variant 需要音效，只为结构重击与关键 hit（如 S4 折叠落定、S3 归位轻点）配音效，不给普通入场自动配音效；BGM 只在开启 `bgm.enabled` 时用一条开源曲库导入的现成曲目，不合成 BGM；所有 cue 对应同帧可见事件并按 `data-start` 调度以保证 seek 安全。
 - 不新增几何/函数预置、通用角色库、AI 概念图库或 BGM 生成。
 
 ## 自看循环（做每一段时）
 
-DeepSeek V4.1 起执行模型能读图，构图与动作由执行者自己看帧判断。Work 061 的教训：为了看一段帧，每块都登记一版 Draft、开一轮全片 `critic round`（draft-v012 到 v039，未记录结论的 29 轮帧包共 6.6 GB），每次又从 0 秒全片诊断、复验早已不变的段。本卡改为只采样正在做的这一段：
+执行者能看图时，构图与动作由执行者自己看帧判断。不要为了看一段帧就逐块登记 Draft、开全片 `critic round`、每次从 0 秒全片诊断并复验早已不变的段，那样只会堆出大量没有结论的帧包。只采样正在做的这一段：
 
 - **开一次预览**：`preview open current --no-open`，整段工作期间保持开着；改源后 Studio 一般会自动重载，没重载时按下面「无效采样」处理。
 - **取帧**：`preview diagnose current --range <段起> <段止> --frames`。要定点看，用 `--times a,b,c` 代替步长网格（每轮 ≤ 20 帧）。报告里：
@@ -36,11 +36,11 @@ DeepSeek V4.1 起执行模型能读图，构图与动作由执行者自己看帧
 - **帧不是证据**：自看帧在 Variant `.runtime/diagnose-frames/`，只留最近 3 次；不贴进交付说明当证据，不入卡仓。交付证据仍以登记的 Draft 与 `critic round` 为准。
 - **独立小样**：X 光拆层、3D 舞台、WebGL 背景这类高难镜头，先在 Work 的 `materials/tests/<名>/` 写一个独立合成（无声、≤ 30 s、一条 paused 主时间线注册到 `window.__timelines`），用 `node <卡>/tools/sample-frames.mjs <小样目录> <小样目录>/frames --times …` 自看，成立后再并入工程。小样一次只推进一步（例如先拆层，再接背景，再接转场），每步有时间盒。
 
-## 前端踩坑清单（Work 061 / 071 实测）
+## 前端踩坑清单
 
 - **3D 被压平**：`preserve-3d` 子树里任何祖先 `opacity < 1`、`filter` 或 `overflow` 裁剪都会把 3D 压平。压暗用不透明暗色，不用半透明；层片厚度用硬投影，不加背板（背板会在恢复不透明时穿出上层）。
 - **真 3D 叠层**：perspective 容器 → 旋转容器 → 各层 `translateZ`；抽出一层是该层自己的位移与转正，其余层不动；所有状态是时刻 t 的纯函数。
-- **拖动不一致**：同一属性只归一个 tween 或一个 `apply(t)`；`from()` / `set()` 回拖不还原，改 `fromTo()` 或纯函数。`determinism` 报不一致，先查这一条（Work 071 在 2.2 s 查出约 2.1 万像素差）。
+- **拖动不一致**：同一属性只归一个 tween 或一个 `apply(t)`；`from()` / `set()` 回拖不还原，改 `fromTo()` 或纯函数。`determinism` 报不一致，先查这一条。
 - **SVG**：GSAP 动画的 SVG 组不设 `transform-box: fill-box`。
 - **自定义数据**：不要存到 `el.dir`、`el.title`、`el.hidden` 等原生属性名上，用 `dataset`。
 - **中文字体**：所有可能含中文的文字（含英文等宽标签、层名牌）`font-family` 最后都落到 SourceHanSansCN，否则显示方框。
@@ -53,12 +53,12 @@ DeepSeek V4.1 起执行模型能读图，构图与动作由执行者自己看帧
 
 自检只定位问题、不判通过、不新增审批门；三道人工门以 workflow 为准。修不了的项逐条写进交付说明未处理项，与 `rhythm_gap` 的处理方式一致。
 
-- **先静后动**：先把每个 Scene 写成停在结束状态的静态构图，按「自看循环」取帧自己看构图；主物大小、位置定下来再补动作。执行模型看不了图时，登记一次 Draft，用 `critic round` 帧条请能看图的一方（用户或 critic）看，不要自己判断构图是否成立。
+- **先静后动**：先把每个 Scene 写成停在结束状态的静态构图，按「自看循环」取帧自己看构图；主物大小、位置定下来再补动作。执行者看不了图时，登记一次 Draft，用 `critic round` 帧条请能看图的一方（用户或 critic）看，不要自己判断构图是否成立。
 - **三帧核对**：每个 Scene 用 `--times` 取段首 +0.5 s、中段、段尾 −0.5 s 三帧。主物不在画里、只剩文字卡，或主物明显小于台面区的 40%，就回改。自看帧不作交付证据，不入卡仓。
 - **覆盖率线索**：`preview diagnose` 报告的 `stage.findings` 里，`stage_sparse` 是前景（第 2 层，扣除 `data-hf-set` 布景件）覆盖率低于本卡阈值的区间，`stage_empty` 是舞台层完全空。按 plan「规则」第 2 条回改。
 - **计算样式抽查**：本镜应在画里的物，其第 2 层节点的 `visibility` 为 `visible`、`position` 为 `absolute`（被 B 接管而隐藏或虚化的 A 组不在此列）；用默认背景时 `.hf-rig` 节点必须存在。用 `getComputedStyle` 核对实际值，不以代码存在代替。
 - **可见性归属**：`.scene` 这类容器若写 `visibility:hidden`，子节点必须由同一函数统一写回 `visible`；只改 `opacity` 的节点会被继承隐藏。积木节点经 `kit.shown` 已成对写入。
-- **类名覆盖**：JS 里创建的每个类名必须有样式契约：在工程 `style.css` 或 rig 注入的 CSS 中有规则，或在 JS 里被当作选择器引用。跑 `node tools/check-classes.mjs <工程目录>`（Windows 侧用 runtime 自带的 node），退出码非 0 先修正；结果写进交付说明。积木自带 CSS，工程只需保证自己新建的类名有规则。
+- **类名覆盖**：JS 里创建的每个类名必须有样式契约：在工程 `style.css` 或 rig 注入的 CSS 中有规则，或在 JS 里被当作选择器引用。跑 `node tools/check-classes.mjs <工程目录>`，退出码非 0 先修正；结果写进交付说明。积木自带 CSS，工程只需保证自己新建的类名有规则。
 - **道具自由**：本期专属的物用 `prop.states` 描述，也可以手写；手写节点同样过类名覆盖与计算样式。积木只是工具，不要为了用积木把物换成纸框、牌子或光。
 - **位图规则**：常驻位图只允许台口（幕布、台唇）与背景轨布景；生图道具用带 alpha 的镂空图，带背景的方图进 `inset.broll` 纸框、`prop.states` 的 `alpha:false` 纸片或墙面贴纸；写实件不得压在阅读区上方。
-- **声音**：只给 rig 落定、归位、盖章配音效；入场不配音；BGM 只按账号开关与偏好用开源曲库现成曲目，与 `GUIDE.md` §8 一致。
+- **声音**：只给 rig 落定、归位、盖章配音效；入场不配音；BGM 只按 `bgm.enabled` 与 `bgm.policy` 用开源曲库现成曲目，与 `GUIDE.md` §8 一致。

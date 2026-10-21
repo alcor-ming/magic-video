@@ -139,7 +139,7 @@ Background 的 `renderer:"module"` 供受支持链路共用，声明包内 JS `e
 
 `work component import-bgm --file <下载的曲目> --source <AssetSource 根> --id <id> --title <曲名> --library <曲库> --source-url <曲目页> --license <许可> --attribution <署名> [--mood <情绪>]...` 把开源曲库的一首现成曲目转为 MP3 media 源，写 `audio_role: bgm`、`source_url`、`rights{library,license,attribution,non_commercial,share_alike}` 与 CREDITS.md，不自动 accept。ND 许可与缺许可拒收。声明 `bgm.enabled` 的卡上，`sound build` 在冻结值不是 true 时拒绝带 BGM 的 Plan，并要求 BGM 引用 `audio_role: bgm` 的资产；未声明该字段的卡与旧 Work 不变。
 
-`work account character add <账号> --name <角色名> --image <PNG> --prompt <提示词> --model <模型> [--reference <已有角色名>]... [--replace]` 登记生图得到的封面角色：只收带透明通道的 PNG，复制到 `control-plane/account-assets/<账号>/cover-characters/<角色名>-<sha12>.png`，同名 `.json` 记录工具、模型、提示词、账号 `cover.character_style` 与参考角色 sha256，并写回账号 `overrides.cover.characters`（账号修订历史照常保留）。
+`work account character add <账号> --name <角色名> --image <PNG> --prompt <提示词> --model <模型> [--tool <工具>] [--reference <已有角色名>]... [--replace]` 登记生图得到的封面角色：只收带透明通道的 PNG，复制到 `control-plane/account-assets/<账号>/cover-characters/<角色名>-<sha12>.png`，同名 `.json` 记录工具（未传 `--tool` 时为 null）、模型、提示词、账号 `cover.character_style` 与参考角色 sha256，并写回账号 `overrides.cover.characters`（账号修订历史照常保留）。
 
 `work component import-sfx --from <hyperframes 包根> --source <AssetSource 根>` 读取本机 `dist/skills/media-use/audio/assets/sfx/manifest.json` 与 `CREDITS.md`，生成带 purpose/tags/license/hit_offset 的可编辑 media 源，不自动 accept。ffmpeg `silencedetect` 的 -40 dB 门限求首个非静音点；检测失败用 0 并标注 `hit_offset_estimated:false`。第三方音效不进入仓库或发行包，WSL 测试仅使用合成夹具。
 

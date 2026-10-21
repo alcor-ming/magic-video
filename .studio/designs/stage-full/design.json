@@ -1,6 +1,6 @@
 {
   "id": "stage-full",
-  "version": 8,
+  "version": 9,
   "type": "design",
   "compatibility": {
     "supersedes": [
@@ -122,7 +122,7 @@
   "settings_defaults": {
     "direction_approval": true,
     "critic.provider": "external",
-    "critic.model": "gpt-6.1-sol",
+    "critic.model": "",
     "critic.max_rounds": 1
   },
   "capabilities": {

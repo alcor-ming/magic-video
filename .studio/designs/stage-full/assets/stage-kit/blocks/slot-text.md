@@ -22,7 +22,7 @@
 | style | Object | 否 | 纯风格参数 |
 | style.ink | string | 否 | 墨色，默认 `#292620` |
 | style.paper | string | 否 | 纸色，默认 `#fffaf0` |
-| style.size | number | 否 | 字号 px，默认 40（v6 起；Work 061 全片都要手动补到 40），必须为正；字体族继承宿主 |
+| style.size | number | 否 | 字号 px，默认 40（v6 起），必须为正；字体族继承宿主 |
 
 几何与时间使用核心校验函数读取，缺失必填项抛出 TypeError。同槽占用区间为 `[at, out+outDur)`，永久保留的条目占用至无限远；任意重叠均在 create 时抛出 TypeError，端点相接允许。非法参数在创建 DOM 之前拒绝。
 

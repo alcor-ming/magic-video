@@ -4,7 +4,7 @@
  * 返回 { root, apply(t), dispose() }。apply(t) 是全片时间 t 的纯函数：任意 seek、倒放、重复 seek
  * 都从 t 重建完整状态。没有 RAF、定时器、Date、Math.random，也不依赖事件回调。
  *
- * 为什么存在：前景轨的执行模型可以少写布局与样式，把精力放在本期的物上。Work 061 那类缺陷——
+ * 为什么存在：前景轨的执行者可以少写布局与样式，把精力放在本期的物上。常见缺陷——
  * 类名没有 CSS（塌成 static）、容器 visibility:hidden 被子节点继承、折叠装置没有 mount——
  * 在积木里做不出来：积木自己的类名自己注入；节点显隐一律经 kit.shown() 同时写 opacity 与
  * visibility；几何缺参数时直接抛错，不给静默默认值。

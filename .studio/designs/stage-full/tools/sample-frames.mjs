@@ -6,7 +6,7 @@
 //        [--browser <chrome>] [--puppeteer <puppeteer-core 目录>]
 //
 // 浏览器默认取 HYPERFRAMES_BROWSER_PATH；puppeteer-core 默认从小样目录和本工具目录向上找
-// runtime/npm/node_modules/puppeteer-core（生产根的布局）。退出码：0 无错误；1 页面错误、
+// runtime/npm/node_modules/puppeteer-core（部署包布局）。退出码：0 无错误；1 页面错误、
 // 重 seek 不一致或参数/启动失败。出画文字只作提示。
 import fs from 'node:fs';
 import os from 'node:os';
@@ -58,7 +58,7 @@ const puppeteerDir = findPuppeteer();
 const { default: puppeteer } = await import(pathToFileURL(path.join(puppeteerDir, 'lib/puppeteer/puppeteer-core.js')).href);
 
 fs.mkdirSync(outDir, { recursive: true });
-// 浏览器配置放系统临时目录：9p/网络盘上的 profile 会让 Chromium 启动即退出（Work 071 实测）。
+// 浏览器配置放系统临时目录：9p/网络盘上的 profile 会让 Chromium 启动即退出。
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'stage-full-frames-'));
 const report = { test: testDir, times, pageErrors: [], consoleErrors: [], failedRequests: [], frames: [], determinism: [] };
 let browser;
