@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "rewrites": [
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "# stage-full 设计卡指南（可编辑动态示例）",
+      "new": "# stage-full 设计卡指南"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "一句话：在一座小型纸舞台上，用**同一次折叠装置**把「观察 → 分组 → 解释」演成动作，\n而不是一页页换幻灯片。示例是编排示范",
+      "new": "一句话：在一座小型纸舞台上，用**同一次折叠装置**把「观察 → 分组 → 解释」演成动作，\n而不是一页页换幻灯片。§2–§4 描述一段 16 秒的示范编排"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "可运行示例：`example/index.html`（配 `example/style.css`、`example/scene.js` 与共享\n`../shared/stage-rig.js`）。宿主在运行目录放入 `runtime/gsap.min.js`、`runtime/scene-binding.js`、\n`runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`，示例不联网、不带位图与音频。Work 里的接线见 §10「动作与背景接入 Work」。",
+      "new": "本包不带示范工程与字体，示范编排只以文字给出，用作写法参考。工程运行需要宿主提供 `runtime/gsap.min.js`、\n`runtime/scene-binding.js`、卡内资产与思源黑体 `media/SourceHanSansCN-Regular.otf`；Work 里的接线见 §10「动作与背景接入 Work」。"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "，本卡 `example/scene.js` 只喂 `{inner, outer, floor, prop}`",
+      "new": "，工程脚本只喂 `{inner, outer, floor, prop}`"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "不配送原作品或私人媒体。资源及示例摘要统一由 example-manifest.json 保存。",
+      "new": "不配送原作品或私人媒体。"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "- `example/style.css` 只给纸艺皮肤；几何与角度全部来自 `../shared/stage-rig.js`。",
+      "new": "- 工程 `style.css` 只给纸艺皮肤；几何与角度全部来自 `assets/stage-rig/stage-rig.js`。"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和适用包的唯一清单。使用 design_examples.py 装配本地闭合工程；目标有改动时拒绝覆盖。",
+      "new": "卡内资产用 `component install stage-full/<资产>` 装进 Work，精确版本与 SHA-256 由 Work 的 `COMPONENT_LOCK.json` 记录；同版本内容不同时拒绝覆盖。"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "- **Draft**：`example/index.html` + `style.css` + `scene.js` + 卡内 `assets/stage-rig/stage-rig.js` 即 Draft 级示范；`example/kit-demo.html` + `kit-demo.js` 是六个积木的出场示范。",
+      "new": "- **Draft**：卡内 `assets/` 的 `stage-rig`、`stage-kit`、`stage-motion` 是 Draft 的构件，按 §10 接入工程。"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "唯一 paused 主时间线注册到 `window.__timelines[\"stage-full-example\"]`，同一条交给\n  `HarnessScene.bindScene`；`window.__example.seek(t)` 直接重建完整状态",
+      "new": "唯一 paused 主时间线注册到 `window.__timelines[\"<composition-id>\"]`，同一条交给\n  `HarnessScene.bindScene`；外部 seek 到 t 时直接重建完整状态"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "- **闭包**：示例只依赖宿主放好的",
+      "new": "- **闭包**：工程只依赖宿主放好的"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "示例静音，便于对照编排。",
+      "new": "示范编排静音，便于对照动作。"
+    },
+    {
+      "file": "designs/stage-full/GUIDE.md",
+      "old": "，对照示范为 `example/motion-demo.html`、`example/backdrop-demo.html`、`example/backdrop-advanced-demo.html`。",
+      "new": "。"
+    },
+    {
+      "file": "designs/stage-full/stages/draft.md",
+      "old": "- 文件：`example/index.html` + `example/style.css` + `example/scene.js` + 卡内资产 `assets/stage-rig/stage-rig.js`",
+      "new": "- 构件：卡内资产 `assets/stage-rig/stage-rig.js`"
+    },
+    {
+      "file": "designs/stage-full/stages/draft.md",
+      "old": "- 单一 paused 主时间线注册到 `window.__timelines['stage-full-example']`",
+      "new": "- 单一 paused 主时间线注册到 `window.__timelines['<composition-id>']`"
+    },
+    {
+      "file": "designs/stage-full/stages/draft.md",
+      "old": "- 外部 seek：`window.__example.seek(t)` 直接重建完整状态",
+      "new": "- 外部 seek：seek 到 t 时直接重建完整状态"
+    },
+    {
+      "file": "designs/stage-full/stages/draft.md",
+      "old": "- 资源闭包：示例只依赖宿主放好的",
+      "new": "- 资源闭包：工程只依赖宿主放好的"
+    },
+    {
+      "file": "designs/stage-full/stages/draft.md",
+      "old": "手写宿主照 `example/style.css`）",
+      "new": "手写宿主照同样写法）"
+    },
+    {
+      "file": "designs/stage-full/stages/plan.md",
+      "old": "- `example/style.css` 只给纸艺皮肤",
+      "new": "- 工程 `style.css` 只给纸艺皮肤"
+    },
+    {
+      "file": "designs/stage-full/stages/plan.md",
+      "old": "，本卡 `example/scene.js` 只喂",
+      "new": "，工程脚本只喂"
+    },
+    {
+      "file": "designs/stage-full/tools/README.md",
+      "old": "以下命令在仓库根目录运行。第一条预期退出 0，首行为 `ok: N classes covered`；允许随后列出静态类名提示。\n\n```sh\nnode .studio/designs/stage-full/tools/check-classes.mjs .studio/designs/stage-full/example --rig .studio/designs/stage-full/assets/stage-rig/stage-rig.js; echo exit=$?\n```\n\n第二条使用",
+      "new": "以下命令在卡片目录的上一级运行。对自己的工程目录跑一次，类名都有定义时退出 0，首行为 `ok: N classes covered`；允许随后列出静态类名提示。\n\n```sh\nnode stage-full/tools/check-classes.mjs <工程目录> --rig stage-full/assets/stage-rig/stage-rig.js; echo exit=$?\n```\n\n下一条使用"
+    },
+    {
+      "file": "designs/stage-full/tools/README.md",
+      "old": "node .studio/designs/stage-full/tools/check-classes.mjs \"${FIXTURE_B:?}\"",
+      "new": "node stage-full/tools/check-classes.mjs \"${FIXTURE_B:?}\""
+    },
+    {
+      "file": "designs/stage-light/GUIDE.md",
+      "old": "# stage-light 设计卡指南（可编辑动态示例）",
+      "new": "# stage-light 设计卡指南"
+    },
+    {
+      "file": "designs/stage-light/GUIDE.md",
+      "old": "示例是编排示范，**不是口播时间证据**",
+      "new": "§3 是一段 16 秒的示范编排，**不是口播时间证据**"
+    },
+    {
+      "file": "designs/stage-light/GUIDE.md",
+      "old": "可运行示例：`example/index.html`（配 `example/style.css`、`example/scene.js` 与共享\n`../shared/stage-rig.js`）。宿主在运行目录放入 `runtime/gsap.min.js`、`runtime/scene-binding.js`、\n`runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`；不联网、不带位图与音频。",
+      "new": "本包不带示范工程与字体，示范编排只以文字给出。工程运行需要宿主提供 `runtime/gsap.min.js`、`runtime/scene-binding.js`、\n所引用的 `stage-full/stage-rig` 与思源黑体 `media/SourceHanSansCN-Regular.otf`。"
+    },
+    {
+      "file": "designs/stage-light/GUIDE.md",
+      "old": "下面的示例是动作标准化之前的编排示范",
+      "new": "下面的示范编排写于动作标准化之前"
+    },
+    {
+      "file": "designs/stage-light/GUIDE.md",
+      "old": "不配送原作品或私人媒体。资源及示例摘要统一由 example-manifest.json 保存。",
+      "new": "不配送原作品或私人媒体。"
+    },
+    {
+      "file": "designs/stage-light/GUIDE.md",
+      "old": "- **Draft**：`example/index.html` + `style.css` + `scene.js` + 所引用的 `stage-full/stage-rig` 即 Draft 级示范。",
+      "new": "- **Draft**：所引用的 `stage-full/stage-rig` 与 `stage-full/stage-motion` 是 Draft 的构件，接入见 MOTION.md「接入 Work」。"
+    },
+    {
+      "file": "designs/stage-light/GUIDE.md",
+      "old": "example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和适用包的唯一清单。使用 design_examples.py 装配本地闭合工程；目标有改动时拒绝覆盖。",
+      "new": "所引用资产用 `component install stage-full/<资产>` 装进 Work，精确版本与 SHA-256 由 Work 的 `COMPONENT_LOCK.json` 记录；同版本内容不同时拒绝覆盖。"
+    },
+    {
+      "file": "designs/stage-light/GUIDE.md",
+      "old": "唯一 paused 主时间线注册到 `window.__timelines[\"stage-light-example\"]`，同一条交给\n  `HarnessScene.bindScene`；`window.__example.seek(t)` 直接重建完整状态",
+      "new": "唯一 paused 主时间线注册到 `window.__timelines[\"<composition-id>\"]`，同一条交给\n  `HarnessScene.bindScene`；外部 seek 到 t 时直接重建完整状态"
+    },
+    {
+      "file": "designs/stage-light/GUIDE.md",
+      "old": "示例静音。若某 Variant",
+      "new": "示范编排静音。若某 Variant"
+    },
+    {
+      "file": "designs/stage-light/stages/draft.md",
+      "old": "- 文件：`example/index.html` + `example/style.css` + `example/scene.js` + 所引用的 `stage-full/stage-rig` 资产；",
+      "new": "- 构件：所引用的 `stage-full/stage-rig` 资产；"
+    },
+    {
+      "file": "designs/stage-light/stages/draft.md",
+      "old": "- 单一 paused 主时间线注册到 `window.__timelines['stage-light-example']`",
+      "new": "- 单一 paused 主时间线注册到 `window.__timelines['<composition-id>']`"
+    },
+    {
+      "file": "designs/stage-light/stages/draft.md",
+      "old": "- 外部 seek：`window.__example.seek(t)` 直接重建完整状态",
+      "new": "- 外部 seek：seek 到 t 时直接重建完整状态"
+    },
+    {
+      "file": "designs/stage-light/stages/draft.md",
+      "old": "- 资源闭包：示例只依赖宿主放好的",
+      "new": "- 资源闭包：工程只依赖宿主放好的"
+    }
+  ]
+}
