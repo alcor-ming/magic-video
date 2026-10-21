@@ -70,7 +70,7 @@
     {
       "source": ".studio/designs/stage-full/GUIDE.md",
       "target": "GUIDE.md",
-      "sha256": "307c033fb15c48921bacfd77daa672c529b7691fd66f986771437f31f14ce97f",
+      "sha256": "3327a03e8a5841d33ab37ae6367f7692dcbe4cb72b638fa74f42308e6dff54e4",
       "origin": "Project authored source extraction guide",
       "version": "1",
       "license": "Apache-2.0",
@@ -83,7 +83,7 @@
     {
       "source": ".studio/designs/stage-full/stages/draft.md",
       "target": "stages/draft.md",
-      "sha256": "166d374d246448a36c294c29578bff663dc762002671c8dc80f2c493431a2049",
+      "sha256": "b12bdcff29b2c32f6300dad14b6bffb339e41dfabdf0919a647fc8f680eb8d70",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -96,7 +96,7 @@
     {
       "source": ".studio/designs/stage-full/stages/export.md",
       "target": "stages/export.md",
-      "sha256": "3d0291f5252b80f684c8c1c5dc2a0c1b64c7e4616a4f12ce57cc883e12578014",
+      "sha256": "2e469782d34f36eb8e4fe5c9557ff631feec3fa6120a5d5a6099360a9bd530eb",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -109,7 +109,7 @@
     {
       "source": ".studio/designs/stage-full/stages/plan.md",
       "target": "stages/plan.md",
-      "sha256": "1ac577349ea53e6ee624e939210f8767f74328ec9e2be6ac1bd568b82aa665c1",
+      "sha256": "39033de0e0a9e6d745338c228bd0179353f10a303e03aa4f86e94c7753aa6a25",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -213,7 +213,7 @@
     {
       "source": ".studio/designs/stage-full/assets/stage-kit/stage-kit.js",
       "target": "runtime/stage-kit.js",
-      "sha256": "8e076b744ba6b60a5592e1bcaee27fd7307b5b304a6f9f60d3b457639b2ededd",
+      "sha256": "c33b27684b9e39778f4356fb66abd0345dc4487940d68f57ef83cf497f120a3f",
       "origin": "Project authored stage block core; metadata in the asset manifest",
       "version": "1",
       "license": "Apache-2.0",

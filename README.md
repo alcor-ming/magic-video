@@ -118,7 +118,7 @@ Theme/Background 使用单资产合同与工程内的精确 vendor/lock；账号
 
 Motion v3 增加风格入退场、一次性强调与转场、back-out/spring 及 cue 相位 hold_fps；允许不同槽混用 v2/v3，新 lock 采用最高能力版本，旧冻结 Work 不自动升级。完整账号外观指定 Theme/Background；跨账号风格叠加省略 theme，保留各自账号 Theme。B-roll module 可通过 `component list --broll-role hook|concept|transition --tag <style>` 查询，接口卡显示完整挂载示例和插槽；Scene 手动接既有 A/B 编排，Binding schema 不变。合同与生产源自检见 [镜头创作指南](.studio/spec/broll-assets.md)。
 
-封面按账号模板合成；舞台卡账号的角色库图片由生图 MCP 生成，`account character add <账号> --name <角色名> --image <PNG> --prompt <提示词> --model <模型>` 登记到账号。声音：BGM 只用开源曲库现成曲目（`component import-bgm` 带许可导入，舞台卡由账号 `bgm.enabled` / `bgm.policy` 开启并写偏好），不合成；音效可用 earshot 音效库渲染（`component generate-sfx --engine earshot`，外部 `earshot` 由 `HYPERFRAMES_EARSHOT` 指定）、SuperCollider / jsfxr 或 HyperFrames 自带音效。命令细节见 [运行时接口](.studio/spec/runtime-interfaces.md)。
+封面按账号模板合成；账号角色库图片用任意生图工具生成透明 PNG，`account character add <账号> --name <角色名> --image <PNG> --prompt <提示词> --model <模型> [--tool <工具>]` 登记到账号。声音：BGM 只用开源曲库现成曲目（`component import-bgm` 带许可导入，由 `bgm.enabled` / `bgm.policy` 开启并写偏好），不合成；音效可用 earshot 音效库渲染（`component generate-sfx --engine earshot`，外部 `earshot` 由 `HYPERFRAMES_EARSHOT` 指定）、SuperCollider / jsfxr 或 HyperFrames 自带音效。命令细节见 [运行时接口](.studio/spec/runtime-interfaces.md)。
 
 所有新视频 Work 默认把 Script/Research 放在 `shared/`，各 Variant 通过 `shared_inputs` 引用同一源，Plan/工程/接受/Final 各自独立。`variant add --from <variant-id>` 显式创建内容分支，不是仅为了新增账号而必需；旧 Variant 内文稿仍按原位置读取。创建隔离测试可用 `work new "联动测试" --workflow hyperframes_video --purpose test --batch <batch-id>`，只进行 Studio 验证，不导出视频。
 

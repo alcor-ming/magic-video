@@ -19,7 +19,7 @@
 **验收标准：** <能由准确 Draft 检查的画面结果>
 **参考机制：** persistent-anchor
 
-explainer 全部必填并引用 1–3 个机制 ID。按冻结 line 加载规则；数学与英语使用各自专属 Plan 模板。
+explainer 全部必填并引用 1–3 个机制 ID。按冻结 line 加载规则。
 
 ## 意图回应
 

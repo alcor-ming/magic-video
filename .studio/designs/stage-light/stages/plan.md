@@ -29,4 +29,4 @@
 - **source asset（来源资产）**：默认背景用所引用的 `stage-full/stage-rig` 资产的全屏纸板背景动作（`panels:2`），物体动作用所引用的 `stage-full/stage-motion` 动作包，动作名与参数见 [MOTION.md](../MOTION.md)；字体 `media/SourceHanSansCN-Regular.otf`。
 - **continuous state（延续状态）**：跨段保留项（六张纸卡、S4 关键纸卡留在台中）。
 - **transition ownership（交接归属）**：铰链旋转归 rig，其他变换归 scene wrapper。
-- **limits（显式限制）**：未在 Windows 锁定 Studio 连续播放；声音/字幕未验证。
+- **limits（显式限制）**：未在锁定的 Studio 中连续播放；声音/字幕未验证。

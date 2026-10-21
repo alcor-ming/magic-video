@@ -29,7 +29,7 @@
 - **source asset（来源资产）**：折叠装置来自卡内资产 `assets/stage-rig/stage-rig.js`，本卡 `example/scene.js` 只喂 `{inner, outer, floor, prop}`；字体 `media/SourceHanSansCN-Regular.otf`。
 - **continuous state（延续状态）**：跨段保留项（如 S4 关键纸盒 amber 停在台上、S2→S3 的六个纸盒）。
 - **transition ownership（交接归属）**：铰链旋转归 rig，其他变换归 scene wrapper；A/B 或跨 Scene 交接写明由谁恢复。
-- **limits（显式限制）**：未在 Windows 锁定 Studio 连续播放；声音/字幕未验证；示例静音不代表有声验收。
+- **limits（显式限制）**：未在锁定的 Studio 中连续播放；声音/字幕未验证；示例静音不代表有声验收。
 
 ## 轨道镜头表（前景轨必填）
 

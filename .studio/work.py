@@ -391,7 +391,7 @@ def command_generate_sfx(root: Path, args: argparse.Namespace) -> None:
 
 def command_account_character(root: Path, args: argparse.Namespace) -> None:
     result = account_service(root).add_cover_character(args.identity, args.name, Path(args.image), prompt=args.prompt,
-                                                       model=args.model, references=args.reference or (), replace=args.replace)
+                                                       model=args.model, tool=args.tool, references=args.reference or (), replace=args.replace)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
@@ -5023,9 +5023,10 @@ def build_parser() -> argparse.ArgumentParser:
             character_add = character_operations.add_parser("add", help="Register a generated transparent PNG with its prompt")
             character_add.add_argument("identity")
             character_add.add_argument("--name", required=True)
-            character_add.add_argument("--image", required=True, help="PNG with transparency from generate_image")
+            character_add.add_argument("--image", required=True, help="PNG with transparency from any image generator")
             character_add.add_argument("--prompt", required=True, help="Prompt the image was generated with")
             character_add.add_argument("--model", required=True, help="Image model the tool reported")
+            character_add.add_argument("--tool", help="Image generation tool, recorded in the provenance")
             character_add.add_argument("--reference", action="append", help="Existing character used as reference_images; repeatable")
             character_add.add_argument("--replace", action="store_true", help="Point an existing name at the new image")
             character_add.set_defaults(handler=command_account_character)
