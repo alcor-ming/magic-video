@@ -381,6 +381,19 @@ class StorageTiersTest(unittest.TestCase):
         for name, content in kept.items():
             self.assertEqual(content, (work / name).read_bytes())
 
+    def test_tier3_accepts_a_work_abandoned_through_its_variant(self):
+        _, work = self.new_work()
+        output = self.root / 'reject.json'
+        self.invoke('--work', work.name, 'archive', '--outcome', 'stored')
+        self.assertEqual('variants_archived', API.read_json(work / '.runtime/archive.json')['outcome'])
+        self.invoke('storage', 'plan', '--tier', '3', '--work', work.name, '--output', str(output), expected=2)
+        self.invoke('reopen', work.name)
+        self.invoke('--work', work.name, 'archive', '--outcome', 'abandoned')
+        self.assertEqual('variants_archived', API.read_json(work / '.runtime/archive.json')['outcome'])
+        self.put(work / 'variants/main/project/index.html')
+        plan, _ = self.plan(work, 3)
+        self.assertIn('project', {Path(row['path']).name for row in plan['items']})
+
     def test_protection_assertions_and_apply_requalification(self):
         _, work = self.new_work()
         variant = work / 'variants/main'
@@ -424,6 +437,22 @@ class StorageTiersTest(unittest.TestCase):
         self.assertFalse(candidate.exists())
         self.assertIn('final_candidate', [row['kind'] for row in receipt['storage']['removed']])
         self.assertTrue((candidate.parent / 'qa.json').exists())
+
+    def test_apply_removes_read_only_review_copies(self):
+        _, work = self.new_work()
+        variant = work / 'variants/main'
+        self.complete(variant)
+        review = self.review(variant)
+        frozen = self.put(review / 'draft-v001/assets/cast/frame.png')
+        # Frozen draft copies are read-only; a read-only directory makes POSIX unlink fail like Windows does.
+        frozen.chmod(0o444)
+        frozen.parent.chmod(0o555)
+        self.addCleanup(lambda: frozen.parent.exists() and frozen.parent.chmod(0o755))
+        _, output = self.plan(work, 1)
+        result = json.loads(self.invoke('storage', 'apply', str(output)))
+        self.assertEqual(['studio_review'], [row['kind'] for row in result['removed']])
+        self.assertFalse(result['skipped'])
+        self.assertFalse(review.exists())
 
     def test_review_cache_is_not_double_counted_and_new_link_is_skipped(self):
         _, work = self.new_work()

@@ -4,10 +4,9 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import stat
 from pathlib import Path
-from storage import scoped_path, process_stopped, StorageError
+from storage import scoped_path, process_stopped, remove_tree, StorageError
 
 
 def measure(work: Path) -> dict:
@@ -169,6 +168,19 @@ def assert_protected(work: Path, item: dict, tier: int, protected=()) -> None:
 
 
 
+def abandoned(api, work: Path) -> bool:
+    """`work archive --outcome abandoned` records the outcome on the Variant when the Work has one."""
+    archive = scoped_path(work, '.runtime/archive.json')
+    if not archive.is_file():
+        return False
+    outcome = api.read_json(archive).get('outcome')
+    if outcome == 'abandoned':
+        return True
+    variants = [path for path in sorted((work / 'variants').glob('*')) if (path / 'variant.yaml').is_file()]
+    return outcome == 'variants_archived' and bool(variants) and all(
+        api.read_json(path / 'variant.yaml').get('archive_outcome') == 'abandoned' for path in variants)
+
+
 def tier_items(api, root: Path, work: Path, tier: int, *, variant: Path | None = None,
                completed: Path | None = None) -> tuple[list, list]:
     items, excluded = [], []
@@ -197,8 +209,7 @@ def tier_items(api, root: Path, work: Path, tier: int, *, variant: Path | None =
             items.append(item)
 
     if tier == 3:
-        archive = scoped_path(work, '.runtime/archive.json')
-        if not archive.is_file() or api.read_json(archive).get('outcome') != 'abandoned' or published(root, work):
+        if not abandoned(api, work) or published(root, work):
             raise ValueError('Tier 3 requires an abandoned, unpublished Work')
         for path in sorted(work.iterdir()):
             if path.name == 'WORK.md':
@@ -319,7 +330,7 @@ def remove_item(api, work: Path, item: dict, *, records=()) -> None:
                         if item['kind'] == 'studio_review' and record_path.name != 'studio-current.json'
                         and record.get('project') and Path(record['project']).is_relative_to(path)]
         if path.is_dir():
-            shutil.rmtree(path)
+            remove_tree(path)
         else:
             path.unlink()
         for record_path in record_paths:
