@@ -72,6 +72,8 @@ Work 是内容容器，各 Variant 平级；`required_variants` 不再作为第�
 
 `work storage inspect` 按 Work 盘点空间，`work storage cleanup` 默认仅预览，加 `--apply` 才执行；均可用 `--work <Work-ID>` 限定目标。容量按需统计，无法读取时报告未知。回收只处理已证明归属、可重建、无引用且相关进程已停止的缓存；Studio 私有浏览器配置（`.runtime/studio-browser`，含审片副本内的）单列 `browser_profiles` 容量，仅在该 Variant 的 Studio 已停止、浏览器不再占用配置时回收其中的 Chrome 缓存目录，`Preferences`（DNT）等配置保留，跳过原因列在 `skipped`；源、原媒体、接受快照、历史成片、未知内容及失败证据保留，归档本身不触发删除。
 
+`work storage plan --tier {1,2,3} (--work <Work-ID> | --all) [--output <file>]` 只写计划，`work storage apply <plan>` 校验摘要、资格与文件统计后逐项删除：第 1 档在定稿完成后自动回收临时副本，第 2 档对发布日志确认已发布的 Work 回收未采纳预览和已判 critic 帧（后续复盘重新采样），第 3 档禁止 `--all`，仅对 abandoned 且未发布的 Work 保留 `WORK.md`、`.runtime/archive.json`、`.runtime/storage.json`、`variants/*/variant.yaml` 与 `variants/*/retro/`。
+
 ## 复用与交接
 
 采用相应复盘配方的设计卡在接受后使用 `VISUAL_RETRO.template.md` 记录积木、动作配方或规则、内容资产和仅属于本片四类。只提炼最小模块/接口/配方，不向其他线交整页代码；提炼到卡内 assets 的可编辑资产不引用 Work 路径，按资产合同校验。规则提案交开发仓，开发会话不读取生产 Work。

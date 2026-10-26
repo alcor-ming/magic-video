@@ -216,6 +216,10 @@ class LifecycleTest(fixtures.WorkCliTest):
         self.assertEqual(0, json.loads(self.invoke('storage', 'inspect'))['reclaimable_bytes'])
         api.studio_record(variant, 'current').unlink()
         self.export(work, b'two')
+        # Tier 1 runs after the completed Finalize; register the candidate again to exercise cleanup guards.
+        self.assertFalse(candidate.exists())
+        candidate.write_bytes(b'one')
+        api.reclaim_final_candidates(variant, candidate, apply=False)
         old_video = next((variant / 'final/history').glob('*/final.mp4'))
         old_video.write_bytes(b'corrupt')
         report = json.loads(self.invoke('storage', 'cleanup', '--apply'))

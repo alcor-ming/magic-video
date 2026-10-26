@@ -16,10 +16,10 @@ templates:
   pure_hyperframes: recipes/pure-hyperframes.md
 
 copywriting:
-  optional: [dbs-xhs-title, media-publish-check]
+  optional: [dbs-title-cover-intro, media-publish-check]
 
 packaging:
-  required: [dbs-xhs-title]
+  required: [dbs-title-cover-intro]
 
 excluded_v1:
   global: [prompt_library, public_publishing]

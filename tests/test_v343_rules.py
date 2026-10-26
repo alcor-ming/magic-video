@@ -68,7 +68,7 @@ class V343RulesTests(unittest.TestCase):
         self.assertNotIn("\n  default:", capabilities)
         self.assertNotIn("podcast_quote_image", capabilities)
         self.assertNotIn("package_pipeline:", capabilities)
-        self.assertIn("optional: [dbs-xhs-title, media-publish-check]", capabilities)
+        self.assertIn("optional: [dbs-title-cover-intro, media-publish-check]", capabilities)
         self.assertTrue((ROOT / ".agents/skills/hyperframes-production-workflow/references/"
                          "hyperframes-design-profile-pack-v0.1.0/SKILL.md").is_file())
         for name in ("README.md", ROOT_TEMPLATE):

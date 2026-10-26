@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import sys
 
 from visual_plan import Composition, validate_dependencies
@@ -115,10 +116,21 @@ def reclaim(runtime: Path, records: list[dict], references: set[str]) -> list[st
         if path.is_dir():
             if any(child.is_symlink() for child in path.rglob("*")):
                 raise StorageError("Cleanup tree contains a link")
-            shutil.rmtree(path)
+            remove_tree(path)
         elif path.is_file():
             path.unlink()
         else:
             continue
         removed.append(relative)
     return removed
+
+
+def remove_tree(path: Path) -> None:
+    """Delete a reclaimable tree. Windows refuses to delete read-only entries (copies of frozen drafts)."""
+    for directory, folders, files in os.walk(path):
+        for name in folders + files:
+            entry = os.path.join(directory, name)
+            if not os.path.islink(entry):
+                os.chmod(entry, stat.S_IMODE(os.lstat(entry).st_mode) | stat.S_IWRITE)
+    os.chmod(path, stat.S_IMODE(os.lstat(path).st_mode) | stat.S_IWRITE)
+    shutil.rmtree(path)

@@ -1758,6 +1758,52 @@ def refresh_browser(root: Path) -> None:
     atomic_write(store / "浏览目录.md", "\n".join(output))
 
 
+def command_storage_plan(root: Path, args: argparse.Namespace) -> None:
+    if bool(args.work_override) == bool(args.all):
+        raise HarnessError('Storage plan requires exactly one of --work or --all')
+    if args.tier == 3 and args.all:
+        raise HarnessError('Tier 3 requires explicit --work; --all is not allowed')
+    works = [path for path, _ in work_paths(root)] if args.all else [locate_work(root, args.work_override)[0]]
+    items, excluded = [], []
+    for work in works:
+        selected, skipped = work_storage.tier_items(SimpleNamespace(**globals()), root, work, args.tier)
+        items.extend(selected)
+        excluded.extend(skipped)
+    totals = {}
+    for item in items:
+        totals[item['kind']] = totals.get(item['kind'], 0) + item['bytes']
+    from datetime import timezone
+    stamp = datetime.now(timezone.utc)
+    plan = dict(schema_version=1, tier=args.tier, created_at=stamp.isoformat(), items=items,
+                excluded=excluded, totals=totals, digest=work_storage.plan_digest(items))
+    output = Path(args.output) if args.output else root / '.studio/.runtime/storage-plans' / (
+        stamp.strftime('%Y%m%dT%H%M%S%fZ') + f'-tier{args.tier}.json')
+    write_json(output, plan)
+    print(json.dumps(plan, ensure_ascii=False, indent=2))
+
+
+def command_storage_apply(root: Path, args: argparse.Namespace) -> None:
+    plan = read_json(Path(args.plan))
+    if (plan.get('schema_version') != 1 or type(plan.get('tier')) is not int or plan['tier'] not in (1, 2, 3)
+            or not isinstance(plan.get('items'), list) or plan.get('digest') != work_storage.plan_digest(plan['items'])):
+        raise HarnessError('Invalid storage plan or digest')
+    grouped = {}
+    for item in plan['items']:
+        grouped.setdefault(validate_id(item['work'], 'work id'), []).append(item)
+    result = dict(removed=[], skipped=[], bytes=0, plan_digest=plan['digest'])
+    for work_id, items in grouped.items():
+        with naming_lock(root):
+            work, _ = locate_work(root, work_id)
+            applied = work_storage.apply_items(SimpleNamespace(**globals()), root, work, plan['tier'], items)
+            usage = work_storage.measure(work)
+            usage.update(removed=applied['removed'], skipped=applied['skipped'], plan_digest=plan['digest'], applied_at=now())
+            write_json(storage.scoped_path(work, '.runtime/storage.json'), usage)
+        result['removed'].extend(applied['removed'])
+        result['skipped'].extend(applied['skipped'])
+        result['bytes'] += applied['bytes']
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
 def command_storage(root: Path, args: argparse.Namespace) -> None:
     work, _ = selected_work(root, args, allow_archive=True)
     candidates, errors, skipped = [], [], []
@@ -3990,7 +4036,85 @@ def reclaim_browser_caches(variant: Path, *, apply: bool = True) -> tuple[list[d
     return reclaimed, skipped, errors
 
 
-def complete_final_lifecycle(root: Path, work: Path, variant: Path) -> None:
+def write_final_package(work: Path, variant: Path, state: dict) -> dict:
+    import hashlib
+    import re
+    import tempfile
+
+    final = storage.scoped_path(variant, 'final')
+    package_path = storage.scoped_path(final, 'package.json')
+    previous = read_json(package_path) if package_path.exists() else {}
+    lines = (work / 'WORK.md').read_text(encoding='utf-8').splitlines()
+    if lines and lines[0] == '---':
+        end = lines.index('---', 1)
+        lines = lines[end + 1:]
+    sources = []
+    if state.get('current_cover'):
+        source = storage.scoped_path(variant, state['current_cover'])
+        sources.append((source, source.relative_to(variant).as_posix()))
+    else:
+        for line in lines:
+            if line.startswith(('- 封面：', '- 封面:')):
+                for value in re.findall(r'`([^`]+)`', line):
+                    source = storage.scoped_path(work, value)
+                    if source.is_file() and source.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp'):
+                        sources.append((source, source.relative_to(work).as_posix()))
+                break
+    description = ''
+    for line in lines:
+        if line.startswith(('- 作品简介：', '- 作品简介:')):
+            description = line[len('- 作品简介：'):].strip()
+            break
+    reserved = {'final.mp4', 'manifest.json', 'package.json', '简介.md'}
+    old_covers = {item['file']: item for item in previous.get('covers', [])}
+    covers, contents, origins = [], {}, {}
+    for source, relative in sources:
+        name = source.name
+        target = storage.scoped_path(final, name)
+        if (name in reserved or name in origins
+                or target.exists() and name not in old_covers):
+            raise HarnessError('Final package cover name collision: ' + name)
+        origins[name] = source
+        content = source.read_bytes()
+        digest = hashlib.sha256(content).hexdigest()
+        covers.append({'file': name, 'sha256': digest, 'source': relative})
+        contents[name] = content
+    description_entry = None
+    if description:
+        content = (description + '\n').encode('utf-8')
+        contents['简介.md'] = content
+        description_entry = {'file': '简介.md', 'sha256': hashlib.sha256(content).hexdigest()}
+    package = {'schema_version': 1, 'covers': covers, 'description': description_entry,
+               'missing': ([] if covers else ['cover']) + ([] if description else ['description'])}
+    final.mkdir(parents=True, exist_ok=True)
+    for name, content in contents.items():
+        target = storage.scoped_path(final, name)
+        if target.exists() and file_sha256(target) == hashlib.sha256(content).hexdigest():
+            continue
+        stream = tempfile.NamedTemporaryFile(dir=final, prefix='.package-', suffix='.pending', delete=False)
+        temporary = Path(stream.name)
+        try:
+            with stream:
+                stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, target)
+        finally:
+            temporary.unlink(missing_ok=True)
+    old_names = set(old_covers)
+    if previous.get('description'):
+        old_names.add(previous['description']['file'])
+    for name in old_names - contents.keys():
+        if Path(name).name == name and name not in {'final.mp4', 'manifest.json', 'package.json'}:
+            target = storage.scoped_path(final, name)
+            if target.is_file():
+                target.unlink()
+    if package != previous:
+        write_json(package_path, package)
+    return package
+
+
+def complete_final_lifecycle(root: Path, work: Path, variant: Path, *, completed: Path | None = None) -> None:
     manifest = read_json(variant / "final/manifest.json")
     receipt = read_json(variant / ".runtime/finalize.json")
     if (receipt.get("final_sha256") != manifest.get("final_sha256")
@@ -4000,6 +4124,7 @@ def complete_final_lifecycle(root: Path, work: Path, variant: Path) -> None:
     state = read_json(variant / "variant.yaml")
     state.update(current_final="final.mp4", status="active", wait_for="none", next_action="Revise or archive explicitly")
     write_variant(variant, state)
+    package = write_final_package(work, variant, state)
     import exports
     config = json.loads(os.environ.get('HYPERFRAMES_AI_RESOLVED_CONFIG', '{}'))
     files = {'video': variant / 'final/final.mp4'}
@@ -4007,15 +4132,32 @@ def complete_final_lifecycle(root: Path, work: Path, variant: Path) -> None:
         files['cover'] = storage.scoped_path(variant, state['current_cover'])
         import cover
         cover.verify(files['cover'].parent)
+    if config.get('export_mode', 'copy') == 'index':
+        files = {'video': variant / 'final/final.mp4'}
+        if package['covers']:
+            files['cover'] = variant / 'final' / package['covers'][0]['file']
     try:
         delivery = exports.publish(Path(config.get('export_root', root / 'exports')), work, variant, files,
+            mode=config.get('export_mode', 'copy'),
             **export_names(root, work, variant, state), revision=state.get('revision', 1),
             review=os.environ.get('HYPERFRAMES_AI_REVIEW') == '1'
                    or read_frontmatter(work / 'WORK.md').get('purpose') == 'test')
     except (OSError, ValueError) as error:
         write_json(variant / '.runtime/finalize.json', {**receipt, 'state': 'promoted', 'export_error': str(error)})
         raise HarnessError('Video is ready; export copy failed. Retry finalize to copy without rendering: ' + str(error)) from error
-    write_json(variant / ".runtime/finalize.json", {**receipt, "state": "complete", "export": delivery})
+    receipt = {**receipt, "state": "complete", "export": delivery, "package": package}
+    write_json(variant / ".runtime/finalize.json", receipt)
+    try:
+        with naming_lock(root):
+            api = SimpleNamespace(**globals())
+            result = work_storage.apply_items(api, root, work, 1, None, variant=variant, completed=completed)
+        receipt['storage'] = {'removed': result['removed'], 'bytes': result['bytes']}
+        receipt.pop('storage_error', None)
+        write_json(variant / '.runtime/finalize.json', receipt)
+    except Exception as error:
+        receipt['storage_error'] = str(error)
+        write_json(variant / '.runtime/finalize.json', receipt)
+
 
 
 def preserve_final_history(final_dir: Path) -> None:
@@ -4105,7 +4247,7 @@ def _command_finalize(root: Path, args: argparse.Namespace) -> None:
             write_json(job / "failure.json", {"error": str(exc), "at": now()})
             raise HarnessError(f"Finalize failed; inspect failure/recovery evidence at {job}: {exc}") from exc
         try:
-            eligible = reclaim_final_candidates(variant, Path(render_args.output), apply=False)
+            eligible = reclaim_final_candidates(variant, apply=False)
             write_json(job / "cleanup.json", {"reclaimable": eligible, "removed": []})
         except (OSError, HarnessError, storage.StorageError) as exc:
             print(f"Final is complete; temporary cleanup deferred: {exc}", file=sys.stderr)
@@ -4186,7 +4328,10 @@ def command_finalize_video(
             shutil.rmtree(journal)
         except OSError:
             pass  # Committed recovery evidence is harmless and cleaned on the next operation.
-    complete_final_lifecycle(root, work, variant)
+    candidate = Path(args.final_file)
+    completed = candidate if (candidate.name == 'candidate.mp4' and candidate.parent.name.startswith('finalize-')
+                              and candidate.parent.parent == variant / '.runtime') else None
+    complete_final_lifecycle(root, work, variant, completed=completed)
     print(str(variant / "final/final.mp4"))
 
 
@@ -4577,6 +4722,8 @@ def command_critic_record(root, args):
         if not ledger['rounds']:
             raise HarnessError('No critic round to record')
         entry = ledger['rounds'][-1]
+        if 'frames_reclaimed_at' in entry:
+            raise HarnessError('Critic frames were reclaimed; start a new round')
         if 'verdict' in entry:
             raise HarnessError('This round already has a verdict')
         try:
@@ -4770,6 +4917,96 @@ def command_exports(root: Path, args: argparse.Namespace) -> None:
                               'skipped': skipped, 'note': 'Old files stay where they are; delete them yourself after checking.'})
 
 
+def command_exports_reindex(root: Path, args: argparse.Namespace) -> None:
+    import exports
+    config = json.loads(os.environ.get('HYPERFRAMES_AI_RESOLVED_CONFIG', '{}'))
+    if config.get('export_mode', 'copy') != 'index':
+        raise HarnessError('Set export_mode to index before reindexing')
+    if args.delete_copies and not args.apply:
+        raise HarnessError('--delete-copies requires --apply')
+    export_root = Path(config.get('export_root', root / 'exports')).absolute()
+    exports.validate_review_path(export_root)
+    index = storage.scoped_path(export_root, exports.INDEX)
+    data = exports._read_index(index)
+    statuses, works = {}, {}
+    for key, episode in list(data['episodes'].items()):
+        current = {item['role']: item for item in episode['files'] if item['current']}
+        if all(item.get('indexed') for item in current.values()):
+            statuses[key] = 'already_indexed'
+            continue
+        try:
+            work, _ = locate_work(root, episode['work'])
+        except HarnessError:
+            statuses[key] = 'missing_work'
+            continue
+        works[episode['work']] = work
+        variant = storage.scoped_path(work, 'variants/' + episode['variant'])
+        if not variant.is_dir():
+            statuses[key] = 'missing_work'
+            continue
+        video = storage.scoped_path(variant, 'final/final.mp4')
+        if exports.sha256(video) != current['video']['sha256']:
+            statuses[key] = 'mismatch'
+            continue
+        state = read_json(variant / 'variant.yaml')
+        # Match write_final_package's first cover without writing during preview.
+        cover = None
+        if state.get('current_cover'):
+            cover = storage.scoped_path(variant, state['current_cover'])
+        else:
+            document = (work / 'WORK.md').read_text(encoding='utf-8').splitlines()
+            if document and document[0] == '---':
+                document = document[document.index('---', 1) + 1:]
+            for line in document:
+                if line.startswith(('- 封面：', '- 封面:')):
+                    for value in re.findall(r'`([^`]+)`', line):
+                        source = storage.scoped_path(work, value)
+                        if source.is_file() and source.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp'):
+                            cover = source
+                            break
+                    break
+        if 'cover' in current and cover is not None and exports.sha256(cover) != current['cover']['sha256']:
+            statuses[key] = 'cover_mismatch'
+            continue
+        statuses[key] = 'converted'
+        if args.apply:
+            package = write_final_package(work, variant, state)
+            sources = {'video': video}
+            if 'cover' in current and package['covers']:
+                sources['cover'] = storage.scoped_path(variant / 'final', package['covers'][0]['file'])
+                if exports.sha256(sources['cover']) != current['cover']['sha256']:
+                    statuses[key] = 'cover_mismatch'
+                    continue
+            exports.place(export_root, tuple(key.split('/')), sources,
+                          {**{name: episode[name] for name in
+                              ('work', 'variant', 'account_name', 'series_name', 'number')},
+                           'revision': state.get('revision', 1)}, mode='index')
+            # Retain replaced copies as history for a later --delete-copies run.
+            with exports.package_write_lock(storage.scoped_path(export_root, '.export.lock')):
+                data = exports._read_index(index)
+                data['episodes'][key]['files'].extend(
+                    {**item, 'current': False} for item in current.values() if not item.get('indexed'))
+                exports._write_atomic(export_root, index, json.dumps(data, ensure_ascii=False, indent=2))
+    legacy = exports.legacy_entries(export_root)
+    for work_id in {episode['work'] for episode in data['episodes'].values()} | {entry['work'] for entry in legacy}:
+        if work_id not in works:
+            try:
+                works[work_id] = locate_work(root, work_id)[0]
+            except HarnessError:
+                pass
+    copies = exports.reindex_copies(export_root, data, legacy, works, statuses,
+                                    delete=args.delete_copies)
+    if args.apply and (any(status == 'converted' for status in statuses.values())
+                       or any(item['deleted'] for item in copies)):
+        with exports.package_write_lock(storage.scoped_path(export_root, '.export.lock')):
+            exports._write_atomic(export_root, index, json.dumps(data, ensure_ascii=False, indent=2))
+            exports._sync_log(export_root, data)
+    print(json.dumps({'episodes': [{'key': key, 'status': status} for key, status in statuses.items()],
+                      'copies': copies,
+                      'deletable_bytes': sum(item['bytes'] for item in copies if item['class'] == 'deletable')},
+                     ensure_ascii=False, indent=2))
+
+
 def command_cover(root: Path, args: argparse.Namespace) -> None:
     import cover
     work, _ = selected_work(root, args)
@@ -4781,12 +5018,21 @@ def command_cover(root: Path, args: argparse.Namespace) -> None:
         print_result(root, args, result)
     else:
         import exports
+        config = json.loads(os.environ.get('HYPERFRAMES_AI_RESOLVED_CONFIG', '{}'))
+        if config.get('export_mode', 'copy') == 'index' and not (variant / 'final/final.mp4').exists():
+            raise HarnessError('Index export needs a Final; run finalize first')
         if not state.get('current_cover'):
             raise HarnessError('No rendered cover; run cover render first')
         cover.verify(storage.scoped_path(variant, state['current_cover']).parent)
-        config = json.loads(os.environ.get('HYPERFRAMES_AI_RESOLVED_CONFIG', '{}'))
-        report = exports.publish(Path(config.get('export_root', root / 'exports')), work, variant,
-            {'cover': storage.scoped_path(variant, state['current_cover'])},
+        files = {'cover': storage.scoped_path(variant, state['current_cover'])}
+        if (variant / 'final/final.mp4').exists():
+            package = write_final_package(work, variant, state)
+            if config.get('export_mode', 'copy') == 'index':
+                files = {'video': variant / 'final/final.mp4'}
+                if package['covers']:
+                    files['cover'] = variant / 'final' / package['covers'][0]['file']
+        report = exports.publish(Path(config.get('export_root', root / 'exports')), work, variant, files,
+            mode=config.get('export_mode', 'copy'),
             **export_names(root, work, variant, state), revision=state.get('revision', 1),
             review=os.environ.get('HYPERFRAMES_AI_REVIEW') == '1' or read_frontmatter(work / 'WORK.md').get('purpose') == 'test')
         print_result(root, args, report)
@@ -4897,6 +5143,10 @@ def build_parser() -> argparse.ArgumentParser:
     migrate_exports = exports_commands.add_parser('migrate', help='Copy old <series>/<Work>/<Variant>/ exports into the account/series packages; preview unless --apply')
     migrate_exports.add_argument('--apply', action='store_true', help='Copy; old files are kept')
     migrate_exports.set_defaults(handler=command_exports)
+    reindex_exports = exports_commands.add_parser('reindex', help='Convert copied exports to index mode; preview unless --apply')
+    reindex_exports.add_argument('--apply', action='store_true', help='Convert matching episodes to index mode')
+    reindex_exports.add_argument('--delete-copies', action='store_true', help='Delete verified duplicates; requires --apply')
+    reindex_exports.set_defaults(handler=command_exports_reindex)
     cover = commands.add_parser('cover', help='Render or independently export the frozen account cover recipe')
     cover_commands = cover.add_subparsers(dest='cover_command', required=True)
     cover_render = cover_commands.add_parser('render')
@@ -4953,6 +5203,16 @@ def build_parser() -> argparse.ArgumentParser:
         storage_command = storage_commands.add_parser(operation)
         storage_command.add_argument("--apply", action="store_true", help="Actually reclaim eligible candidates (cleanup only)")
         storage_command.set_defaults(handler=command_storage)
+    storage_plan = storage_commands.add_parser('plan', help='Write a read-only tiered reclamation plan')
+    storage_plan.add_argument('--tier', type=int, choices=(1, 2, 3), required=True)
+    storage_scope = storage_plan.add_mutually_exclusive_group()
+    storage_scope.add_argument('--work', dest='work_override', default=argparse.SUPPRESS)
+    storage_scope.add_argument('--all', action='store_true')
+    storage_plan.add_argument('--output')
+    storage_plan.set_defaults(handler=command_storage_plan)
+    storage_apply = storage_commands.add_parser('apply', help='Revalidate and apply a storage plan')
+    storage_apply.add_argument('plan')
+    storage_apply.set_defaults(handler=command_storage_apply)
     find = commands.add_parser("find", help="Find video Variants by series number")
     find.add_argument("--series", required=True)
     find.add_argument("--number", type=int, required=True)
@@ -5424,7 +5684,7 @@ def build_parser() -> argparse.ArgumentParser:
 def store_exclusive(args: argparse.Namespace) -> bool:
     return (args.command in {'migrate', 'successor', 'browser'}
             or args.command == 'root' and args.root_command == 'set'
-            or args.command == 'storage' and args.storage_command == 'cleanup'
+            or args.command == 'storage' and args.storage_command in {'cleanup', 'apply'}
             or args.command == 'series' and args.operation in {'move', 'delete'})
 
 
@@ -5433,6 +5693,8 @@ def operation_lock(root: Path, args: argparse.Namespace):
     """Parallel Works: the store lock is shared except for store-wide changes; writers exclude per Work/Variant."""
     from windows_runtime import file_lock
     if (args.command in {'list', 'current', 'find', 'status'}
+            or args.command == 'exports' and args.exports_command == 'reindex' and not args.apply
+            or args.command == 'storage' and args.storage_command == 'plan'
             or args.command == 'preview' and args.preview_command in {'diagnose', 'list', 'diff', 'context'}
             or args.command == 'component' and args.component_command in {'list', 'interface', 'validate', 'verify', 'trace'}):
         yield
@@ -5514,7 +5776,8 @@ def execute_command(target_root: Path, args: argparse.Namespace) -> int:
                 raise HarnessError("Review forbids production acceptance, installation and lifecycle promotion")
         with operation_lock(target_root, args):
             args.handler(target_root, args)
-        if (args.command in {"new", "successor", "name", "wait", "resume", "park", "archive", "reopen", "finalize", "storage", "use"}
+        if (args.command in {"new", "successor", "name", "wait", "resume", "park", "archive", "reopen", "finalize", "use"}
+                or args.command == 'storage' and args.storage_command in {'inspect', 'cleanup'}
                 or args.command == "variant" and args.variant_command in {"add", "name", "use"}
                 or args.command == "series" and args.operation in {"put", "move"}
                 or args.command == "account" and args.operation in {"put", "character"}

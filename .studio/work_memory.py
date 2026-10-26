@@ -66,6 +66,7 @@ def open_retro(api, root, args):
         ledger_path = scoped_path(variant, 'critic/ledger.json')
         ledger = memory.read(ledger_path) if ledger_path.is_file() else {'rounds': []}
         previous = next((item for item in reversed(ledger['rounds']) if item['draft_id'] == args.draft_id
+                         and 'frames_reclaimed_at' not in item
                          and item['snapshot_sha256'] == metadata['snapshot_sha256']), None)
         if previous:
             source = scoped_path(variant / 'critic', previous['package'])

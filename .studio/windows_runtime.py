@@ -116,6 +116,10 @@ def resolved_config(root: Path) -> dict:
     config_path = root / ".studio/.runtime/local.json"
     validate_review_path(config_path)
     config = read_json(config_path)
+    export_mode = config.get("export_mode", "copy")
+    if export_mode not in ("copy", "index"):
+        raise ValueError("export_mode must be copy or index")
+    config["export_mode"] = export_mode
     for key in ("work_root", "asset_root"):
         value = config.get(key, str(Path(config["work_root"]) / "asset-library/store") if key == "asset_root" else None)
         if not isinstance(value, str) or not Path(value).is_absolute():
