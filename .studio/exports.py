@@ -154,7 +154,8 @@ def _sync_log(root, data):
         rows = {row['编号']: row for row in reader if row.get('编号')}
     output = []
     for key, episode in data['episodes'].items():
-        current = {item['role']: Path(item['file']).name for item in episode['files'] if item['current']}
+        current = {item['role']: item['file'] if item.get('indexed') else Path(item['file']).name
+                   for item in episode['files'] if item['current']}
         row = rows.pop(episode['stem'], {})
         status = row.get('状态') or PENDING
         if row.get('版本') not in (None, '', str(episode['version'])) and status == PUBLISHED:
@@ -174,7 +175,7 @@ def _sync_log(root, data):
     _write_atomic(root, path, text.getvalue(), encoding='utf-8-sig')
 
 
-def place(export_root, target, sources, record):
+def place(export_root, target, sources, record, mode='copy'):
     """Make ``sources`` ({role: path}) the current package of one episode; returns the receipt.
 
     ``target`` is (account folder, series folder, stem); ``record`` carries the Work, Variant, revision and the
@@ -193,7 +194,25 @@ def place(export_root, target, sources, record):
         episode = data['episodes'].setdefault(key, {'stem': stem, 'version': 0, 'files': []})
         current = {item['role']: item for item in episode['files'] if item['current']}
         changed = any(current.get(role, {}).get('sha256') != hashes[role] for role in sources)
-        if changed:
+        if mode == 'index':
+            folder = next(iter(sources.values())).parent
+            if changed or any(not item.get('indexed') for item in current.values()):
+                version = episode['version'] + int(changed)
+                if changed:
+                    for item in current.values():
+                        item['current'] = False
+                else:
+                    episode['files'] = [item for item in episode['files'] if not item['current']]
+                for role in sorted(sources):
+                    episode['files'].append({'role': role,
+                                             'file': Path(os.path.relpath(sources[role], root.parent)).as_posix(),
+                                             'sha256': hashes[role], 'current': True, 'version': version,
+                                             'indexed': True,
+                                             **{name: record[name] for name in ('work', 'variant', 'revision')}})
+                episode.update(version=version, **{name: record[name] for name in
+                                                   ('work', 'variant', 'account_name', 'series_name', 'number')})
+                _write_atomic(root, index_path, json.dumps(data, ensure_ascii=False, indent=2))
+        elif changed:
             # Unchanged roles of the episode carry forward so one version is one complete upload package.
             carried = {role: scoped_path(root, item['file']) for role, item in current.items() if role not in sources}
             for role, path in carried.items():
@@ -233,7 +252,9 @@ def place(export_root, target, sources, record):
 
 
 def publish(export_root, work, variant, files, *, series=None, number=None, account=None, label=None,
-            series_name=None, account_name=None, revision=1, review=False):
+            series_name=None, account_name=None, revision=1, review=False, mode='copy'):
+    if mode not in ('copy', 'index'):
+        raise ValueError('export_mode must be copy or index')
     if review:
         raise ValueError('Review/test-work cannot publish exports')
     if type(revision) is not int or revision < 1 or not isinstance(files, dict) or not files:
@@ -263,7 +284,88 @@ def publish(export_root, work, variant, files, *, series=None, number=None, acco
         raise ValueError('Export shelf must be separate from Variant source')
     return place(root, target, sources, {'work': work.name, 'variant': variant.name, 'revision': revision,
                                          'account_name': account_name or account or '',
-                                         'series_name': series_name or series or '', 'number': number})
+                                         'series_name': series_name or series or '', 'number': number}, mode=mode)
+
+
+def reindex_copies(export_root, data, legacy, works, statuses, *, delete=False):
+    """Inventory shelf copies against retained Work media, deleting only verified duplicates."""
+    from datetime import datetime
+
+    root = Path(export_root).absolute()
+    hashes = {}
+    for work_id, work in works.items():
+        hashes[work_id] = set()
+        for variant in sorted(work.glob('variants/*')):
+            if not variant.is_dir():
+                continue
+            final = scoped_path(work, f'variants/{variant.name}/final')
+            media = [final / 'final.mp4', *final.glob('history/*/final.mp4')]
+            package = scoped_path(final, 'package.json')
+            if package.is_file():
+                media.extend(scoped_path(final, item['file'])
+                             for item in json.loads(package.read_text(encoding='utf-8'))['covers'])
+            for path in media:
+                path = scoped_path(work, path.relative_to(work).as_posix())
+                if path.is_file():
+                    hashes[work_id].add(sha256(path))
+    candidates = {}
+    for key, episode in data['episodes'].items():
+        for item in episode['files']:
+            if not item.get('indexed'):
+                path = scoped_path(root, item['file'])
+                if path.is_file():
+                    candidate = candidates.setdefault(path, {'owners': set(), 'works': set(), 'items': [], 'legacy': False})
+                    candidate['owners'].add(key)
+                    candidate['works'].add(episode['work'])
+                    candidate['items'].append(item)
+    for entry in legacy:
+        owners = {key for key, episode in data['episodes'].items()
+                  if (episode['work'], episode['variant']) == (entry['work'], entry['variant'])}
+        for role, source in entry['files'].items():
+            path = scoped_path(root, source.relative_to(root).as_posix())
+            if path.is_file():
+                candidate = candidates.setdefault(path, {'owners': set(), 'works': set(), 'items': [], 'legacy': False})
+                candidate['owners'].update(owners)
+                candidate['works'].add(entry['work'])
+                candidate['legacy'] = True
+                # Legacy media also gets a historical entry in the central index
+                # when deleted, leaving the old layout's index intact.
+                for key in owners:
+                    if not any(item['file'] == path.relative_to(root).as_posix()
+                               for item in data['episodes'][key]['files'] if not item.get('indexed')):
+                        candidate['items'].append((key, {'role': role, 'file': path.relative_to(root).as_posix(),
+                            'sha256': entry['hashes'][role], 'current': False,
+                            'version': data['episodes'][key]['version'], 'work': entry['work'],
+                            'variant': entry['variant'], 'revision': entry['revision']}))
+    copies, empty_dirs = [], set()
+    for path, candidate in sorted(candidates.items()):
+        digest = sha256(path)
+        deletable = (all(digest in hashes.get(work_id, set()) for work_id in candidate['works'])
+                     and all(statuses[key] != 'cover_mismatch' for key in candidate['owners']))
+        item = {'path': path.relative_to(root).as_posix(), 'bytes': path.stat().st_size,
+                'sha256': digest, 'class': 'deletable' if deletable else 'unique', 'deleted': False}
+        if (delete and deletable and candidate['owners']
+                and all(statuses[key] in ('already_indexed', 'converted') for key in candidate['owners'])):
+            checked = scoped_path(root, item['path'])
+            if sha256(checked) == digest:
+                checked.unlink()
+                item['deleted'] = True
+                stamp = datetime.now().astimezone().isoformat(timespec='seconds')
+                for record in candidate['items']:
+                    if isinstance(record, tuple):
+                        key, record = record
+                        data['episodes'][key]['files'].append(record)
+                    record['deleted_at'] = stamp
+                if candidate['legacy']:
+                    empty_dirs.update(parent for parent in path.parents if parent != root and parent.is_relative_to(root))
+                elif path.parent.name == SUPERSEDED:
+                    empty_dirs.add(path.parent)
+        copies.append(item)
+    for folder in sorted(empty_dirs, key=lambda path: len(path.parts), reverse=True):
+        folder = scoped_path(root, folder.relative_to(root).as_posix())
+        if folder.is_dir() and not any(folder.iterdir()):
+            folder.rmdir()
+    return copies
 
 
 def legacy_entries(export_root):

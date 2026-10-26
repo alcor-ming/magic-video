@@ -551,5 +551,179 @@ class WorkCliTest(unittest.TestCase):
         self.assertEqual(b"replacement", paths[0].read_bytes())
 
 
+    def test_finalize_writes_package_description_and_reuses_bytes(self):
+        work_id, work = self.new_work()
+        draft = self.prepare_preview(work)
+        self.invoke('preview', 'register', str(draft))
+        self.invoke('preview', 'accept', 'draft-v001')
+        document = work / 'WORK.md'
+        document.write_text(document.read_text(encoding='utf-8') + '\n- 作品简介：xxx\n', encoding='utf-8')
+        final_source = self.root / 'final-package.mp4'
+        final_source.write_bytes(b'final package fixture')
+        final = Path(self.invoke('finalize', str(final_source), '--qa-passed')).parent
+        package = WORK_CLI.read_json(final / 'package.json')
+        self.assertEqual('xxx\n', (final / '简介.md').read_text(encoding='utf-8'))
+        self.assertEqual(WORK_CLI.file_sha256(final / '简介.md'), package['description']['sha256'])
+        state = WORK_CLI.read_json(final.parent / 'variant.yaml')
+        if state.get('current_cover'):
+            cover = WORK_CLI.storage.scoped_path(final.parent, state['current_cover'])
+            self.assertEqual(cover.read_bytes(), (final / cover.name).read_bytes())
+        else:
+            self.assertIn('cover', package['missing'])
+        self.assertEqual(package, WORK_CLI.read_json(final.parent / '.runtime/finalize.json')['package'])
+        original = (final / 'package.json').read_bytes()
+        self.invoke('--work', work_id, 'finalize', str(final_source), '--qa-passed')
+        self.assertEqual(original, (final / 'package.json').read_bytes())
+
+    def test_final_package_work_sources_cleanup_and_collisions(self):
+        _, work = self.new_work()
+        variant = work / 'variants/main'
+        first, second = work / 'first.png', work / 'second.webp'
+        first.write_bytes(b'first cover')
+        second.write_bytes(b'second cover')
+        document = work / 'WORK.md'
+        original = document.read_text(encoding='utf-8')
+        document.write_text(original + '\n- 封面: `first.png` `missing.jpg` `second.webp`\n'
+                            '- 封面：`ignored.png`\n- 作品简介: description\n', encoding='utf-8')
+        package = WORK_CLI.write_final_package(work, variant, {})
+        final = variant / 'final'
+        self.assertEqual(['first.png', 'second.webp'], [item['file'] for item in package['covers']])
+        self.assertEqual(['first.png', 'second.webp'], [item['source'] for item in package['covers']])
+        self.assertEqual([], package['missing'])
+        stamp = (final / 'first.png').stat().st_mtime_ns
+        self.assertEqual(package, WORK_CLI.write_final_package(work, variant, {}))
+        self.assertEqual(stamp, (final / 'first.png').stat().st_mtime_ns)
+        (final / 'manifest.json').write_bytes(b'bound manifest')
+        (final / 'unknown.png').write_bytes(b'keep unknown')
+        document.write_text(original + '\n- 封面：`second.webp`\n', encoding='utf-8')
+        reduced = WORK_CLI.write_final_package(work, variant, {})
+        self.assertEqual(['description'], reduced['missing'])
+        self.assertFalse((final / 'first.png').exists())
+        self.assertFalse((final / '简介.md').exists())
+        self.assertEqual(b'bound manifest', (final / 'manifest.json').read_bytes())
+        self.assertEqual(b'keep unknown', (final / 'unknown.png').read_bytes())
+        other = work / 'other'
+        other.mkdir()
+        (other / 'second.webp').write_bytes(b'different source')
+        document.write_text(original + '\n- 封面：`second.webp` `other/second.webp`\n', encoding='utf-8')
+        with self.assertRaises(WORK_CLI.HarnessError):
+            WORK_CLI.write_final_package(work, variant, {})
+        self.assertEqual(b'second cover', (final / 'second.webp').read_bytes())
+        (work / 'unknown.png').write_bytes(b'new unknown')
+        document.write_text(original + '\n- 封面：`unknown.png`\n', encoding='utf-8')
+        with self.assertRaises(WORK_CLI.HarnessError):
+            WORK_CLI.write_final_package(work, variant, {})
+        self.assertEqual(b'keep unknown', (final / 'unknown.png').read_bytes())
+        with self.assertRaises(WORK_CLI.HarnessError):
+            WORK_CLI.write_final_package(work, variant, {'current_cover': 'final/manifest.json'})
+
+    def test_final_package_current_cover_has_priority_and_updates(self):
+        _, work = self.new_work()
+        variant = work / 'variants/main'
+        source = variant / 'chosen.png'
+        source.write_bytes(b'chosen')
+        (work / 'fallback.jpg').write_bytes(b'fallback')
+        document = work / 'WORK.md'
+        document.write_text(document.read_text(encoding='utf-8') + '\n- 封面：`fallback.jpg`\n', encoding='utf-8')
+        state = {'current_cover': 'chosen.png'}
+        first = WORK_CLI.write_final_package(work, variant, state)
+        self.assertEqual(['chosen.png'], [item['file'] for item in first['covers']])
+        self.assertEqual('chosen.png', first['covers'][0]['source'])
+        source.write_bytes(b'updated')
+        second = WORK_CLI.write_final_package(work, variant, state)
+        self.assertNotEqual(first['covers'][0]['sha256'], second['covers'][0]['sha256'])
+        self.assertEqual(b'updated', (variant / 'final/chosen.png').read_bytes())
+
+    def test_index_cover_publish_without_final_writes_nothing(self):
+        import argparse
+        _, work = self.new_work()
+        variant = work / 'variants/main'
+        (variant / 'cover.png').write_bytes(b'cover')
+        before = {path.relative_to(self.root): path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
+        with mock.patch.object(WORK_CLI, 'selected_work', return_value=(work, 'active')), \
+                mock.patch.object(WORK_CLI, 'selected_variant', return_value=(variant, {'current_cover': 'cover.png'})), \
+                mock.patch.dict(WORK_CLI.os.environ, {'HYPERFRAMES_AI_RESOLVED_CONFIG': '{"export_mode":"index"}'}):
+            with self.assertRaisesRegex(WORK_CLI.HarnessError, '^Index export needs a Final; run finalize first$'):
+                WORK_CLI.command_cover(self.root, argparse.Namespace(cover_command='export'))
+        after = {path.relative_to(self.root): path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
+        self.assertEqual(before, after)
+        self.assertFalse((variant / 'final').exists())
+        self.assertFalse((self.root / 'exports').exists())
+
+    def test_index_finalize_and_cover_publish_use_final_package(self):
+        import cover
+        work_id, work = self.new_work()
+        draft = self.prepare_preview(work)
+        self.invoke('preview', 'register', str(draft))
+        self.invoke('preview', 'accept', 'draft-v001')
+        variant = work / 'variants/main'
+        (variant / 'chosen.png').write_bytes(b'cover fixture')
+        state = WORK_CLI.read_json(variant / 'variant.yaml')
+        state['current_cover'] = 'chosen.png'
+        WORK_CLI.write_variant(variant, state)
+        final_source = self.root / 'index-final.mp4'
+        final_source.write_bytes(b'final fixture')
+        with mock.patch.dict(WORK_CLI.os.environ, {'HYPERFRAMES_AI_RESOLVED_CONFIG': '{"export_mode":"index"}'}), \
+                mock.patch.object(cover, 'verify'):
+            final = Path(self.invoke('finalize', str(final_source), '--qa-passed')).parent
+            receipt = WORK_CLI.read_json(final.parent / '.runtime/finalize.json')['export']
+            self.assertEqual(str(final), receipt['directory'])
+            self.assertEqual({'video': 'final.mp4', 'cover': 'chosen.png'}, receipt['files'])
+            self.assertEqual(b'cover fixture', (final / 'chosen.png').read_bytes())
+            (final.parent / 'chosen.png').write_bytes(b'new cover')
+            self.invoke('--work', work_id, 'cover', 'export')
+        self.assertEqual(b'new cover', (final / 'chosen.png').read_bytes())
+        episodes = WORK_CLI.read_json(self.root / 'exports/.exports.json')['episodes']
+        episode = next(iter(episodes.values()))
+        self.assertEqual(2, episode['version'])
+        current = {item['role']: item for item in episode['files'] if item['current']}
+        self.assertEqual({'video', 'cover'}, set(current))
+        for item in current.values():
+            self.assertTrue(item['indexed'])
+            self.assertEqual(final, (self.root / item['file']).parent)
+        self.assertFalse((self.root / 'exports/main').exists())
+
+
+    def test_cover_export_replaces_managed_cover_from_new_render(self):
+        import cover
+        work_id, work = self.new_work()
+        draft = self.prepare_preview(work)
+        self.invoke('preview', 'register', str(draft))
+        self.invoke('preview', 'accept', 'draft-v001')
+        variant = work / 'variants/main'
+        # Model two render outputs with the same basename in distinct render directories.
+        first = variant / 'covers/render-one/cover.png'
+        first.parent.mkdir(parents=True)
+        first.write_bytes(b'first rendered cover')
+        state = WORK_CLI.read_json(variant / 'variant.yaml')
+        state['current_cover'] = first.relative_to(variant).as_posix()
+        WORK_CLI.write_variant(variant, state)
+        video = self.root / 'cover-replacement-final.mp4'
+        video.write_bytes(b'final fixture')
+        with mock.patch.object(cover, 'verify'):
+            final = Path(self.invoke('finalize', str(video), '--qa-passed')).parent
+            old_package = WORK_CLI.read_json(final / 'package.json')
+            manifest = (final / 'manifest.json').read_bytes()
+            second = final.parent / 'covers/render-two/cover.png'
+            second.parent.mkdir(parents=True)
+            second.write_bytes(b'second rendered cover')
+            state = WORK_CLI.read_json(final.parent / 'variant.yaml')
+            state['current_cover'] = second.relative_to(final.parent).as_posix()
+            WORK_CLI.write_variant(final.parent, state)
+            with mock.patch.object(WORK_CLI.os, 'replace', wraps=WORK_CLI.os.replace) as replace:
+                self.invoke('--work', work_id, 'cover', 'export')
+            cover_replacements = [call.args for call in replace.call_args_list
+                                  if Path(call.args[1]) == final / 'cover.png']
+            self.assertEqual(1, len(cover_replacements))
+            self.assertEqual(final, Path(cover_replacements[0][0]).parent)
+        package = WORK_CLI.read_json(final / 'package.json')
+        self.assertEqual(b'second rendered cover', (final / 'cover.png').read_bytes())
+        self.assertEqual('covers/render-two/cover.png', package['covers'][0]['source'])
+        self.assertEqual(WORK_CLI.file_sha256(second), package['covers'][0]['sha256'])
+        self.assertNotEqual(old_package['covers'][0]['sha256'], package['covers'][0]['sha256'])
+        self.assertEqual(manifest, (final / 'manifest.json').read_bytes())
+        self.assertEqual(b'final fixture', (final / 'final.mp4').read_bytes())
+
+
 if __name__ == "__main__":
     unittest.main()
