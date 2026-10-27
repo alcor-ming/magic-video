@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""Read-only Mac compatibility audit.
+
+Development only: never a product source.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import sys
+import unicodedata
+
+TEXT_EXTENSIONS = set('.json .yaml .yml .md .html .htm .css .js .mjs .cjs .txt .toml .ini .py .sh'.split())
+SCRIPT_EXTENSIONS = set('.sh .py .mjs .cjs .js'.split())
+FONT_EXTENSIONS = set('.css .html .htm .js .mjs .cjs .json .vue .svelte'.split())
+WINDOWS_EXTENSIONS = ('.cmd', '.bat', '.ps1', '.exe', '.dll')
+SKIP_TEXT_DIRS = ('node_modules', '.git')
+WINDOWS_PATTERNS = {
+    'drive': re.compile(r'(?<![A-Za-z0-9])[A-Za-z]:(\\\\|\\|/)(?!/)'),
+    'mnt': re.compile(r'/mnt/[a-z]/'),
+    'wsl': re.compile(r'\\{2,}(?:wsl\$|wsl\.localhost)'),
+}
+PLATFORM_FONTS = {
+    'windows': ('Microsoft YaHei', '微软雅黑', 'SimHei', 'SimSun', 'Segoe UI', 'Microsoft JhengHei'),
+    'mac': ('PingFang SC', 'PingFang TC', 'PingFang HK', 'PingFang', 'Hiragino Sans GB',
+            'Hiragino Kaku Gothic ProN', 'Hiragino Mincho ProN', 'Hiragino Sans',
+            '-apple-system', 'BlinkMacSystemFont'),
+}
+FONT_NAMES = {name.casefold(): name for names in PLATFORM_FONTS.values() for name in names}
+FONT_PATTERNS = (re.compile(r'font-family\s*:\s*([^;}{]+)'),
+                 re.compile(r'''fontFamily["']?\s*:\s*(["'`])(.+?)\1'''))
+
+
+def scan_root(root: Path, skip_text_dirs: tuple[str, ...] = SKIP_TEXT_DIRS) -> dict:
+    root = Path(root)
+    if not root.exists():
+        raise FileNotFoundError(str(root))
+    report = {
+        'totals': {'files': 0, 'bytes': 0, 'by_directory': {}},
+        'windows_paths': [], 'nfd_names': [], 'case_conflicts': [], 'crlf_scripts': [],
+        'windows_only': {'counts': {ext: 0 for ext in WINDOWS_EXTENSIONS}, 'paths': []},
+        'long_names': [], 'errors': [],
+    }
+    for directory, folders, files in os.walk(root, followlinks=False):
+        parent = Path(directory)
+        groups = {}
+        for name in sorted(folders + files):
+            relative = (parent / name).relative_to(root).as_posix()
+            groups.setdefault(name.casefold(), []).append(relative)
+            if unicodedata.normalize('NFC', name) != name:
+                report['nfd_names'].append(relative)
+            if len(name.encode('utf-8')) > 255:
+                report['long_names'].append(relative)
+        report['case_conflicts'].extend(names for names in groups.values() if len(names) > 1)
+        for name in sorted(files):
+            path = parent / name
+            relative = path.relative_to(root)
+            label = relative.as_posix()
+            try:
+                info = path.lstat()
+            except OSError as error:
+                report['errors'].append({'path': label, 'error': str(error)})
+                continue
+            size = info.st_size
+            totals = report['totals']
+            totals['files'] += 1
+            totals['bytes'] += size
+            group = relative.parts[0] if len(relative.parts) > 1 else '.'
+            subtotal = totals['by_directory'].setdefault(group, {'files': 0, 'bytes': 0})
+            subtotal['files'] += 1
+            subtotal['bytes'] += size
+            extension = path.suffix.lower()
+            if extension in WINDOWS_EXTENSIONS:
+                report['windows_only']['counts'][extension] += 1
+                if len(report['windows_only']['paths']) < 50:
+                    report['windows_only']['paths'].append(label)
+            readable = (path.is_file() and not path.is_symlink() and size <= 2 * 1024 * 1024
+                        and not set(relative.parts[:-1]).intersection(skip_text_dirs))
+            scan_text = readable and extension in TEXT_EXTENSIONS
+            scan_script = readable and (extension in SCRIPT_EXTENSIONS or not extension)
+            if not scan_text and not scan_script:
+                continue
+            try:
+                with open(path, 'rb') as stream:
+                    content = stream.read()
+            except OSError as error:
+                report['errors'].append({'path': label, 'error': str(error)})
+                continue
+            if scan_script and (extension in SCRIPT_EXTENSIONS or content.startswith(b'#!')):
+                if b'\r\n' in content:
+                    report['crlf_scripts'].append(label)
+            if scan_text and b'\0' not in content:
+                for line_number, line in enumerate(content.decode('utf-8', errors='replace').splitlines(), 1):
+                    for kind, pattern in WINDOWS_PATTERNS.items():
+                        if pattern.search(line):
+                            report['windows_paths'].append({
+                                'path': label, 'line': line_number, 'kind': kind, 'snippet': line[:160],
+                            })
+    return report
+
+
+def scan_fonts(roots: list[Path]) -> dict:
+    report = {'stacks': [], 'risks': {'leading': 0, 'fallback': 0}, 'platform_fonts': {}}
+    for root in map(Path, roots):
+        if not root.exists():
+            raise FileNotFoundError(str(root))
+        for directory, folders, files in os.walk(root, followlinks=False):
+            folders[:] = sorted(name for name in folders if name not in SKIP_TEXT_DIRS)
+            for name in sorted(files):
+                path = Path(directory) / name
+                if path.suffix.lower() not in FONT_EXTENSIONS:
+                    continue
+                with open(path, encoding='utf-8', errors='replace') as stream:
+                    text = stream.read()
+                for index, pattern in enumerate(FONT_PATTERNS):
+                    for match in pattern.finditer(text):
+                        stack = [font.strip().strip('\"\'').strip()
+                                 for font in match.group(1 if index == 0 else 2).split(',')]
+                        fonts = [FONT_NAMES[font.casefold()] for font in stack if font.casefold() in FONT_NAMES]
+                        if not fonts:
+                            continue
+                        risk = 'leading' if stack[0].casefold() in FONT_NAMES else 'fallback'
+                        report['stacks'].append({
+                            'path': str(path), 'line': text.count('\n', 0, match.start()) + 1,
+                            'stack': stack, 'platform_fonts': fonts, 'risk': risk,
+                        })
+                        report['risks'][risk] += 1
+                        for font in fonts:
+                            report['platform_fonts'][font] = report['platform_fonts'].get(font, 0) + 1
+    return report
+
+
+def print_summary(report: dict) -> None:
+    for category, value in report.items():
+        if isinstance(value, list):
+            print(f'{category}: {len(value)} total')
+            for item in value[:20]:
+                print('  ' + json.dumps(item, ensure_ascii=False))
+        elif category == 'windows_only':
+            print(f"windows_only: {sum(value['counts'].values())} total")
+            print('  counts: ' + json.dumps(value['counts'], ensure_ascii=False))
+            for path in value['paths'][:20]:
+                print('  ' + path)
+        elif category == 'totals':
+            print(f"totals: {value['files']} files, {value['bytes']} bytes")
+            print(f"  by_directory: {len(value['by_directory'])} total")
+            for name, counts in list(value['by_directory'].items())[:20]:
+                print(f"  {name}: {counts['files']} files, {counts['bytes']} bytes")
+        else:
+            print(f'{category}: {sum(value.values())} total')
+            for name, count in list(value.items())[:20]:
+                print(f'  {name}: {count}')
+
+
+def main(arguments: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest='command', required=True)
+    root_parser = commands.add_parser('scan-root')
+    root_parser.add_argument('path', type=Path)
+    root_parser.add_argument('--json', action='store_true')
+    root_parser.add_argument('--skip-text-dir', nargs='+', default=SKIP_TEXT_DIRS)
+    font_parser = commands.add_parser('scan-fonts')
+    font_parser.add_argument('paths', nargs='+', type=Path)
+    font_parser.add_argument('--json', action='store_true')
+    args = parser.parse_args(arguments)
+    try:
+        report = (scan_root(args.path, args.skip_text_dir) if args.command == 'scan-root'
+                  else scan_fonts(args.paths))
+    except FileNotFoundError as error:
+        print(f'mac-compat-audit: {error}', file=sys.stderr)
+        return 2
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        print_summary(report)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
