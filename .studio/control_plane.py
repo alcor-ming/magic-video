@@ -39,6 +39,8 @@ class AccountService:
             if not isinstance(data.get("ratios"), list) or not data["ratios"] or not all(isinstance(item, str) for item in data["ratios"]) or not set(data["ratios"]).issubset(self.api.RATIOS - {"source"}):
                 raise self.api.HarnessError("Theme requires explicit supported ratios")
         if kind == "account":
+            if data.get("mode") == "math":
+                raise self.api.HarnessError("The math card is retired; choose another mode or design for this account")
             self.appearance(data)
         if kind == "series":
             from appearance import check_mode
@@ -133,7 +135,8 @@ class AccountService:
         owners = sorted(row["id"] for row in works if row.get("series") == series)
         if owners:
             raise self.api.HarnessError(f"Series {series} still owns Works: {', '.join(owners)}; move them with work series move first")
-        unreadable = sorted(row["id"] for row in works if row.get("error") and row.get("series") is None)
+        unreadable = sorted(row["id"] for row in works if row.get("error") and row.get("series") is None
+                            and (Path(row["path"]) / "WORK.md").exists())
         if unreadable:
             raise self.api.HarnessError(f"Cannot confirm series ownership of unreadable Works: {', '.join(unreadable)}")
         base = self.directory / "series"
@@ -162,6 +165,46 @@ class AccountService:
         # The live configuration moves last: an interrupted delete still leaves the series visible.
         sources[0][0].replace(target / sources[0][1])
         return {"series": series, "deleted": True, "archive": str(target)}
+
+    def delete_account(self, account: str, works: list[dict]) -> dict:
+        """Retire an account no Variant or series references; the caller holds the naming lock.
+
+        Configuration, history and account assets move together into control-plane/deleted,
+        so a later account with the same identity starts clean and nothing is hard-deleted.
+        """
+        account = self.api.validate_id(account, "account")
+        if account == "history":
+            raise self.api.HarnessError("Account identity 'history' is reserved")
+        record = self.get("account", account)
+        users = sorted({f"{row['id']}/{variant['id']}" for row in works
+                        for variant in row["variants"] if variant.get("account") == account})
+        if users:
+            raise self.api.HarnessError(f"Account {account} is frozen into Variants: {', '.join(users)}")
+        # A folder without WORK.md is not a Work (e.g. materials kept in a series folder).
+        unreadable = sorted(row["id"] for row in works if row.get("error") and (Path(row["path"]) / "WORK.md").exists())
+        if unreadable:
+            raise self.api.HarnessError(f"Cannot confirm account use of unreadable Works: {', '.join(unreadable)}")
+        series = sorted(path.stem for path in (self.directory / "series").glob("*.json")
+                        if account in (self.api.read_json(path).get("accounts") or []))
+        if series:
+            raise self.api.HarnessError(f"Account {account} is listed by series: {', '.join(series)}; update their accounts first")
+        sources = [(self.directory / "account" / f"{account}.json", f"{account}.json"),
+                   (self.directory / "account" / "history" / account, "history"),
+                   (self.directory / "account-assets" / account, "assets")]
+        if any(source.is_symlink() for source, _ in sources):
+            raise self.api.HarnessError("Account configuration cannot be linked")
+        from datetime import datetime
+        stamp = datetime.now().strftime("%Y%m%dT%H%M%S")
+        target = self.directory / "deleted" / "account" / f"{account}-r{record.get('revision', 0)}-{stamp}"
+        if target.exists():
+            raise self.api.HarnessError(f"Deleted account archive already exists: {target}")
+        target.mkdir(parents=True)
+        for source, name in sources[1:]:
+            if source.exists():
+                source.replace(target / name)
+        # The live configuration moves last: an interrupted delete still leaves the account visible.
+        sources[0][0].replace(target / sources[0][1])
+        return {"account": account, "deleted": True, "archive": str(target)}
 
     def add_cover_character(self, account: str, name: str, image: Path, *, prompt: str, model: str,
                             tool: str | None = None, references=(), replace: bool = False) -> dict:

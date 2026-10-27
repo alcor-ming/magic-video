@@ -306,6 +306,9 @@ class ControlPlaneTest(unittest.TestCase):
         with self.assertRaisesRegex(cli.HarnessError, "still owns Works"):
             self.run_cli("series", "delete", "fixture")
 
+        # Materials without WORK.md in another series folder are not Works and do not block.
+        (cli.series_folder(self.root, "fixture") / "materials").mkdir()
+        self.assertEqual(1, len(json.loads(self.run_cli("series", "get", "fixture"))["works"]))
         deleted = json.loads(self.run_cli("series", "delete", "spare"))
         archive = Path(deleted["archive"])
         self.assertEqual(cli.runtime_root(self.root) / "control-plane/deleted/series", archive.parent)
@@ -320,6 +323,30 @@ class ControlPlaneTest(unittest.TestCase):
         # A recreated identity starts a fresh revision history.
         self.assertEqual(1, service.put("series", "spare", {"name": "Spare again"})["revision"])
 
+
+    def test_account_delete_archives_only_unused_accounts(self):
+        service = cli.account_service(self.root)
+        service.put("account", "spare", {"name": "Spare"})
+        service.put("account", "spare", {"name": "Spare renamed"})
+        service.put("account", "listed", {"name": "Listed"})
+        service.put("series", "listing", {"name": "Listing", "accounts": ["listed"]})
+        self.run_cli("new", "Episode", "--workflow", "hyperframes_video")
+        with self.assertRaisesRegex(cli.HarnessError, "frozen into Variants"):
+            self.run_cli("account", "delete", "main")
+        with self.assertRaisesRegex(cli.HarnessError, "listed by series: listing"):
+            self.run_cli("account", "delete", "listed")
+        # A materials folder without WORK.md inside a series folder is not a Work and does not block.
+        (cli.series_folder(self.root, "fixture") / "materials").mkdir()
+
+        deleted = json.loads(self.run_cli("account", "delete", "spare"))
+        archive = Path(deleted["archive"])
+        self.assertEqual(cli.runtime_root(self.root) / "control-plane/deleted/account", archive.parent)
+        self.assertEqual("Spare renamed", json.loads((archive / "spare.json").read_text(encoding="utf-8"))["name"])
+        self.assertTrue((archive / "history/1.json").is_file())
+        self.assertEqual(["listed", "main"], [row["id"] for row in json.loads(self.run_cli("account", "list"))])
+        with self.assertRaises(cli.HarnessError):
+            self.run_cli("account", "delete", "spare")
+        self.assertEqual(1, service.put("account", "spare", {"name": "Spare again"})["revision"])
 
 if __name__ == "__main__":
     unittest.main()

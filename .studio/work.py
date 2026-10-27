@@ -417,8 +417,7 @@ def command_config(root: Path, args: argparse.Namespace) -> None:
     elif args.operation == "get":
         record = service.get(args.command, args.identity)
         if args.command == "series":
-            record = {**record, "works": [row["id"] for row in list_work_rows(root)
-                                         if read_frontmatter(locate_work(root, row["id"])[0] / "WORK.md").get("series") == args.identity]}
+            record = {**record, "works": [row["id"] for row in list_work_rows(root) if row["series"] == args.identity]}
         elif args.command == "account":
             record = {**record, "variants": [
                 {"work": row["id"], "series": row["series"], "series_number": row["series_number"], **variant}
@@ -442,6 +441,12 @@ def command_series_rules(root: Path, args: argparse.Namespace) -> None:
         record = service.delete_rules(args.identity)
     else:
         record = service.get_rules(args.identity)
+    print(json.dumps(record, ensure_ascii=False, indent=2))
+
+
+def command_account_delete(root: Path, args: argparse.Namespace) -> None:
+    with naming_lock(root):
+        record = account_service(root).delete_account(args.identity, list_work_rows(root))
     print(json.dumps(record, ensure_ascii=False, indent=2))
 
 
@@ -5290,6 +5295,9 @@ def build_parser() -> argparse.ArgumentParser:
             character_add.add_argument("--reference", action="append", help="Existing character used as reference_images; repeatable")
             character_add.add_argument("--replace", action="store_true", help="Point an existing name at the new image")
             character_add.set_defaults(handler=command_account_character)
+            delete = operations.add_parser("delete", help="Retire an account no Variant or series uses; config, history and assets are archived")
+            delete.add_argument("identity")
+            delete.set_defaults(handler=command_account_delete)
         if kind == "series":
             rules = operations.add_parser("rules", help="Read or replace the series AGENTS.md rules by series identity")
             rules_operations = rules.add_subparsers(dest="rules_operation", required=True)
