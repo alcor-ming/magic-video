@@ -1,13 +1,14 @@
 // 独立小样取帧：给 Work 的 materials/tests/<名>/ 这类单文件合成用（不经 Studio、不登记 Draft）。
-// 按给定时刻 seek 主时间线截 PNG；每个时刻再经「0 → 片尾 → 该时刻」重 seek 一次比对像素；
-// 报告页面错误、出画的文字和单帧 seek 耗时。帧只给执行者自己看，不作交付或审片证据。
+// 按给定时刻 seek 主时间线并照 HyperFrames 宿主派发 hf-seek（等 waitUntil），截 PNG；
+// 每个时刻再经「0 → 片尾 → 该时刻」重 seek 一次比对像素；不同时刻的帧全部逐像素相同（页面没重绘）
+// 判失败。报告页面错误、出画的文字和单帧 seek 耗时。帧只给执行者自己看，不作交付或审片证据。
 //
 //   node sample-frames.mjs <小样目录> <输出目录> --times 0,2.5,7 [--timeline main]
 //        [--browser <chrome>] [--puppeteer <puppeteer-core 目录>]
 //
 // 浏览器默认取 HYPERFRAMES_BROWSER_PATH；puppeteer-core 默认从小样目录和本工具目录向上找
 // runtime/npm/node_modules/puppeteer-core（部署包布局）。退出码：0 无错误；1 页面错误、
-// 重 seek 不一致或参数/启动失败。出画文字只作提示。
+// 重 seek 不一致、帧全同或参数/启动失败。出画文字只作提示。
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -55,7 +56,11 @@ function findPuppeteer() {
   return fail('puppeteer-core not found; pass --puppeteer <dir>');
 }
 const puppeteerDir = findPuppeteer();
-const { default: puppeteer } = await import(pathToFileURL(path.join(puppeteerDir, 'lib/puppeteer/puppeteer-core.js')).href);
+// npm 包为 lib/puppeteer/，pnpm / 新版布局为 lib/esm/puppeteer/；用存在的那个。
+const puppeteerEntry = ['lib/puppeteer/puppeteer-core.js', 'lib/esm/puppeteer/puppeteer-core.js']
+  .map((item) => path.join(puppeteerDir, item)).find((item) => fs.existsSync(item));
+if (!puppeteerEntry) fail('no lib/puppeteer/puppeteer-core.js or lib/esm/puppeteer/puppeteer-core.js under ' + puppeteerDir);
+const { default: puppeteer } = await import(pathToFileURL(puppeteerEntry).href);
 
 fs.mkdirSync(outDir, { recursive: true });
 // 浏览器配置放系统临时目录：9p/网络盘上的 profile 会让 Chromium 启动即退出。
@@ -101,6 +106,17 @@ try {
   const seek = (time) => page.evaluate(async (key, at) => {
     // suppressEvents=false：onUpdate 驱动的 WebGL/粒子背景也会按该时刻重画。
     window.__timelines[key].seek(at, false);
+    // 与 HyperFrames 宿主一致：同步派发 hf-seek，监听器（如 HarnessScene.bindScene）只能在派发期间
+    // 调 waitUntil；等这些 Promise 完成后再等两帧。不派发时 bindScene 页面停在初始态。
+    const pending = [];
+    let open = true;
+    const detail = { time: at, waitUntil: (promise) => {
+      if (!open) throw new Error('hf-seek waitUntil() must be called synchronously from the event listener');
+      pending.push(promise);
+    } };
+    window.__hfThreeTime = at;
+    try { window.dispatchEvent(new CustomEvent('hf-seek', { detail })); } finally { open = false; }
+    await Promise.all(pending);
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   }, id, time);
   const shot = () => page.screenshot({ type: 'png', clip: { x: 0, y: 0, ...size } });
@@ -134,6 +150,10 @@ try {
     fs.writeFileSync(path.join(outDir, file), bytes);
     report.frames.push({ time, file, textOutside: await outside() });
   }
+  // 防假通过：≥2 个不同时刻的帧逐像素全同，多半是 seek 没驱动重绘，判失败。
+  const shots = report.frames.filter((item) => item.file).map((item) => fs.readFileSync(path.join(outDir, item.file)));
+  report.identicalFrames = shots.length >= 2 && shots.every((bytes) => bytes.equals(shots[0]));
+  if (report.identicalFrames) errors += 1;
   for (const frame of report.frames.filter((item) => item.file)) {
     await seek(0);
     await seek(duration);
@@ -159,7 +179,8 @@ fs.writeFileSync(path.join(outDir, 'qa.json'), JSON.stringify(report, null, 2) +
 const hints = report.frames.filter((frame) => frame.textOutside && frame.textOutside.length).map((frame) => frame.time);
 console.log(JSON.stringify({
   ok: errors === 0, frames: report.frames.filter((frame) => frame.file).length, outDir,
-  determinism: report.determinism.every((item) => item.identical), pageErrors: report.pageErrors.length,
+  determinism: report.determinism.every((item) => item.identical), identicalFrames: Boolean(report.identicalFrames),
+  pageErrors: report.pageErrors.length,
   textOutsideAt: hints, seekMs: report.seekMs, fatal: report.fatal,
 }));
 process.exitCode = errors ? 1 : 0;

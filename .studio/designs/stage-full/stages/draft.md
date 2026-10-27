@@ -47,6 +47,7 @@
 - **字不出画**：字幕和第 4 层文字任何时刻完整在画内；`sample-frames.mjs` 报 `textOutsideAt`，Studio 帧里看底边。
 - **滤镜态的角色**：X 光、冷色调这类处理下角色仍要认得出：保留原图，叠冷色与发光轮廓，不做成灰剪影。
 - **层宿主不吃命中测试**：全屏的层宿主写 `pointer-events: none`，直接子节点恢复 `auto`（积木核心已注入，手写宿主照 `example/style.css`）；否则第 3、4 层宿主盖住全画面，诊断把台上的物都判成被遮挡，报出大量 `rhythm_gap` 提示。
+- **合成层与重 seek**：镜头缩放或推镜下，`will-change: transform` 会按首次栅格比例锁死图层，重 seek 后边缘与小件出现 1 级像素差；不要给随镜头缩放的节点写 `will-change`。需要独立合成层时用极小的 `translateZ`（如 `translateZ(0)` 或 0.01px 的 z 位移）。`sample-frames.mjs` 报 `determinism` 不一致而属性归属没问题时，查这一条。
 - **积木字号**：`slot.text` 默认 40 px；`sign.plate` 用 `style.size`；`inset.broll` 标注用 `label.size`。不要因为积木文档没细读就手写替身。
 
 ## 前景自检（整片登记 Draft 前做）

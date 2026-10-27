@@ -83,7 +83,7 @@
     {
       "source": ".studio/designs/stage-full/stages/draft.md",
       "target": "stages/draft.md",
-      "sha256": "b12bdcff29b2c32f6300dad14b6bffb339e41dfabdf0919a647fc8f680eb8d70",
+      "sha256": "f92a7a9964d44e56f618b1affee2b20f01ee16c66376b4d87ac089207ede04c7",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
