@@ -445,6 +445,12 @@ def command_series_rules(root: Path, args: argparse.Namespace) -> None:
     print(json.dumps(record, ensure_ascii=False, indent=2))
 
 
+def command_account_delete(root: Path, args: argparse.Namespace) -> None:
+    with naming_lock(root):
+        record = account_service(root).delete_account(args.identity, list_work_rows(root))
+    print(json.dumps(record, ensure_ascii=False, indent=2))
+
+
 def command_series_delete(root: Path, args: argparse.Namespace) -> None:
     with naming_lock(root):
         record = account_service(root).delete_series(args.identity, list_work_rows(root))
@@ -5290,6 +5296,9 @@ def build_parser() -> argparse.ArgumentParser:
             character_add.add_argument("--reference", action="append", help="Existing character used as reference_images; repeatable")
             character_add.add_argument("--replace", action="store_true", help="Point an existing name at the new image")
             character_add.set_defaults(handler=command_account_character)
+            delete = operations.add_parser("delete", help="Retire an account no Variant or series uses; config, history and assets are archived")
+            delete.add_argument("identity")
+            delete.set_defaults(handler=command_account_delete)
         if kind == "series":
             rules = operations.add_parser("rules", help="Read or replace the series AGENTS.md rules by series identity")
             rules_operations = rules.add_subparsers(dest="rules_operation", required=True)
