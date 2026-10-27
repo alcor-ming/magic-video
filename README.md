@@ -67,7 +67,7 @@ card 链路从 repo 和产品配送中删除，不保留制作、编辑或渲染
 
 Studio 对 current 的修改同步原文案真源或暂停对应再生成，旧 MP4 / QA 不继续代表新源码。登记版本的独立审阅副本文件只读，不支持 Studio 保存；打开时先校验，副本变化则新建目录并保留旧副本，不放宽诊断完整性检查。`reference` Plan 没有虚构的可播放工程，直接审阅其资产引用。
 
-数学卡已于 2026-10-20 退役，`math build`、数学图积木与数学 Plan 检查一并删除。旧数学 Work 只读：状态、列表、预览列表与诊断照常，制作、登记、导出等命令报错；要继续做，用 `variant reselect` 换到其他卡。账号不受影响，换绑别的卡后照常使用。
+数学卡已于 2026-10-20 退役，`math build`、数学图积木与数学 Plan 检查一并删除。旧数学 Work 只读：状态、列表、预览列表与诊断照常，制作、登记、导出等命令报错；要继续做，用 `variant reselect` 换到其他卡。已有账号不受影响，换绑别的卡后照常使用；新写入的账号与系列配置拒绝 `mode: math`。
 
 对已打开的准确目标运行 `./work --work <id> --variant <id> preview diagnose <current或Plan/Draft-ID>`，支持 executable 登记（`plan-vNNN` / `draft-vNNN`），拒绝静态 `reference` 和 `layout`。只读输出上屏照搬、Plan 信息缺失/截短、其他实现偏离和静止疑点，不作 QA 通过判断。Plan 支持新 `screen` 信息块与旧表格格式。登记 Plan/Draft 使用同版冻结的 Script、Research、Plan 与工程，当前文稿的跨版本差异另列；输入在诊断期间变化则报告过期。单 Scene Plan 参考沿用登记的 `sample_scenes`，其他 Scene 列入 `d1.out_of_scope`（不在本参考范围），不报缺失或未验证。文字按 `data-info-id` 或与唯一信息块的精确文本匹配归属；无法唯一归属时按元素列为待核验，相关信息不报缺失。多信息 Scene 可在信息块容器上标注可选的 `data-info-id`。参数及明确引用例外见 `preview diagnose --help`。制作中可用 `--range` / `--times` 只采样正在做的段，`--frames` 把采样帧存到 Variant `.runtime/diagnose-frames/` 供执行者自看（不作交付证据，交付前仍全片诊断）。范围内未采样状态、无法确认 ready 的媒体/子画面及图片内文字保留未验证，仍需按 [Draft QA](.studio/spec/hyperframes.md#draft-qa) 连续观看；诊断不导出视频或修改接受状态。
 

@@ -86,6 +86,10 @@ class V36IntegrationTest(unittest.TestCase):
         for series in ({"name": "Math", "mode": "explainer", "spec": "math-rap"}, {"name": "Math", "mode": "math"}):
             with self.subTest(series=series), self.assertRaisesRegex(cli.HarnessError, "math card .* retired"):
                 service.put("series", "fixture", series)
+        for account, message in (({"name": "Math", "mode": "math"}, "math card is retired"),
+                                 ({"name": "Math", "design": "math"}, "'math' is retired")):
+            with self.subTest(account=account), self.assertRaisesRegex(cli.HarnessError, message):
+                service.put("account", "math", account)
         identity, variant = self.create()
         state = cli.read_json(variant / "variant.yaml")
         # An old math Work as frozen before the card retired.

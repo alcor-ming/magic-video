@@ -308,6 +308,7 @@ class ControlPlaneTest(unittest.TestCase):
 
         # Materials without WORK.md in another series folder are not Works and do not block.
         (cli.series_folder(self.root, "fixture") / "materials").mkdir()
+        self.assertEqual(1, len(json.loads(self.run_cli("series", "get", "fixture"))["works"]))
         deleted = json.loads(self.run_cli("series", "delete", "spare"))
         archive = Path(deleted["archive"])
         self.assertEqual(cli.runtime_root(self.root) / "control-plane/deleted/series", archive.parent)

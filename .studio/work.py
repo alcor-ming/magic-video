@@ -417,8 +417,7 @@ def command_config(root: Path, args: argparse.Namespace) -> None:
     elif args.operation == "get":
         record = service.get(args.command, args.identity)
         if args.command == "series":
-            record = {**record, "works": [row["id"] for row in list_work_rows(root)
-                                         if read_frontmatter(locate_work(root, row["id"])[0] / "WORK.md").get("series") == args.identity]}
+            record = {**record, "works": [row["id"] for row in list_work_rows(root) if row["series"] == args.identity]}
         elif args.command == "account":
             record = {**record, "variants": [
                 {"work": row["id"], "series": row["series"], "series_number": row["series_number"], **variant}

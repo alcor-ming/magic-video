@@ -39,6 +39,8 @@ class AccountService:
             if not isinstance(data.get("ratios"), list) or not data["ratios"] or not all(isinstance(item, str) for item in data["ratios"]) or not set(data["ratios"]).issubset(self.api.RATIOS - {"source"}):
                 raise self.api.HarnessError("Theme requires explicit supported ratios")
         if kind == "account":
+            if data.get("mode") == "math":
+                raise self.api.HarnessError("The math card is retired; choose another mode or design for this account")
             self.appearance(data)
         if kind == "series":
             from appearance import check_mode
