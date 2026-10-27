@@ -82,6 +82,9 @@ class RootDeploymentTests(unittest.TestCase):
         with patch.object(deploy.os, 'name', 'nt'), patch.object(deploy.subprocess, 'run') as run:
             run.return_value.stdout = json.dumps([host])
             deploy.idle(root)
+            script = "[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false; Get-CimInstance Win32_Process | Where-Object { $_.Name -match '^(python|pythonw|node|ffmpeg|ffprobe|chrome|chrome-headless-shell|esbuild)(\\.exe)?$' } | Select-Object ProcessId,CommandLine,ExecutablePath | ConvertTo-Json -Compress"
+            run.assert_called_once_with(['powershell.exe', '-NoLogo', '-NoProfile', '-Command', script],
+                                        capture_output=True, encoding='utf-8', check=True)
             for command in (root + r'\runtime\node\node.exe', 'node ' + root + r'\works\build.js'):
                 run.return_value.stdout = json.dumps([{**host, 'CommandLine': command}])
                 with self.assertRaisesRegex(ValueError, 'is active'):

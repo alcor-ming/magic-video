@@ -20,6 +20,23 @@ STATE = ".studio/.runtime"
 MANIFEST = f"{STATE}/deployment.json"
 PENDING = f"{STATE}/deploy-pending.json"
 CONFIG = f"{STATE}/local.json"
+RUNTIME_LOCKS = {
+    "windows-x64": "windows-runtime.lock.json",
+    "darwin-arm64": "darwin-runtime.lock.json",
+}
+
+
+def runtime_lock_path(root: Path, *, target: str | None = None) -> Path:
+    if target is None:
+        release = root / ".release.json"
+        if release.is_file():
+            target = json.loads(release.read_text(encoding="utf-8")).get("target")
+        else:
+            # Development roots on WSL/Linux continue using the Windows lock.
+            target = "darwin-arm64" if sys.platform == "darwin" else "windows-x64"
+    if target not in RUNTIME_LOCKS:
+        raise ValueError("Unsupported package identity")
+    return root / RUNTIME_LOCKS[target]
 
 
 def read(path):
@@ -79,7 +96,7 @@ def managed(files):
 
 def verify_package(root):
     manifest = read(safe(root, ".release.json"))
-    if manifest.get("target") != "windows-x64" or manifest.get("channel") not in {"candidate", "local", "stable"}:
+    if manifest.get("target") not in RUNTIME_LOCKS or manifest.get("channel") not in {"candidate", "local", "stable"}:
         raise ValueError("Unsupported package identity")
     if not re.fullmatch(r"(?:harness-\d{4}\.\d{2}\.\d+|(?:candidate|local)-[A-Za-z0-9][A-Za-z0-9._-]*)", manifest.get("release", "")) or manifest.get("layout") != "root-v1":
         raise ValueError("Package requires a valid release identity and root-v1 layout")
@@ -95,7 +112,7 @@ def verify_package(root):
             raise ValueError("Tools package requires exact runtime files")
         if any(name.startswith("runtime/") for name in files):
             raise ValueError("Tools package cannot contain runtime files")
-        if not isinstance(manifest.get("runtime_lock_sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", manifest["runtime_lock_sha256"]) or files.get("windows-runtime.lock.json") != manifest["runtime_lock_sha256"]:
+        if not isinstance(manifest.get("runtime_lock_sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", manifest["runtime_lock_sha256"]) or files.get(runtime_lock_path(root, target=manifest["target"]).name) != manifest["runtime_lock_sha256"]:
             raise ValueError("Tools package runtime lock mismatch")
     if ".release.json" in {name.casefold() for name in files}:
         raise ValueError("Package cannot claim its own .release.json")
@@ -184,7 +201,25 @@ def validate_config(root, config, candidate):
                     raise ValueError(f"Review path overlaps protected production root: {path}")
 
 
-def idle(root):
+def idle(root, *, target='windows-x64'):
+    if target not in RUNTIME_LOCKS:
+        raise ValueError("Unsupported package identity")
+    if target == 'darwin-arm64':
+        result = subprocess.run(['ps', '-axo', 'pid=,command='],
+                                capture_output=True, encoding='utf-8', check=True)
+        prefix = str(root).rstrip('/') + '/'
+        for line in result.stdout.splitlines():
+            if not line.strip():
+                continue
+            pid_text, command = line.strip().split(None, 1)
+            pid = int(pid_text)
+            executable = command.split(None, 1)[0].rsplit('/', 1)[-1]
+            matched = re.fullmatch(
+                r'(python|pythonw|node|ffmpeg|ffprobe|chrome|chrome-headless-shell|esbuild)(\.exe)?',
+                executable, re.IGNORECASE)
+            if matched and pid != os.getpid() and prefix in command:
+                raise ValueError(f'Root process {pid} is active; close preview/render before updating')
+        return
     if os.name != "nt":
         return
     script = "[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false; Get-CimInstance Win32_Process | Where-Object { $_.Name -match '^(python|pythonw|node|ffmpeg|ffprobe|chrome|chrome-headless-shell|esbuild)(\\.exe)?$' } | Select-Object ProcessId,CommandLine,ExecutablePath | ConvertTo-Json -Compress"
@@ -346,7 +381,8 @@ def preflight(root, config_path=None, *, retained=None, expected=None, recover_p
         recovered = True
     from windows_runtime import command_lock
     with command_lock(root):
-        idle(root)
+        release = safe(root, '.release.json')
+        idle(root, target=read(release).get('target') if release.exists() else 'windows-x64')
         prior = verify_root(root, retained=retained, expected=expected) if safe(root, MANIFEST).exists() else {'files': {}}
         config_file = safe(root, CONFIG)
         if not config_file.exists() and not config_path:
@@ -381,7 +417,7 @@ def deploy(package, root, config_path, keep=1):
     root.mkdir(parents=True, exist_ok=True)
     from windows_runtime import command_lock
     with command_lock(root):
-        idle(root)
+        idle(root, target=manifest['target'])
         if safe(root, PENDING).exists():
             raise ValueError("Interrupted deployment; run recover")
         retained = set(manifest["files"]) | {".release.json"}
@@ -402,7 +438,7 @@ def deploy(package, root, config_path, keep=1):
         if manifest.get("package_kind") == "tools":
             required = manifest["runtime_files"]
             installed = {name: value for name, value in prior["files"].items() if name.startswith("runtime/")}
-            if installed != required or prior["files"].get("windows-runtime.lock.json") != manifest["runtime_lock_sha256"]:
+            if installed != required or prior["files"].get(runtime_lock_path(root, target=manifest["target"]).name) != manifest["runtime_lock_sha256"]:
                 raise ValueError("Installed runtime differs; deploy a full package")
             files.update(required)
         files[".release.json"] = digest(package / ".release.json")
@@ -502,14 +538,19 @@ def recover(root, rollback=False):
         raise ValueError("Run recovery/rollback from an unpacked package outside the deployed root")
     from windows_runtime import command_lock
     with command_lock(root):
-        idle(root)
+        release = safe(root, '.release.json')
         if rollback:
+            idle(root, target=read(release).get('target'))
             state = verify_root(root)
             transaction = read(safe(root, state["backup"]) / "transaction.json")
             restore(root, transaction, check_only=True)
             write_json(safe(root, PENDING), transaction)
         else:
             transaction = read(safe(root, PENDING))
+            old_release = safe(safe(root, transaction['backup']), '.release.json')
+            if old_release.exists():
+                release = old_release
+            idle(root, target=read(release).get('target') if release.exists() else 'windows-x64')
         restore(root, transaction)
     modifications = sorted(set(transaction.get('preexisting_changes', []))
                            | {item["original"] for item in transaction.get("retired_preserved", [])})

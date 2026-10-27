@@ -16,6 +16,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / ".studio"))
 import asset_store as STORE
 import component_harness as COMPONENT
+import root_deploy as DEPLOY
 
 
 class AssetStoreTest(unittest.TestCase):
@@ -275,6 +276,112 @@ class AssetStoreTest(unittest.TestCase):
         path.write_text(json.dumps(lock))
         with self.assertRaisesRegex(COMPONENT.ComponentError, "exact package"):
             COMPONENT.verify_installation(project)
+
+    def test_runtime_lock_selection(self):
+        root = self.root / "selection"
+        root.mkdir()
+        for target, name in DEPLOY.RUNTIME_LOCKS.items():
+            self.assertEqual(root / name, DEPLOY.runtime_lock_path(root, target=target))
+        with self.assertRaisesRegex(ValueError, "Unsupported package identity"):
+            DEPLOY.runtime_lock_path(root, target="unknown")
+        for both_locks in (False, True):
+            if both_locks:
+                for name in DEPLOY.RUNTIME_LOCKS.values():
+                    (root / name).write_text("{}")
+            for platform, target in (("darwin", "darwin-arm64"), ("linux", "windows-x64")):
+                with self.subTest(both_locks=both_locks, platform=platform), patch.object(sys, "platform", platform):
+                    self.assertEqual(root / DEPLOY.RUNTIME_LOCKS[target], DEPLOY.runtime_lock_path(root))
+        for target, name in DEPLOY.RUNTIME_LOCKS.items():
+            (root / ".release.json").write_text(json.dumps({"target": target}))
+            with patch.object(sys, "platform", "linux" if target == "darwin-arm64" else "darwin"):
+                self.assertEqual(root / name, DEPLOY.runtime_lock_path(root))
+        for identity in ({"target": "unknown"}, {}):
+            (root / ".release.json").write_text(json.dumps(identity))
+            with self.assertRaisesRegex(ValueError, "Unsupported package identity"):
+                DEPLOY.runtime_lock_path(root)
+            self.assertEqual(root / "darwin-runtime.lock.json",
+                             DEPLOY.runtime_lock_path(root, target="darwin-arm64"))
+
+    def test_darwin_acceptance_and_runtime_validation(self):
+        harness = self.root / "darwin-harness"
+        harness.mkdir()
+        versions = {"hyperframes": "test-hyperframes", "gsap": "test-gsap", "three": "test-three"}
+        (harness / "darwin-runtime.lock.json").write_text(json.dumps({
+            "target": "darwin-arm64", "versions": versions}))
+        (harness / ".release.json").write_text(json.dumps({"target": "darwin-arm64"}))
+        self.metadata(runtime={"target": "darwin-arm64", "versions": versions})
+        candidate = STORE.import_component(self.store, self.source)
+        record = STORE.accept_component(self.store, self.ref, candidate["package_sha256"],
+                                        "Synthetic Darwin fixture", runtime_root=harness)
+        self.assertEqual("darwin-arm64", record["runtime"]["target"])
+        self.assertEqual(versions, record["runtime"]["versions"])
+        release = STORE._validate_package(self.source)
+        COMPONENT.validate_component_acceptance(record, release, runtime_root=harness)
+        for runtime, message in (({"target": "windows-x64", "versions": versions}, "runtime target"),
+                                 ({"target": "darwin-arm64", "versions": dict(versions, hyperframes="wrong")}, "runtime version")):
+            with self.subTest(message=message), self.assertRaisesRegex(COMPONENT.ComponentError, message):
+                COMPONENT.validate_component_acceptance(dict(record, runtime=runtime), release, runtime_root=harness)
+        (harness / ".release.json").write_text(json.dumps({"target": "unknown"}))
+        with self.assertRaisesRegex(COMPONENT.ComponentError, "Unsupported package identity"):
+            COMPONENT.validate_component_acceptance(record, release, runtime_root=harness)
+
+    def test_lock_selection_failure_does_not_write_acceptance(self):
+        candidate = STORE.import_component(self.store, self.source)
+        (self.harness / ".release.json").write_text(json.dumps({"target": "unknown"}))
+        with self.assertRaisesRegex(COMPONENT.ComponentError, "Unsupported package identity"):
+            STORE.accept_component(self.store, self.ref, candidate["package_sha256"],
+                                   "Synthetic fixture", runtime_root=self.harness)
+        self.assertFalse((self.store / "acceptances").exists())
+        self.assertFalse((self.store / "packages/external-example/4x3/v1").exists())
+
+    def test_declarative_acceptance_without_runtime_lock(self):
+        from PIL import Image
+        harness = self.root / "declarative-harness"
+        harness.mkdir()
+        source = self.root / "media"
+        source.mkdir()
+        (source / "asset.json").write_text(json.dumps({
+            "schema_version": 1, "id": "local-media", "version": 1, "kind": "media",
+            "entry": "image.png", "source_url": "https://example.invalid/source", "rights": "test-owned"}))
+        Image.new("RGB", (12, 8), "red").save(source / "image.png")
+        candidate = STORE.pack_source(self.store, source)
+        ref = candidate["component_ref"]
+        record = STORE.accept_component(self.store, ref, candidate["package_sha256"],
+                                        "Synthetic media fixture", runtime_root=harness)
+        self.assertEqual({"target": "declarative", "versions": {}}, record["runtime"])
+        package, _ = STORE.resolve_component(harness, ref)
+        release = STORE._validate_package(package)
+        COMPONENT.validate_component_acceptance(record, release, runtime_root=harness)
+
+    def test_darwin_package_verification(self):
+        cases = (("full", "darwin-arm64", "darwin-runtime.lock.json", False, None),
+                 ("tools", "darwin-arm64", "darwin-runtime.lock.json", False, None),
+                 ("full", None, "darwin-runtime.lock.json", False, "Unsupported package identity"),
+                 ("full", "unknown", "darwin-runtime.lock.json", False, "Unsupported package identity"),
+                 ("tools", "darwin-arm64", "windows-runtime.lock.json", False, "runtime lock mismatch"),
+                 ("tools", "darwin-arm64", "darwin-runtime.lock.json", True, "runtime lock mismatch"))
+        for index, (kind, target, lock_name, wrong_digest, error) in enumerate(cases):
+            with self.subTest(kind=kind, target=target, lock=lock_name, wrong_digest=wrong_digest):
+                root = self.root / f"package-{index}"
+                root.mkdir()
+                (root / lock_name).write_text("synthetic runtime lock")
+                files = {lock_name: DEPLOY.digest(root / lock_name)}
+                manifest = {"release": "candidate-test", "channel": "candidate", "layout": "root-v1",
+                            "package_kind": kind, "files": files}
+                if target is not None:
+                    manifest["target"] = target
+                if kind == "tools":
+                    manifest.update(runtime_files={"runtime/python/bin/python3": "1" * 64},
+                                    runtime_lock_sha256="0" * 64 if wrong_digest else files[lock_name])
+                (root / ".release.json").write_text(json.dumps(manifest))
+                if error:
+                    with self.assertRaisesRegex(ValueError, error):
+                        DEPLOY.verify_package(root)
+                else:
+                    self.assertEqual(manifest, DEPLOY.verify_package(root))
+                    (root / lock_name).write_text("changed")
+                    with self.assertRaisesRegex(ValueError, "Package hash mismatch"):
+                        DEPLOY.verify_package(root)
 
     def test_cli_discovery_import_and_acceptance_do_not_require_current_work(self):
         import work as WORK
