@@ -43,15 +43,32 @@ echo exit=$?
 
 ## 独立小样取帧
 
-给 Work 的 `materials/tests/<名>/` 这类单文件合成用，不经 Studio、不登记 Draft。按给定时刻 seek 主时间线截 PNG，每个时刻再经「0 → 片尾 → 该时刻」重 seek 一次比对像素，并报告页面错误、出画的文字与单帧 seek 耗时。正式工程用 `preview diagnose --range … --frames`，不用本工具。
+给 Work 的 `materials/tests/<名>/` 这类单文件合成用，不经 Studio、不登记 Draft。按给定时刻 seek 主时间线并派发 `hf-seek` 后截 PNG，每个时刻再经「0 → 片尾 → 该时刻」重 seek 一次比对像素，并报告页面错误、出画的文字与单帧 seek 耗时。正式工程用 `preview diagnose --range … --frames`，不用本工具。
 
 ```sh
 node sample-frames.mjs <小样目录> <输出目录> --times 0,2.5,7 [--timeline main] [--browser <chrome>] [--puppeteer <puppeteer-core 目录>]
 ```
 
 - 小样目录要有 `index.html`，一条 paused GSAP 主时间线注册到 `window.__timelines`；`--timeline` 缺省取根 `data-composition-id`，再取第一条。
-- 浏览器缺省取 `HYPERFRAMES_BROWSER_PATH`；puppeteer-core 缺省从小样目录和本工具目录向上找 `runtime/npm/node_modules/puppeteer-core`（部署包布局）。
+- 浏览器缺省取 `HYPERFRAMES_BROWSER_PATH`；puppeteer-core 缺省从小样目录和本工具目录向上找 `runtime/npm/node_modules/puppeteer-core`（部署包布局）。入口先找 `lib/puppeteer/puppeteer-core.js`，再找 `lib/esm/puppeteer/puppeteer-core.js`（pnpm / 新版布局），都没有则退出 1。
 - 浏览器配置放系统临时目录，结束即删；网络盘或 9p 上的 profile 会让 Chromium 启动即退出。
-- seek 用 `seek(t, false)`，由 `onUpdate` 驱动的 WebGL 背景也按该时刻重画。
-- 输出目录写 `t<秒>.png`、重 seek 不一致时的 `-reseek.png` 与 `qa.json`；标准输出一行摘要。退出码：0 无错误；1 页面错误、重 seek 不一致、参数或启动失败。出画文字只作提示（`textOutsideAt`）。
+- 每次 seek 与 HyperFrames 宿主同一路径：先 `seek(t, false)`，由 `onUpdate` 驱动的 WebGL 背景也按该时刻重画；再置 `window.__hfThreeTime` 并在 `window` 同步派发 `hf-seek`（`detail.time`、`detail.waitUntil`），等全部 `waitUntil` Promise 完成后再等两帧截图。`HarnessScene.bindScene` 只监听 `hf-seek`，不跟随 `timeline.seek`；旧版只 seek 时间线，这类页面会停在初始态。
+- 防假通过：≥ 2 个不同时刻的帧逐像素全同，多半是 seek 没驱动重绘，`qa.json` 与摘要记 `identicalFrames: true`，退出 1。确实静止的小样至少取一个画面有变化的时刻。
+- 输出目录写 `t<秒>.png`、重 seek 不一致时的 `-reseek.png` 与 `qa.json`；标准输出一行摘要。退出码：0 无错误；1 页面错误、重 seek 不一致、帧全同（`identicalFrames`）、参数或启动失败。出画文字只作提示（`textOutsideAt`）。
 - 帧只给执行者自己看，不作交付或审片证据，不入卡仓。
+
+### 自测
+
+以下命令在仓库根目录运行。`$DEMO` 为一个装好 `runtime/`、用 `HarnessScene.bindScene` 驱动的小样，`$OUT`、`$STUCK` 为授权可写的临时目录。第一条取画面有变化的三个时刻，预期 `ok:true`、`identicalFrames:false`，三帧互不相同且与页面自己调 binding `seek` 的截图一致，退出 0。
+
+```sh
+node .studio/designs/stage-full/tools/sample-frames.mjs "${DEMO:?}" "${OUT:?}" --times 1.2,5.5,11 --browser <chrome> --puppeteer <puppeteer-core 目录>; echo exit=$?
+```
+
+第二条用不重绘的页面，预期 `identicalFrames:true`，退出 1。
+
+```sh
+printf '%s' '<div data-composition-id="main" data-width="640" data-height="360">static</div><script>window.__timelines={main:{seek(){},duration(){return 10}}}</script>' > "${STUCK:?}/index.html" &&
+node .studio/designs/stage-full/tools/sample-frames.mjs "${STUCK:?}" "${STUCK:?}/frames" --times 1,4,7 --browser <chrome> --puppeteer <puppeteer-core 目录>
+echo exit=$?
+```
