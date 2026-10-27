@@ -201,7 +201,25 @@ def validate_config(root, config, candidate):
                     raise ValueError(f"Review path overlaps protected production root: {path}")
 
 
-def idle(root):
+def idle(root, *, target='windows-x64'):
+    if target not in RUNTIME_LOCKS:
+        raise ValueError("Unsupported package identity")
+    if target == 'darwin-arm64':
+        result = subprocess.run(['ps', '-axo', 'pid=,command='],
+                                capture_output=True, encoding='utf-8', check=True)
+        prefix = str(root).rstrip('/') + '/'
+        for line in result.stdout.splitlines():
+            if not line.strip():
+                continue
+            pid_text, command = line.strip().split(None, 1)
+            pid = int(pid_text)
+            executable = command.split(None, 1)[0].rsplit('/', 1)[-1]
+            matched = re.fullmatch(
+                r'(python|pythonw|node|ffmpeg|ffprobe|chrome|chrome-headless-shell|esbuild)(\.exe)?',
+                executable, re.IGNORECASE)
+            if matched and pid != os.getpid() and prefix in command:
+                raise ValueError(f'Root process {pid} is active; close preview/render before updating')
+        return
     if os.name != "nt":
         return
     script = "[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false; Get-CimInstance Win32_Process | Where-Object { $_.Name -match '^(python|pythonw|node|ffmpeg|ffprobe|chrome|chrome-headless-shell|esbuild)(\\.exe)?$' } | Select-Object ProcessId,CommandLine,ExecutablePath | ConvertTo-Json -Compress"
@@ -363,7 +381,8 @@ def preflight(root, config_path=None, *, retained=None, expected=None, recover_p
         recovered = True
     from windows_runtime import command_lock
     with command_lock(root):
-        idle(root)
+        release = safe(root, '.release.json')
+        idle(root, target=read(release).get('target') if release.exists() else 'windows-x64')
         prior = verify_root(root, retained=retained, expected=expected) if safe(root, MANIFEST).exists() else {'files': {}}
         config_file = safe(root, CONFIG)
         if not config_file.exists() and not config_path:
@@ -398,7 +417,7 @@ def deploy(package, root, config_path, keep=1):
     root.mkdir(parents=True, exist_ok=True)
     from windows_runtime import command_lock
     with command_lock(root):
-        idle(root)
+        idle(root, target=manifest['target'])
         if safe(root, PENDING).exists():
             raise ValueError("Interrupted deployment; run recover")
         retained = set(manifest["files"]) | {".release.json"}
@@ -519,14 +538,19 @@ def recover(root, rollback=False):
         raise ValueError("Run recovery/rollback from an unpacked package outside the deployed root")
     from windows_runtime import command_lock
     with command_lock(root):
-        idle(root)
+        release = safe(root, '.release.json')
         if rollback:
+            idle(root, target=read(release).get('target'))
             state = verify_root(root)
             transaction = read(safe(root, state["backup"]) / "transaction.json")
             restore(root, transaction, check_only=True)
             write_json(safe(root, PENDING), transaction)
         else:
             transaction = read(safe(root, PENDING))
+            old_release = safe(safe(root, transaction['backup']), '.release.json')
+            if old_release.exists():
+                release = old_release
+            idle(root, target=read(release).get('target') if release.exists() else 'windows-x64')
         restore(root, transaction)
     modifications = sorted(set(transaction.get('preexisting_changes', []))
                            | {item["original"] for item in transaction.get("retired_preserved", [])})
