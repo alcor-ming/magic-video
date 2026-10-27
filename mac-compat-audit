@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 import sys
 import unicodedata
 
@@ -38,13 +39,20 @@ def scan_root(root: Path, skip_text_dirs: tuple[str, ...] = SKIP_TEXT_DIRS) -> d
     root = Path(root)
     if not root.exists():
         raise FileNotFoundError(str(root))
+    if not root.is_dir():
+        raise NotADirectoryError(str(root))
     report = {
         'totals': {'files': 0, 'bytes': 0, 'by_directory': {}},
         'windows_paths': [], 'nfd_names': [], 'case_conflicts': [], 'crlf_scripts': [],
         'windows_only': {'counts': {ext: 0 for ext in WINDOWS_EXTENSIONS}, 'paths': []},
         'long_names': [], 'errors': [],
     }
-    for directory, folders, files in os.walk(root, followlinks=False):
+    def onerror(error):
+        report['errors'].append({
+            'path': Path(error.filename).relative_to(root).as_posix(), 'error': str(error),
+        })
+
+    for directory, folders, files in os.walk(root, followlinks=False, onerror=onerror):
         parent = Path(directory)
         groups = {}
         for name in sorted(folders + files):
@@ -103,18 +111,30 @@ def scan_root(root: Path, skip_text_dirs: tuple[str, ...] = SKIP_TEXT_DIRS) -> d
 
 
 def scan_fonts(roots: list[Path]) -> dict:
-    report = {'stacks': [], 'risks': {'leading': 0, 'fallback': 0}, 'platform_fonts': {}}
+    report = {'stacks': [], 'risks': {'leading': 0, 'fallback': 0}, 'platform_fonts': {}, 'errors': []}
+
+    def onerror(error):
+        report['errors'].append({'path': str(error.filename), 'error': str(error)})
+
     for root in map(Path, roots):
         if not root.exists():
             raise FileNotFoundError(str(root))
-        for directory, folders, files in os.walk(root, followlinks=False):
+        if not root.is_dir():
+            raise NotADirectoryError(str(root))
+        for directory, folders, files in os.walk(root, followlinks=False, onerror=onerror):
             folders[:] = sorted(name for name in folders if name not in SKIP_TEXT_DIRS)
             for name in sorted(files):
                 path = Path(directory) / name
                 if path.suffix.lower() not in FONT_EXTENSIONS:
                     continue
-                with open(path, encoding='utf-8', errors='replace') as stream:
-                    text = stream.read()
+                try:
+                    if not stat.S_ISREG(path.lstat().st_mode):
+                        continue
+                    with open(path, encoding='utf-8', errors='replace') as stream:
+                        text = stream.read()
+                except OSError as error:
+                    report['errors'].append({'path': str(path), 'error': str(error)})
+                    continue
                 for index, pattern in enumerate(FONT_PATTERNS):
                     for match in pattern.finditer(text):
                         stack = [font.strip().strip('\"\'').strip()
@@ -169,14 +189,14 @@ def main(arguments: list[str] | None = None) -> int:
     try:
         report = (scan_root(args.path, args.skip_text_dir) if args.command == 'scan-root'
                   else scan_fonts(args.paths))
-    except FileNotFoundError as error:
+    except (FileNotFoundError, NotADirectoryError) as error:
         print(f'mac-compat-audit: {error}', file=sys.stderr)
         return 2
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print_summary(report)
-    return 0
+    return 1 if report['errors'] else 0
 
 
 if __name__ == '__main__':

@@ -4,12 +4,14 @@ from contextlib import redirect_stdout, redirect_stderr
 from importlib.machinery import SourceFileLoader
 import importlib.util
 import io
+import errno
 import json
 import os
 from pathlib import Path
 import tempfile
 import unicodedata
 import unittest
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[1]
 LOADER = SourceFileLoader('mac_compat_audit', str(REPO / 'mac-compat-audit'))
@@ -124,6 +126,94 @@ class MacCompatAuditTests(unittest.TestCase):
         self.assertEqual(report['errors'], [])
         self.assertEqual(report['totals']['files'], 3)
         self.assertEqual(report['crlf_scripts'], [])
+
+    def test_scan_fonts_skips_external_symlink(self):
+        with tempfile.TemporaryDirectory() as external:
+            target = Path(external) / 'outside.css'
+            target.write_text('font-family: SimHei;', encoding='utf-8')
+            (self.root / 'linked.css').symlink_to(target)
+            with patch('builtins.open', side_effect=AssertionError('must not read symlink')):
+                report = AUDIT.scan_fonts([self.root])
+        self.assertEqual(report['stacks'], [])
+        self.assertEqual(report['risks'], {'leading': 0, 'fallback': 0})
+        self.assertEqual(report['platform_fonts'], {})
+        self.assertEqual(report['errors'], [])
+
+    @unittest.skipUnless(hasattr(os, 'mkfifo'), 'FIFO requires POSIX')
+    def test_scan_fonts_skips_fifo(self):
+        os.mkfifo(self.root / 'pipe.css')
+        with patch('builtins.open', side_effect=AssertionError('must not open FIFO')):
+            report = AUDIT.scan_fonts([self.root])
+        self.assertEqual(report['stacks'], [])
+        self.assertEqual(report['errors'], [])
+
+    def test_scan_fonts_records_lstat_and_open_errors(self):
+        self.put('bad.css', 'font-family: SimHei;')
+        self.put('good.css', 'font-family: PingFang SC;')
+        bad = self.root / 'bad.css'
+        for operation in ('lstat', 'open'):
+            with self.subTest(operation=operation):
+                failure = PermissionError(errno.EACCES, 'denied', str(bad))
+                original = Path.lstat if operation == 'lstat' else open
+
+                def fail_bad(path, *args, **kwargs):
+                    if Path(path) == bad:
+                        raise failure
+                    return original(path, *args, **kwargs)
+
+                target = 'pathlib.Path.lstat' if operation == 'lstat' else 'builtins.open'
+                with patch(target, new=fail_bad):
+                    report = AUDIT.scan_fonts([self.root])
+                self.assertEqual(report['errors'], [{'path': str(bad), 'error': str(failure)}])
+                self.assertEqual(report['platform_fonts'], {'PingFang SC': 1})
+
+    def test_unreadable_directories_report_errors_and_main_returns_one(self):
+        if hasattr(os, 'geteuid') and os.geteuid() == 0:
+            self.skipTest('root bypasses directory permission checks')
+        if os.name != 'posix':
+            self.skipTest('chmod permission checks require POSIX')
+        self.put('blocked/hidden.css', 'font-family: SimHei;')
+        self.put('visible.css', 'font-family: PingFang SC;')
+        blocked = self.root / 'blocked'
+        blocked.chmod(0)
+        try:
+            for command in ('scan-root', 'scan-fonts'):
+                for root in (self.root, blocked):
+                    for as_json in (False, True):
+                        with self.subTest(command=command, root=root, as_json=as_json):
+                            output = io.StringIO()
+                            args = [command, str(root)] + (['--json'] if as_json else [])
+                            with redirect_stdout(output):
+                                self.assertEqual(AUDIT.main(args), 1)
+                            if as_json:
+                                report = json.loads(output.getvalue())
+                                expected = blocked.relative_to(root).as_posix() if command == 'scan-root' else str(blocked)
+                                self.assertEqual(len(report['errors']), 1)
+                                self.assertEqual(report['errors'][0]['path'], expected)
+                                self.assertIn('Permission denied', report['errors'][0]['error'])
+                                if root == self.root:
+                                    if command == 'scan-root':
+                                        self.assertEqual(report['totals']['files'], 1)
+                                    else:
+                                        self.assertEqual(report['platform_fonts'], {'PingFang SC': 1})
+                            else:
+                                self.assertIn('errors: 1 total', output.getvalue())
+        finally:
+            blocked.chmod(0o700)
+
+    def test_file_input_returns_two(self):
+        self.put('file.css', 'font-family: SimHei;')
+        path = self.root / 'file.css'
+        for scan, argument in ((AUDIT.scan_root, path), (AUDIT.scan_fonts, [path])):
+            with self.assertRaises(NotADirectoryError):
+                scan(argument)
+        for command in ('scan-root', 'scan-fonts'):
+            with self.subTest(command=command):
+                output, error = io.StringIO(), io.StringIO()
+                with redirect_stdout(output), redirect_stderr(error):
+                    self.assertEqual(AUDIT.main([command, str(path)]), 2)
+                self.assertEqual(output.getvalue(), '')
+                self.assertIn(str(path), error.getvalue())
 
     def test_missing_path(self):
         for command in ('scan-root', 'scan-fonts'):
