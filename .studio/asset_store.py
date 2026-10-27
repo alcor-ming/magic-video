@@ -275,7 +275,15 @@ def accept_component(store: Path, ref: str, sha256: str, note: str, *, runtime_r
                       visiting={ref})
     from asset_contract import asset_requires_runtime
     executable = asset_requires_runtime(report["metadata"])
-    lock = _read_json(runtime_root / "windows-runtime.lock.json") if executable else {"target": "declarative", "versions": {}}
+    if executable:
+        from root_deploy import runtime_lock_path
+        try:
+            lock_path = runtime_lock_path(runtime_root)
+        except ValueError as error:
+            raise ComponentError(str(error)) from error
+        lock = _read_json(lock_path)
+    else:
+        lock = {"target": "declarative", "versions": {}}
     declared_runtime = report["metadata"].get("runtime", {})
     declared_versions = declared_runtime.get("versions", {}) if isinstance(declared_runtime, dict) else None
     if not isinstance(declared_versions, dict):

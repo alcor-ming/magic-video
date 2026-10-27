@@ -20,6 +20,23 @@ STATE = ".studio/.runtime"
 MANIFEST = f"{STATE}/deployment.json"
 PENDING = f"{STATE}/deploy-pending.json"
 CONFIG = f"{STATE}/local.json"
+RUNTIME_LOCKS = {
+    "windows-x64": "windows-runtime.lock.json",
+    "darwin-arm64": "darwin-runtime.lock.json",
+}
+
+
+def runtime_lock_path(root: Path, *, target: str | None = None) -> Path:
+    if target is None:
+        release = root / ".release.json"
+        if release.is_file():
+            target = json.loads(release.read_text(encoding="utf-8")).get("target")
+        else:
+            # Development roots on WSL/Linux continue using the Windows lock.
+            target = "darwin-arm64" if sys.platform == "darwin" else "windows-x64"
+    if target not in RUNTIME_LOCKS:
+        raise ValueError("Unsupported package identity")
+    return root / RUNTIME_LOCKS[target]
 
 
 def read(path):
@@ -79,7 +96,7 @@ def managed(files):
 
 def verify_package(root):
     manifest = read(safe(root, ".release.json"))
-    if manifest.get("target") != "windows-x64" or manifest.get("channel") not in {"candidate", "local", "stable"}:
+    if manifest.get("target") not in RUNTIME_LOCKS or manifest.get("channel") not in {"candidate", "local", "stable"}:
         raise ValueError("Unsupported package identity")
     if not re.fullmatch(r"(?:harness-\d{4}\.\d{2}\.\d+|(?:candidate|local)-[A-Za-z0-9][A-Za-z0-9._-]*)", manifest.get("release", "")) or manifest.get("layout") != "root-v1":
         raise ValueError("Package requires a valid release identity and root-v1 layout")
@@ -95,7 +112,7 @@ def verify_package(root):
             raise ValueError("Tools package requires exact runtime files")
         if any(name.startswith("runtime/") for name in files):
             raise ValueError("Tools package cannot contain runtime files")
-        if not isinstance(manifest.get("runtime_lock_sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", manifest["runtime_lock_sha256"]) or files.get("windows-runtime.lock.json") != manifest["runtime_lock_sha256"]:
+        if not isinstance(manifest.get("runtime_lock_sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", manifest["runtime_lock_sha256"]) or files.get(runtime_lock_path(root, target=manifest["target"]).name) != manifest["runtime_lock_sha256"]:
             raise ValueError("Tools package runtime lock mismatch")
     if ".release.json" in {name.casefold() for name in files}:
         raise ValueError("Package cannot claim its own .release.json")
@@ -402,7 +419,7 @@ def deploy(package, root, config_path, keep=1):
         if manifest.get("package_kind") == "tools":
             required = manifest["runtime_files"]
             installed = {name: value for name, value in prior["files"].items() if name.startswith("runtime/")}
-            if installed != required or prior["files"].get("windows-runtime.lock.json") != manifest["runtime_lock_sha256"]:
+            if installed != required or prior["files"].get(runtime_lock_path(root, target=manifest["target"]).name) != manifest["runtime_lock_sha256"]:
                 raise ValueError("Installed runtime differs; deploy a full package")
             files.update(required)
         files[".release.json"] = digest(package / ".release.json")

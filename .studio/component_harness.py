@@ -478,7 +478,12 @@ def validate_component_acceptance(acceptance: dict, release: dict, *, runtime_ro
     if not asset_requires_runtime(release["metadata"]):
         return
     root = runtime_root or Path(os.environ.get("HYPERFRAMES_AI_ROOT", Path(__file__).resolve().parents[1]))
-    lock = _read_json(root / "windows-runtime.lock.json")
+    from root_deploy import runtime_lock_path
+    try:
+        lock_path = runtime_lock_path(root)
+    except ValueError as error:
+        raise ComponentError(str(error)) from error
+    lock = _read_json(lock_path)
     runtime = acceptance.get("runtime")
     if not isinstance(runtime, dict) or runtime.get("target") != lock.get("target"):
         raise ComponentError(f"Asset runtime target is incompatible: {release['component_ref']}")
