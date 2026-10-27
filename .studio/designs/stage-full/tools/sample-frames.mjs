@@ -140,6 +140,7 @@ try {
     return found.slice(0, 10);
   }, size);
   const costs = [];
+  const shots = [];
   for (const time of times) {
     if (time > duration + 1e-6) { report.frames.push({ time, skipped: 'after timeline end ' + duration }); continue; }
     const started = Date.now();
@@ -148,18 +149,19 @@ try {
     const file = 't' + time.toFixed(2).padStart(7, '0') + '.png';
     const bytes = Buffer.from(await shot());
     fs.writeFileSync(path.join(outDir, file), bytes);
+    shots.push(bytes);
     report.frames.push({ time, file, textOutside: await outside() });
   }
   // 防假通过：≥2 个不同时刻的帧逐像素全同，多半是 seek 没驱动重绘，判失败。
-  const shots = report.frames.filter((item) => item.file).map((item) => fs.readFileSync(path.join(outDir, item.file)));
+  // 两处比对都用内存里的截图字节，不回读文件：时刻只差 0.01 s 以内时文件名会相同。
   report.identicalFrames = shots.length >= 2 && shots.every((bytes) => bytes.equals(shots[0]));
   if (report.identicalFrames) errors += 1;
-  for (const frame of report.frames.filter((item) => item.file)) {
+  for (const [index, frame] of report.frames.filter((item) => item.file).entries()) {
     await seek(0);
     await seek(duration);
     await seek(frame.time);
     const again = Buffer.from(await shot());
-    const identical = again.equals(fs.readFileSync(path.join(outDir, frame.file)));
+    const identical = again.equals(shots[index]);
     if (!identical) {
       fs.writeFileSync(path.join(outDir, frame.file.replace(/\.png$/, '-reseek.png')), again);
       errors += 1;
