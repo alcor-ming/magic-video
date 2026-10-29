@@ -1,3 +1,4 @@
+// Set HYPERFRAMES_CLI (runtime hyperframes CLI, supplies puppeteer-core) and CHROME_PATH; TEST_CHINESE_FONT optional.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';

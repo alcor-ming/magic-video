@@ -1,32 +1,36 @@
-// node tests/design-examples-browser.mjs <materialized-example> <evidence-directory>
+// HYPERFRAMES_CLI=<runtime CLI> node tests/design-examples-browser.mjs <materialized-example> <evidence-directory>
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {actualCharacters, coveredCharacters} from './font_cmap.mjs';
-const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const {chromium} = createRequire(path.join(repo, '.studio/parser/package.json'))('playwright-core');
+assert(process.env.HYPERFRAMES_CLI, 'Runtime is not configured: HYPERFRAMES_CLI');
+// The host ships only the runtime's puppeteer-core; .studio/parser is a development toolchain.
+const puppeteer = createRequire(process.env.HYPERFRAMES_CLI)('puppeteer-core');
 const [directory, output] = process.argv.slice(2).map(value => path.resolve(value));
 assert(directory && output && output !== directory);
 await fs.mkdir(output, {recursive: true});
-const browser = await chromium.launch({executablePath: process.env.HYPERFRAMES_BROWSER_PATH || process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox']});
+const browser = await puppeteer.launch({executablePath: process.env.HYPERFRAMES_BROWSER_PATH || process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox']});
 const errors = [], requests = [], seeks = [], rasterDifferences = [];
 const hash = buffer => createHash('sha256').update(buffer).digest('hex');
 try {
   const lock = JSON.parse(await fs.readFile(path.join(directory, 'appearance-lock.json'), 'utf8').catch(() => '{}'));
-  const page = await browser.newPage({viewport: {width: lock.width || 1920, height: lock.height || 1080}, deviceScaleFactor: 1});
+  const page = await browser.newPage();
+  await page.setViewport({width: lock.width || 1920, height: lock.height || 1080, deviceScaleFactor: 1});
   page.on('pageerror', error => errors.push(error.message));
-  await page.route('**/*', async route => {
-    const url = new URL(route.request().url());
+  await page.setRequestInterception(true);
+  page.on('request', async request => {
+    const url = new URL(request.url());
+    if (url.protocol === 'data:') return request.continue(); // in-page data, never intercepted
+    if (url.pathname === '/favicon.ico') return request.abort(); // Chromium's own tab icon, not page content
     try {
       assert.equal(url.origin, 'http://example.test');
       const file = await fs.realpath(path.join(directory, decodeURIComponent(url.pathname)));
       assert(file.startsWith(directory + path.sep));
       const types = {'.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.json':'application/json', '.css':'text/css', '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp'};
-      await route.fulfill({body:await fs.readFile(file), contentType:types[path.extname(file)] ? types[path.extname(file)] + '; charset=utf-8' : 'application/octet-stream'});
-    } catch { requests.push(url.href); await route.abort(); }
+      await request.respond({status:200, body:await fs.readFile(file), contentType:types[path.extname(file)] ? types[path.extname(file)] + '; charset=utf-8' : 'application/octet-stream'});
+    } catch { requests.push(url.href); await request.abort(); }
   });
   const url = 'http://example.test/index.html';
   const load = async () => {
@@ -35,6 +39,11 @@ try {
     assert.equal(await page.evaluate(() => Object.keys(window.__timelines).length), 1);
   };
   const seek = time => page.evaluate(time => window.__example.seek(time), time);
+  const screenshot = async () => {
+    // Capture only after the compositor has presented the seeked state.
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    return Buffer.from(await page.screenshot());
+  };
   const state = () => page.evaluate(() => [...document.querySelectorAll('body *')].map(node => ({
     id: node.id, class: [...node.classList].sort(), style: node.getAttribute('style'),
     transform: getComputedStyle(node).transform, path: node.getAttribute('d'),
@@ -72,18 +81,18 @@ try {
     await load();
     await seek(time);
     const directState = await state();
-    const direct = await page.screenshot();
+    const direct = await screenshot();
     await seek(duration - .01); await seek(time);
     assert.deepEqual(await state(), directState, 'backward state ' + time);
-    await assertFrame(await page.screenshot(), direct, 'backward seek ' + time);
+    await assertFrame(await screenshot(), direct, 'backward seek ' + time);
     await seek(time);
     assert.deepEqual(await state(), directState, 'repeat state ' + time);
-    await assertFrame(await page.screenshot(), direct, 'repeat seek ' + time);
+    await assertFrame(await screenshot(), direct, 'repeat seek ' + time);
     await load();
     for (let step = 0; step < time; step += .2) await seek(step);
     await seek(time);
     assert.deepEqual(await state(), directState, 'sequential state ' + time);
-    await assertFrame(await page.screenshot(), direct, 'sequential seek ' + time);
+    await assertFrame(await screenshot(), direct, 'sequential seek ' + time);
     const file = 'frame-' + time.toFixed(2) + '.png';
     await fs.writeFile(path.join(output, file), direct);
     seeks.push({time, sha256: hash(direct), file});
@@ -97,7 +106,7 @@ try {
     }
     await document.fonts.ready;
   });
-  const cdp = await page.context().newCDPSession(page);
+  const cdp = await page.createCDPSession();
   await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
   const {root} = await cdp.send('DOM.getDocument');
   const {nodeIds} = await cdp.send('DOM.querySelectorAll', {nodeId: root.nodeId, selector: 'body *'});
@@ -120,13 +129,13 @@ try {
   }
   await cdp.detach();
   await page.evaluate(() => window.__example.dispose());
-  const before = await page.screenshot();
+  const before = await screenshot();
   await page.evaluate(async () => {
     const pending = [];
     window.dispatchEvent(new CustomEvent('hf-seek', {detail: {time: 0, waitUntil: promise => pending.push(promise)}}));
     await Promise.all(pending);
   });
-  assert.equal(hash(await page.screenshot()), hash(before), 'disposed scene must not respond to seek');
+  assert.equal(hash(await screenshot()), hash(before), 'disposed scene must not respond to seek');
   assert.equal(await page.evaluate(() => Object.keys(window.__timelines).length), 0);
   assert.deepEqual(errors, []); assert.deepEqual(requests, []);
   await fs.writeFile(path.join(output, 'result.json'), JSON.stringify({directory, duration, seeks, glyphs, rasterDifferences, rasterTolerance: 1, errors, externalRequests: requests, disposed: true}, null, 2));

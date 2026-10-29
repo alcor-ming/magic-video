@@ -3,16 +3,17 @@ import fs from 'node:fs/promises';
 import {coveredCharacters, actualCharacters} from './font_cmap.mjs';
 import path from 'node:path';
 import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
-const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const {chromium} = createRequire(path.join(repo, '.studio/parser/package.json'))('playwright-core');
+if (!process.env.HYPERFRAMES_CLI) throw new Error('Runtime is not configured: HYPERFRAMES_CLI');
+// The host ships only the runtime's puppeteer-core; .studio/parser is a development toolchain.
+const puppeteer = createRequire(process.env.HYPERFRAMES_CLI)('puppeteer-core');
 const input = JSON.parse(await fs.readFile(process.argv[2], 'utf8'));
 const directory = await fs.realpath(input.project);
-const browser = await chromium.launch({executablePath: process.env.HYPERFRAMES_BROWSER_PATH || process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox']});
+const browser = await puppeteer.launch({executablePath: process.env.HYPERFRAMES_BROWSER_PATH || process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox']});
 const errors = [], items = new Map(), domTexts = [];
 try {
-  const page = await browser.newPage({viewport: {width: input.width || 1920, height: input.height || 1080}});
-  await page.addInitScript(() => {
+  const page = await browser.newPage();
+  await page.setViewport({width: input.width || 1920, height: input.height || 1080});
+  await page.evaluateOnNewDocument(() => {
     window.__hfCanvasTexts = new Map();
     for (const Context of [window.CanvasRenderingContext2D, window.OffscreenCanvasRenderingContext2D]) {
       if (!Context) continue;
@@ -27,17 +28,20 @@ try {
     }
   });
   page.on('pageerror', error => errors.push(error.message));
-  await page.route('**/*', async route => {
+  await page.setRequestInterception(true);
+  page.on('request', async request => {
     try {
-      const url = new URL(route.request().url());
+      const url = new URL(request.url());
+      if (url.protocol === 'data:') return await request.continue(); // in-page data, never intercepted
+      if (url.pathname === '/favicon.ico') return await request.abort(); // Chromium's own tab icon, not page content
       if (url.origin !== 'http://source.test') throw new Error('External source request');
       const file = await fs.realpath(path.join(directory, decodeURIComponent(url.pathname)));
       if (!file.startsWith(directory + path.sep)) throw new Error('Source path escaped snapshot');
       const types = {'.js':'text/javascript', '.mjs':'text/javascript', '.json':'application/json', '.html':'text/html', '.css':'text/css', '.woff':'font/woff', '.woff2':'font/woff2', '.ttf':'font/ttf', '.otf':'font/otf'};
-      await route.fulfill({body: await fs.readFile(file), contentType: (types[path.extname(file)] || 'application/octet-stream') + (['.html','.js','.mjs','.css','.json'].includes(path.extname(file)) ? '; charset=utf-8' : '')});
-    } catch (error) { errors.push(error.message); await route.abort(); }
+      await request.respond({status: 200, body: await fs.readFile(file), contentType: (types[path.extname(file)] || 'application/octet-stream') + (['.html','.js','.mjs','.css','.json'].includes(path.extname(file)) ? '; charset=utf-8' : '')});
+    } catch (error) { errors.push(error.message); await request.abort(); }
   });
-  await page.goto('http://source.test/index.html', {waitUntil:'networkidle'});
+  await page.goto('http://source.test/index.html', {waitUntil:'networkidle0'});
   for (const scene of input.scenes) for (const time of [scene.start, scene.start + scene.duration / 2, scene.start + scene.duration - .001]) {
     await page.evaluate(async time => {
       await window.__example?.ready;
@@ -96,7 +100,7 @@ try {
     await document.fonts.ready;
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   }, values);
-  const cdp = await page.context().newCDPSession(page);
+  const cdp = await page.createCDPSession();
   await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
   const {root} = await cdp.send('DOM.getDocument');
   const {nodeIds} = await cdp.send('DOM.querySelectorAll', {nodeId:root.nodeId, selector:'[data-hf-font-probe]'});
