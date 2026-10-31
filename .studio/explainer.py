@@ -1,8 +1,7 @@
-"""Frozen narration cues and sound tracks for explainer projects."""
+"""Frozen narration cues for explainer projects."""
 
 from difflib import SequenceMatcher
 import hashlib
-from html import escape
 from html.parser import HTMLParser
 import json
 import math
@@ -189,75 +188,6 @@ def installed_assets(project, *, check_mounts=True):
     return result
 
 
-def sound_elements(plan, cues, assets, *, library_bgm=False):
-    if not isinstance(plan, dict) or set(plan) - {"bgm", "sfx"} or not isinstance(plan.get("sfx", []), list):
-        raise ExplainerError("Invalid sound table")
-    output, tracks = [], []
-
-    def asset_for(item):
-        ref = item.get("ref")
-        if not isinstance(ref, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*@v[1-9][0-9]*", ref):
-            raise ExplainerError("Invalid sound ref")
-        asset = assets.get(ref)
-        if asset is None or asset["metadata"].get("kind") != "media" or Path(asset["metadata"].get("entry", "")).suffix.lower() != ".mp3":
-            raise ExplainerError("sound_asset_outside_closure")
-        return asset
-
-    def audio(item, identity, start, duration, group=None):
-        asset = asset_for(item)
-        gain = number(item.get("gain", 1), "sound gain", maximum=1)
-        attrs = {"id": identity, "src": f'{asset["vendor_path"]}/{asset["metadata"]["entry"]}',
-                 "data-asset-ref": item["ref"], "data-start": start, "data-duration": duration,
-                 "data-volume": gain, "data-track-index": 6 if group else 7}
-        if group:
-            attrs["data-audio-group"] = group
-        output.append("<audio " + " ".join(f'{key}="{escape(str(value), quote=True)}"' for key, value in attrs.items())
-                      + (" loop" if group else "") + "></audio>")
-        tracks.append(attrs)
-
-    bgm = plan.get("bgm")
-    if bgm is not None:
-        if not isinstance(bgm, dict) or set(bgm) != {"ref", "start_cue", "end_cue", "gain"}:
-            raise ExplainerError("BGM needs ref, start_cue, end_cue and gain")
-        if library_bgm and asset_for(bgm)["metadata"].get("audio_role") != "bgm":
-            raise ExplainerError("BGM must be an open-source library track imported with component import-bgm")
-        start, end = find_cue(cues, bgm["start_cue"]), find_cue(cues, bgm["end_cue"])
-        if end <= start:
-            raise ExplainerError("BGM end must follow start")
-        points = {0: 1}
-        for a, b in cues["speech_intervals"]:
-            if b <= start or a >= end:
-                continue
-            a, b = max(start, a), min(end, b)
-            points[max(0, a - 0.08)] = 1
-            points[a] = 0.25
-            points[b] = 0.25
-            if b < end:
-                points[min(end, b + 0.12)] = 1
-        if len(points) > 512:
-            raise ExplainerError("BGM automation exceeds upstream 512-point limit")
-        automation = {"version": 1, "lanes": [{"target": "volume", "points": [
-            {"t": time, "v": value} for time, value in sorted(points.items())]}]}
-        output.append('<hf-audio-group id="harness-bgm" data-start="0" data-volume="1" data-automation="'
-                      + escape(json.dumps(automation, separators=(",", ":")), quote=True) + '"></hf-audio-group>')
-        audio(bgm, "harness-bgm-track", start, end - start, "harness-bgm")
-    for index, item in enumerate(plan.get("sfx", [])):
-        if (not isinstance(item, dict) or set(item) != {"ref", "cue", "event", "tier", "gain"}
-                or not all(isinstance(item[key], str) and item[key].strip() for key in ("event", "tier"))):
-            raise ExplainerError("SFX needs ref, cue, visible event, tier and gain")
-        asset = asset_for(item)
-        metadata = asset["metadata"]
-        hit = number(metadata.get("hit_offset", 0), "hit_offset")
-        start = find_cue(cues, item["cue"]) - hit
-        if start < 0:
-            raise ExplainerError("sound_negative_preroll")
-        from asset_contract import _check_audio
-        duration = _check_audio(Path(asset["path"]))["duration"] if "path" in asset else metadata.get("audio", {}).get("duration")
-        number(duration, "SFX duration", minimum=0.000001)
-        audio(item, f"harness-sfx-{index}", start, duration)
-    return "\n".join(output), tracks
-
-
 class BodyEnd(HTMLParser):
     def __init__(self, text):
         super().__init__()
@@ -271,18 +201,3 @@ class BodyEnd(HTMLParser):
         if tag == "body":
             line, col = self.getpos()
             self.end = self.offsets[line - 1] + col
-
-
-def insert_sound(text, elements):
-    start, end = "<!-- harness-sound:start -->", "<!-- harness-sound:end -->"
-    block = start + "\n" + elements + "\n" + end
-    if start in text or end in text:
-        if text.count(start) != 1 or text.count(end) != 1 or text.index(end) < text.index(start):
-            raise ExplainerError("Invalid generated sound markers")
-        before, tail = text.split(start)
-        _, after = tail.split(end)
-        return before + block + after
-    position = BodyEnd(text).end
-    if position is None:
-        raise ExplainerError("Sound build requires a closing body element")
-    return text[:position] + block + "\n" + text[position:]

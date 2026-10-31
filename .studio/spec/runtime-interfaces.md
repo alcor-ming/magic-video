@@ -86,14 +86,6 @@ const background = await HarnessAppearance.mountBackground(stage, appearance, cu
 await background.renderAt(at);
 ```
 
-## Sound
-
-用途：从唯一批准 Plan 导出音轨；画幅：16:9、9:16；占层：audio group，不占视觉层。参数：Plan sound JSON 的 bgm/ref/start_cue/end_cue/gain 与 sfx/ref/cue/event/tier/gain；事件必须与可见变化对应。
-
-```sh
-work --work <id> --variant <id> sound build
-```
-
 ## Icons
 
 用途：取用冻结图标集中的精确图标；画幅：16:9、9:16；占层：随语义内容通常 2/3，按所选组件合同挂载。参数：图标精确引用 `lucide:<name>@<version>`、工程内 SVG 目标路径、主题 color/stroke token。取用保留 data-icon 来源与路径几何，使用 currentColor；不联网，不手绘替代标准图标。自制示意使用 `custom:` 引用并纳入闭包。
@@ -127,21 +119,13 @@ A/B 接线使用冻结到工程的 `runtime/rolls.js`：`HarnessRolls.mount({cue
 
 `captions.js` 按标点与画幅最大字数分组，以 `renderAt(t)` 直接求当前字幕与逐字高亮。未对齐字跟随下一个已对齐字的起点，不捏造时间；主题 `--appearance-*` token 控制样式，安全区位于各画幅 title-safe 底部。通过 `scene-binding.js` 的 `hf-seek` 驱动，关闭开关时不创建 captions 宿主，不能另挂播放时钟。
 
-`work --work <id> --variant <id> sound build` 必须从已批准 Plan 中恰好一个 `sound` JSON 代码块导出 `project/sound.json`；缺失、重复或未批准均失败，不回退读取可变的 sound.json。结构为 `bgm: {ref,start_cue,end_cue,gain}` 与 `sfx: [{ref,cue,event,tier,gain}]`，cue 为字符串或 `{token,nth,within,edge}`。构建器更新 index.html 中命名标记包围的音轨与 audio group，SFX `data-start = cue - hit_offset`，负起点明确失败，需调整素材/计划而非静默裁切。BGM 利用锁定 0.8.150 的 `hf-audio-group` / automation 在人声区间 ducking；只引用 appearance lock 或已安装 Binding 的本地 media 闭包，越界报 `sound_asset_outside_closure`，预览与 Final 共用输入。
-
 Background 的 `renderer:"module"` 供受支持链路共用，声明包内 JS `entry` 与 `parameters`（可含 `moods:[{cue,tint}]`）。`HarnessAppearance.mountBackground(stage, appearance, cues)` 加载导出的 `create(el, params, {seed,width,height})`，返回 `renderAt(t)` / `dispose()`；背景由时间纯函数求值、按 cue 变色，经 scene-binding 接宿主，不依赖历史帧或自行 RAF。文件与参数进入冻结闭包。
 
 `character` 是 schema 2 声明式资产，entry `character.json` 包含 `name`、`profile`、`series_style`、`reference`、`states:{id:{file,anchor:[x,y],facing:"left"|"right"}}`、`default_state`、`provenance`。状态图必须为带 alpha 通道的 PNG，锚点在图像范围内，默认状态存在，参考与状态文件都在包内。沿用 pack/validate/accept/install/verify，Binding schema 3 的 `usage.role` 为 character；同身份同版本不同内容拒绝覆盖。
 
 `await HarnessFigures.load(lock)` 从闭包加载角色，提供 `figure(el, characterRef)` / `image(el)`，支持 enter/exit/idle/bounce/squash/pan/zoom/point/state(cue,id)/talk(intervals)。动作按 `{start,duration,fn(localT)}` 登记，由 `renderAt(t)` 合成 transform 与状态图，不依赖 tween 回调。talk 使用 cue 数据中相邻已对齐字符间隔小于 0.35 秒合并的人声活动段，不做骨骼或口型。Helper 与所用资源复制进工程并随快照冻结，不读取安装根活跃源码。
 
-`work component generate-sfx --engine earshot|supercollider|jsfxr --parameters <json> --output <AssetSource 下新目录> [--recipe <配方>]` 渲染一条音效为可编辑 media 源（WAV + MP3 + manifest + asset.json），不自动 accept；同名输出拒绝覆盖。earshot 调外部 `earshot sfx render <类别/成员>`（可执行文件由 `HYPERFRAMES_EARSHOT` 指定，默认 PATH 上的 `earshot`），参数为 `id` 及可选 `seed`、`duration`、`apex`、`pitch`、`peak_db`；只用其音效库的纯 DSP 渲染，不加载听审模型。manifest 记录音效库版本、实际 seed 与渲染自带的无模型审计 `audit`，`hit_offset` 取 earshot 实测的最响 5 ms 时刻（whoosh 掠过、riser 到顶、impact 命中）。earshot 只需 numpy、scipy、soundfile、soxr，`pip install --no-deps` 安装其源码即可，不进发行包。
-
-`work component import-bgm --file <下载的曲目> --source <AssetSource 根> --id <id> --title <曲名> --library <曲库> --source-url <曲目页> --license <许可> --attribution <署名> [--mood <情绪>]...` 把开源曲库的一首现成曲目转为 MP3 media 源，写 `audio_role: bgm`、`source_url`、`rights{library,license,attribution,non_commercial,share_alike}` 与 CREDITS.md，不自动 accept。ND 许可与缺许可拒收。声明 `bgm.enabled` 的卡上，`sound build` 在冻结值不是 true 时拒绝带 BGM 的 Plan，并要求 BGM 引用 `audio_role: bgm` 的资产；未声明该字段的卡与旧 Work 不变。
-
 `work account character add <账号> --name <角色名> --image <PNG> --prompt <提示词> --model <模型> [--tool <工具>] [--reference <已有角色名>]... [--replace]` 登记生图得到的封面角色：只收带透明通道的 PNG，复制到 `control-plane/account-assets/<账号>/cover-characters/<角色名>-<sha12>.png`，同名 `.json` 记录工具（未传 `--tool` 时为 null）、模型、提示词、账号 `cover.character_style` 与参考角色 sha256，并写回账号 `overrides.cover.characters`（账号修订历史照常保留）。
-
-`work component import-sfx --from <hyperframes 包根> --source <AssetSource 根>` 读取本机 `dist/skills/media-use/audio/assets/sfx/manifest.json` 与 `CREDITS.md`，生成带 purpose/tags/license/hit_offset 的可编辑 media 源，不自动 accept。ffmpeg `silencedetect` 的 -40 dB 门限求首个非静音点；检测失败用 0 并标注 `hit_offset_estimated:false`。第三方音效不进入仓库或发行包，WSL 测试仅使用合成夹具。
 
 优先复用 timestamps 与 `section_map.json`。语义 cue 定位 Anchor、字符范围或明确 occurrence，未可靠对齐的字符不均匀插值。源片段采用半开区间，按 `timeline_in + (source_time - source_in) / rate` 映射；多 take 明确选择，被删除词无有效 cue。单 Scene 预览减去 crop 起点而不改原对齐，仅在输出 fps 时量化。
 

@@ -52,8 +52,8 @@ class V35RulesTests(unittest.TestCase):
                       "不设固定数量或间隔配额", "未试听", "Plan 检查", "Q1"):
             self.assertIn(token, design)
         plan = read(".studio/templates/ANIMATION_PLAN.template.md")
-        for token in ("导演 Brief", "B 素材", "声音导出", "A/B 编排", "刻意停顿例外",
-                      "起始 cue", "结束 cue", "起点口播词", "```sound"):
+        for token in ("导演 Brief", "B 素材", "A/B 编排", "刻意停顿例外",
+                      "起始 cue", "结束 cue", "起点口播词"):
             self.assertIn(token, plan)
         spec = read(".studio/spec/hyperframes.md")
         spec += read(".studio/spec/runtime-interfaces.md")
@@ -62,7 +62,6 @@ class V35RulesTests(unittest.TestCase):
                       "`captions`", "共同五层宿主", "cue_not_found", "cue_ambiguous", "cue_unaligned",
                       "HarnessFigures.load(lock)", "renderAt(t)", "character.json",
                       "captions_lock_mismatch", "sound_asset_outside_closure", "精确 ref/hash",
-                      "已批准 Plan 中恰好一个", "不回退读取可变的 sound.json",
                       'data-audio-role="voice"', 'data-character-ref="<id@vN>"',
                       "其余 audio 必须来自 media 闭包"):
             self.assertIn(token, spec)
@@ -74,7 +73,7 @@ class V35RulesTests(unittest.TestCase):
         loader.exec_module(release)
         files = [".studio/runtime/" + name for name in
                  ("appearance.js", "scene-binding.js", "motion.js", "cues.js", "captions.js", "figures.js")]
-        files += [".studio/explainer.py", ".studio/sfx_import.py"]
+        files += [".studio/explainer.py"]
         files += ["AGENTS.md", ".studio/workflow.md", ".studio/spec/visual-design.md",
                   ".studio/templates/WINDOWS_AGENTS.md", ".studio/templates/ANIMATION_PLAN.template.md",
                   ".studio/templates/RESEARCH.template.md"]

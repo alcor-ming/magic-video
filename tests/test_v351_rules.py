@@ -113,7 +113,7 @@ class V351RulesTests(unittest.TestCase):
         for token in ("采纳", "改写", "未采纳", "`锁定` 不可未采纳", "`Variant`"):
             self.assertIn(token, intent)
         self.assertIn("元信息由 CLI", plan)
-        self.assertEqual(1, plan.count("```sound"))
+        self.assertNotIn("```sound", plan)
 
     def test_package_checks_deployed_windows_links(self):
         spec = importlib.util.spec_from_file_location("validate_v351", ROOT / VALIDATOR)

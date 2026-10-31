@@ -31,7 +31,7 @@ class V352RulesTest(unittest.TestCase):
             self.assertIn(name + '.md', router)
             self.assertTrue((ROOT / '.studio/spec' / (name + '.md')).is_file())
         interfaces = read('.studio/spec/runtime-interfaces.md')
-        names = [path.name for path in (ROOT / '.studio/runtime').glob('*.js')] + ['Sound', 'Background', 'Icons']
+        names = [path.name for path in (ROOT / '.studio/runtime').glob('*.js')] + ['Background', 'Icons']
         for name in names:
             with self.subTest(name=name):
                 section = interfaces.split('## ' + name + '\n', 1)[1].split('\n## ', 1)[0]

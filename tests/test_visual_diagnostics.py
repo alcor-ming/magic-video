@@ -44,6 +44,20 @@ class ExplainerDiagnosticsTests(unittest.TestCase):
             self.assertIn('character_asset_outside_closure', kinds)
             self.assertNotIn('explainer_plan_missing', kinds)
 
+    def test_local_stems_are_exempt_but_remote_or_missing_ones_are_not(self):
+        with tempfile.TemporaryDirectory() as temp:
+            project = Path(temp)
+            (project / 'assets').mkdir()
+            (project / 'assets/bgm.mp3').write_bytes(b'x')
+            (project / 'index.html').write_text('<main data-hf-layer="background">'
+                '<audio data-audio-role="stem" src="assets/bgm.mp3"></audio>'
+                '<audio data-audio-role="stem" src="assets/gone.mp3"></audio>'
+                '<audio data-audio-role="stem" src="https://example.com/a.mp3"></audio></main>', encoding='utf-8')
+            report = explainer_diagnostics(project, ['index.html'], {'mode': 'math'},
+                '| 原 Scene ID | 使用信息 ID |\n|---|---|\n| S01 | I01 |\n')
+            flagged = [item['src'] for item in report['findings'] if item['kind'] == 'sound_asset_outside_closure']
+            self.assertEqual(['assets/gone.mp3', 'https://example.com/a.mp3'], flagged)
+
     def test_layers_captions_assets_and_plan_are_advisory(self):
         with tempfile.TemporaryDirectory() as temp:
             project = Path(temp)

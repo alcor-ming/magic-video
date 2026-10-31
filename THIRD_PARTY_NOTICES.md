@@ -38,14 +38,6 @@ stated explicitly.
 - Copyright 2014-2025 Adobe, with Reserved Font Name "Source". Sources and
   per-file hashes: `.studio/fonts/manifest.json`.
 
-## jsfxr
-
-- Components: `.studio/sfx/vendor/jsfxr/` (jsfxr 1.4.1) and the `jsfxr` 1.4.1
-  dependency declared in `.studio/sfx/package.json` / `package-lock.json`.
-- License: The Unlicense. Full text:
-  `.studio/sfx/vendor/jsfxr/UNLICENSE`. Source and per-file hashes:
-  `.studio/sfx/vendor/manifest.json`.
-
 ## `.studio/parser` toolchain
 
 Declared in `.studio/parser/package.json` / `package-lock.json`; installed on the
@@ -54,12 +46,6 @@ host and not redistributed in this repository:
 - `acorn` 8.15.0 - MIT
 - `esbuild` 0.28.2, including the `@esbuild/*` platform packages - MIT
 - `playwright-core` 1.63.0 - Apache-2.0
-
-## `.studio/sfx` toolchain
-
-Declared in `.studio/sfx/package.json` / `package-lock.json`:
-
-- `jsfxr` 1.4.1 - The Unlicense (see above)
 
 ## Locked host npm runtime tree
 

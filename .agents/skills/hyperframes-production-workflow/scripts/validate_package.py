@@ -45,7 +45,6 @@ REQUIRED_HARNESS = [
     ".studio/work_memory.py",
     ".studio/behavior-changes.yaml",
     ".studio/explainer.py",
-    ".studio/sfx_import.py",
     ".studio/workflow.md",
     ".studio/capabilities.yaml",
     ".studio/spec/creative.md",
