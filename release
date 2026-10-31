@@ -72,7 +72,7 @@ FORBIDDEN_TEXT_SUFFIXES = {".md", ".json", ".yaml", ".yml", ".py", ".js", ".mjs"
 # Keep fingerprints, not production titles, in public source.
 FORBIDDEN_TITLE_HASHES = ((6, 'ea59336b8bcf84149a40bbd6640469d08f5eec909c325c372931e1df6637e341'), (6, 'c64ef31bca565b9712aeb32637f091e8890ceae6b19591bd50b44ee6663d345c'), (15, 'aa90c8b9fa526ae450ce516127d78d938b521c164562b2bff8016263ad98aaae'), (15, '33caca4a64ff26f6d568d5f63652289531ebe1918e667c8f6980b585acd3c3e4'))
 PRIVATE_PATH = re.compile(r"/(?:home/[A-Za-z0-9_.-]+/|mnt/[a-z]/)|[A-Za-z]:[\\/]+AI[\\/]", re.I)
-PRIVATE_OVERLAY = ("personal/", ".agents/skills/tts/", ".agents/skills/hermes-media-download/")
+PRIVATE_OVERLAY = ("personal/", ".agents/skills/tts/", ".agents/skills/sound/", ".agents/skills/hermes-media-download/")
 # Root files the private source may supply in place of the public ones: rules and the local WSL entry wiring.
 PRODUCT_VERSION = "4.2.0"
 # Private root files replace these public counterparts; `bases` pins the public bytes each one was reviewed against.

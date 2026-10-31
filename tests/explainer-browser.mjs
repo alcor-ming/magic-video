@@ -51,23 +51,11 @@ for (const name of ['speech', 'sfx']) {
   const encode = spawnSync('ffmpeg', ['-v', 'error', '-y', '-i', path.join(output, name + '.wav'), path.join(output, 'media', name + '.mp3')], { encoding: 'utf8' });
   assert.equal(encode.status, 0, encode.stderr);
 }
-const sound = spawnSync('python3', ['-c', `import json, pathlib, sys
-sys.path.insert(0,str(pathlib.Path(sys.argv[1])/'.studio'))
-from explainer import sound_elements
-root=pathlib.Path(sys.argv[2]); cues=json.loads((root/'runtime/cues.json').read_text())
-plan={'bgm':{'ref':'music@v1','start_cue':'H','end_cue':{'token':'.','edge':'end'},'gain':.5},'sfx':[{'ref':'ping@v1','cue':'Next','event':'character points','tier':'accent','gain':.7}]}
-assets={'music@v1':{'vendor_path':'media','metadata':{'kind':'media','entry':'speech.mp3'}},'ping@v1':{'vendor_path':'media','metadata':{'kind':'media','entry':'sfx.mp3','hit_offset':.1,'audio':{'duration':.3}}}}
-html,tracks=sound_elements(plan,cues,assets)
-print(json.dumps({'html':html,'tracks':tracks}))
-`, repo, output], { encoding: 'utf8' });
-assert.equal(sound.status, 0, sound.stderr);
-const soundResult = JSON.parse(sound.stdout);
-assert(Math.abs(Number(soundResult.tracks[1]['data-start']) - 2.2) < 1e-8, 'Generated SFX accounts for hit_offset');
 await fs.writeFile(path.join(output, 'index.html'), `<!doctype html><meta charset="utf-8"><style>
 body{margin:0}main{position:relative;width:100vw;height:100vh;overflow:hidden}[data-hf-layer]{position:absolute;inset:0}#background{z-index:0}#stage{z-index:1}#overlay{z-index:2}#text{z-index:3}#captions{z-index:4}#figure{position:absolute;left:20%;top:25%;width:128px;height:128px}#picture{position:absolute;left:65%;top:32%;width:64px;height:64px}h1{font:28px sans-serif;margin:8% 10%}
 </style><script src="gsap.js"></script><script src="hf-runtime.js"></script>
 ${['cues', 'captions', 'figures', 'appearance', 'scene-binding'].map(n => '<script src="runtime/' + n + '.js"></script>').join('')}
-<main data-composition-id="fixture" data-start="0" data-duration="5"><div id="background" data-hf-layer="background"></div><div id="stage" data-hf-layer="stage"><div id="figure"></div><img id="picture" src="character/normal.png"></div><div id="overlay" data-hf-layer="overlay"></div><div id="text" data-hf-layer="text"><h1>Explainer fixture</h1></div><div id="captions" data-hf-layer="captions"></div><audio src="speech.wav" class="clip" data-start="0" data-duration="5" data-track-index="1"></audio>${soundResult.html}</main>
+<main data-composition-id="fixture" data-start="0" data-duration="5"><div id="background" data-hf-layer="background"></div><div id="stage" data-hf-layer="stage"><div id="figure"></div><img id="picture" src="character/normal.png"></div><div id="overlay" data-hf-layer="overlay"></div><div id="text" data-hf-layer="text"><h1>Explainer fixture</h1></div><div id="captions" data-hf-layer="captions"></div><audio src="speech.wav" class="clip" data-start="0" data-duration="5" data-track-index="1"></audio><audio src="media/speech.mp3" class="clip" data-audio-role="stem" data-start="0" data-duration="5" data-track-index="6" data-volume=".5"></audio><audio src="media/sfx.mp3" class="clip" data-audio-role="stem" data-start="2.2" data-duration=".3" data-track-index="7" data-volume=".7"></audio></main>
 <script>
 const el=id=>document.getElementById(id);
 window.__timelines={fixture:gsap.timeline({paused:true}).to({},{duration:5})};
@@ -169,17 +157,13 @@ try {
     evidence.frames.push({ viewport, states, checks, pixels, audio, webAudio });
     assert(audio.every(a => !a.error && a.paused), JSON.stringify(audio));
     assert(webAudio.contexts.some(c => c.state === 'running' && c.time > 0), 'HF uses a running WebAudio clock');
-    assert(webAudio.sources.length + webAudio.media.length >= 2, 'HF schedules narration and generated BGM through WebAudio');
+    assert(webAudio.sources.length + webAudio.media.length >= 2, 'HF schedules narration and stems through WebAudio');
     assert(webAudio.gains.some(g => g.rms > .001), 'Real WebAudio graph produces nonzero PCM');
-    assert(webAudio.gains.some(g => Math.abs(g.gain - .25) < .001), 'Generated speech ducking reaches group GainNode');
-    const musicInput = webAudio.gains.find(g => Math.abs(g.gain - .5) < .001);
-    const musicOutput = webAudio.gains.find(g => Math.abs(g.gain - .25) < .001);
-    assert(musicInput.rms > .001 && Math.abs(musicOutput.rms / musicInput.rms - .25) < .02, 'Actual BGM PCM is attenuated to one quarter');
     await seek(2.25); await page.evaluate(() => __player.play()); await page.waitForTimeout(120);
     const sfxAudio = await page.evaluate(() => readAudioProbe());
     await page.evaluate(() => __player.pause());
     evidence.frames.at(-1).sfxAudio = sfxAudio;
-    assert(sfxAudio.gains.some(g => Math.abs(g.gain - .7) < .001 && g.rms > .001), 'Generated SFX enters the real audio graph at its scheduled cue');
+    assert(sfxAudio.gains.some(g => Math.abs(g.gain - .7) < .001 && g.rms > .001), 'Stem SFX enters the real audio graph at its scheduled time');
     await visit('/?captions=off'); await seek(2.65); assert.equal(await page.locator('[data-hf-layer="captions"]').count(), 0);
     await page.evaluate(() => { binding.dispose(); appearance.dispose(); });
     assert.equal(await page.locator('canvas').count(), 0);

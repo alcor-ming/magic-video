@@ -1,8 +1,0 @@
-{
-  "name": "hyperframes-sfx-tools",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "jsfxr": "1.4.1"
-  }
-}

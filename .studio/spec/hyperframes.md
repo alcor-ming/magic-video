@@ -55,7 +55,7 @@
 
 showcase 不要求 explainer 分层/角色检查、Q1 或节奏诊断必经闭环；下文表现形式要求不适用，但 CDN、闭包外资产及 `onUpdate` 状态等硬约束继续检查。英语按教学 Plan 核对发音、拼写、词义、记忆提示、回忆任务及声画对应，保留合理阅读停顿，不强加通用角色、生图或 A/B 配额。诊断和代码证据不代替用户观看。
 
-explainer 的 `preview diagnose` 另报告 `explainer_layer_missing`、`captions_lock_mismatch` 与 `sound_asset_outside_closure`，闭包检查覆盖音轨和 character。口播 audio 显式标注 `data-audio-role="voice"` 才豁免声音资产检查，其余 audio 必须来自 media 闭包，不能把 BGM/SFX 标为 voice 绕过校验。角色 DOM 标注 `data-character-ref="<id@vN>"` 辅助静态 diagnose 核对 character 闭包。均为静态疑点；第 5 层口播字幕不按第 4 层 A1 判为照搬。Plan/Q1 还需人工核验每场可见事件、角色与图片风格、遮挡和有声观看，技术报告不代替接受。
+explainer 的 `preview diagnose` 另报告 `explainer_layer_missing`、`captions_lock_mismatch` 与 `sound_asset_outside_closure`，闭包检查覆盖音轨和 character。口播 audio 显式标注 `data-audio-role="voice"`、工程内本地烘焙音轨标注 `data-audio-role="stem"` 才豁免声音资产检查，其余 audio 必须来自 media 闭包，不能把 BGM/SFX 标为 voice 绕过校验。角色 DOM 标注 `data-character-ref="<id@vN>"` 辅助静态 diagnose 核对 character 闭包。均为静态疑点；第 5 层口播字幕不按第 4 层 A1 判为照搬。Plan/Q1 还需人工核验每场可见事件、角色与图片风格、遮挡和有声观看，技术报告不代替接受。
 
 使用安装根内的锁定 Node、CLI 和浏览器。`npx --no-install` 仍按项目/npm 缓存解析包，不能保证选中安装根的版本；工程不需要另装 `node_modules`。Windows PowerShell 示例（替换安装根和工程路径）：
 
