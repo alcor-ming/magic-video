@@ -71,6 +71,32 @@ class AssetContractTest(unittest.TestCase):
         release = self.freeze()
         self.assertIn("dynamic.json", [item["path"] for item in release["files"]])
 
+    def test_frozen_legacy_audio_roles_keep_their_manifest_and_hashes(self):
+        self.metadata.update(schema_version=2, kind="media", entry="audio.mp3",
+                             contract_version=1, parameters={}, compatibility={})
+        (self.source / "audio.mp3").write_bytes(b"synthetic audio fixture")
+        rights = {"library": "Synthetic library", "license": "CC BY 4.0",
+                  "attribution": "Synthetic artist", "non_commercial": False, "share_alike": False}
+        with patch.object(ASSET, "_check_audio", return_value={"duration": 1.0}):
+            for role in ("bgm", "sfx"):
+                with self.subTest(role=role):
+                    if self.destination.exists():
+                        shutil.rmtree(self.destination)
+                    report = self.freeze(audio_role=role, source_url="https://example.invalid/audio", rights=rights)
+                    before = {p.name: p.read_bytes() for p in self.destination.iterdir()}
+                    self.assertEqual(report, COMPONENT.validate_component_release(self.destination))
+                    self.assertEqual(before, {p.name: p.read_bytes() for p in self.destination.iterdir()})
+                    self.assertEqual(role, json.loads(before["asset.json"])["audio_role"])
+
+    def test_legacy_audio_roles_still_validate_kind_and_rights(self):
+        metadata = dict(self.metadata, schema_version=2, kind="media", contract_version=1,
+                        parameters={}, compatibility={}, audio_role="bgm")
+        with self.assertRaisesRegex(COMPONENT.ComponentError, "BGM requires"):
+            ASSET._schema2(self.source, metadata)
+        for changes in ({"audio_role": "unknown"}, {"audio_role": "sfx", "kind": "module"}):
+            with self.subTest(changes=changes), self.assertRaisesRegex(COMPONENT.ComponentError, "audio_role"):
+                ASSET._schema2(self.source, dict(metadata, **changes))
+
     def test_media_needs_no_runtime_and_image_bytes_are_verified(self):
         report = self.freeze(kind="media", entry="image.png")
         self.assertNotIn("runtime", report["metadata"])
