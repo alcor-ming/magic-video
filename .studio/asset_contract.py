@@ -343,7 +343,7 @@ def _motion2(payload, version=2):
 
 
 def _audio_role(metadata):
-    """A BGM track records the open library it came from and its license, so NC/SA use stays filterable."""
+    """Keep frozen legacy audio manifests valid after retiring the import commands."""
     if metadata["audio_role"] not in {"bgm", "sfx"} or metadata["kind"] != "media":
         raise COMPONENT.ComponentError("audio_role must be bgm or sfx on a media asset")
     if metadata["audio_role"] != "bgm":

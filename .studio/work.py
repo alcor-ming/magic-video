@@ -293,71 +293,22 @@ def command_explainer_build(root: Path, args: argparse.Namespace) -> None:
             raise HarnessError("SCRIPT.md still requires approval")
         text = script_text(script)
         cue_path = storage.scoped_path(project, "runtime/cues.json")
-        if args.command == "cues":
-            try:
-                alignment = Path(args.alignment).read_bytes()
-            except OSError as exc:
-                raise HarnessError(f"Cannot read alignment: {exc}") from exc
-            data = explainer.build_cues(text, alignment)
-            config_path = storage.scoped_path(project, "project-config.json")
-            runtime = storage.scoped_path(project, "runtime/cues.js")
-            before = {path: path.read_text(encoding="utf-8") if path.exists() else None
-                      for path in (cue_path, config_path)}
-            if not runtime.exists():
-                before[runtime] = None
-            try:
-                write_json(cue_path, data)
-                if not runtime.exists():
-                    atomic_write(runtime, (Path(__file__).parent / "runtime/cues.js").read_text(encoding="utf-8"))
-                explainer.declare_files(project, ["runtime/cues.json", "runtime/cues.js"])
-            except Exception:
-                for path, original in before.items():
-                    if original is None:
-                        path.unlink(missing_ok=True)
-                    else:
-                        atomic_write(path, original)
-                raise
-            print(json.dumps({"path": str(cue_path), "mismatches": data["mismatches"]}, ensure_ascii=False))
-            return
-        cues = explainer.validate_cues(explainer.read_json(cue_path))
-        if cues.get("sources", {}).get("script_sha256") != hashlib.sha256(text.encode("utf-8")).hexdigest():
-            raise HarnessError("Narration changed; rebuild cues before sound")
-        plan_path = input_path(variant, "ANIMATION_PLAN.md")
-        if read_frontmatter(plan_path).get("status") != "approved" and plan_confirmation(root, variant, state):
-            raise HarnessError("ANIMATION_PLAN.md must be approved before sound build")
-        plan_scene_rows(plan_path.read_text(encoding="utf-8"))
-        blocks = re.findall(r"^```sound[ \t]*\n(.*?)^```[ \t]*$", document_body(plan_path), re.M | re.S)
-        sound_path = storage.scoped_path(project, "sound.json")
-        if len(blocks) != 1:
-            raise HarnessError("Approved Plan requires one sound JSON block")
         try:
-            sound = json.loads(blocks[0])
-        except ValueError as exc:
-            raise HarnessError(f"Invalid Plan sound JSON: {exc}") from exc
-        if (isinstance(sound, dict) and sound.get('sfx')
-                and state.get('design_values', {}).get('sfx.enabled') is False):
-            raise HarnessError('SFX are disabled in the frozen configuration; reselect with sfx.enabled=true before building this sound Plan')
-        # Cards that declare bgm.* take BGM only when the account turned it on, and only from an imported library track.
-        library_bgm = 'bgm.enabled' in state.get('design_values', {})
-        if isinstance(sound, dict) and sound.get('bgm') and library_bgm and state['design_values']['bgm.enabled'] is not True:
-            raise HarnessError('BGM is off in the frozen configuration; enable bgm.enabled on the account and reselect before building a BGM sound Plan')
-        assets = explainer.installed_assets(project, check_mounts=False)
-        for asset in assets.values():
-            asset["path"] = str(storage.scoped_path(project, f'{asset["vendor_path"]}/{asset["metadata"]["entry"]}'))
-        elements, tracks = explainer.sound_elements(sound, cues, assets, library_bgm=library_bgm)
-        index = storage.scoped_path(project, "index.html")
-        updated = explainer.insert_sound(index.read_text(encoding="utf-8"), elements)
+            alignment = Path(args.alignment).read_bytes()
+        except OSError as exc:
+            raise HarnessError(f"Cannot read alignment: {exc}") from exc
+        data = explainer.build_cues(text, alignment)
         config_path = storage.scoped_path(project, "project-config.json")
+        runtime = storage.scoped_path(project, "runtime/cues.js")
         before = {path: path.read_text(encoding="utf-8") if path.exists() else None
-                  for path in (sound_path, index, config_path)}
+                  for path in (cue_path, config_path)}
+        if not runtime.exists():
+            before[runtime] = None
         try:
-            write_json(sound_path, sound)
-            atomic_write(index, updated)
-            explainer.declare_files(project, ["sound.json", "runtime/cues.json"])
-            if lock:
-                appearance.verify(project, lock)
-            else:
-                explainer.installed_assets(project)
+            write_json(cue_path, data)
+            if not runtime.exists():
+                atomic_write(runtime, (Path(__file__).parent / "runtime/cues.js").read_text(encoding="utf-8"))
+            explainer.declare_files(project, ["runtime/cues.json", "runtime/cues.js"])
         except Exception:
             for path, original in before.items():
                 if original is None:
@@ -365,28 +316,7 @@ def command_explainer_build(root: Path, args: argparse.Namespace) -> None:
                 else:
                     atomic_write(path, original)
             raise
-        print(json.dumps({"path": str(sound_path), "tracks": tracks}, ensure_ascii=False))
-
-
-def command_import_sfx(root: Path, args: argparse.Namespace) -> None:
-    from sfx_import import import_sfx
-    print(json.dumps(import_sfx(Path(args.package), Path(args.source)), ensure_ascii=False, indent=2))
-
-
-def command_import_bgm(root: Path, args: argparse.Namespace) -> None:
-    from bgm_import import import_bgm
-    print(json.dumps(import_bgm(Path(args.file), Path(args.source), args.id, library=args.library,
-                                source_url=args.source_url, license_name=args.license, attribution=args.attribution,
-                                title=args.title, moods=args.mood or ()), ensure_ascii=False, indent=2))
-
-
-def command_generate_sfx(root: Path, args: argparse.Namespace) -> None:
-    import sfx_generate
-    tools = {'sclang': os.environ.get('HYPERFRAMES_SCLANG', 'sclang'), 'node': os.environ.get('HYPERFRAMES_NODE', 'node'),
-             'ffmpeg': os.environ.get('HYPERFRAMES_FFMPEG_PATH', 'ffmpeg'), 'earshot': os.environ.get('HYPERFRAMES_EARSHOT', 'earshot')}
-    result = sfx_generate.generate(Path(args.recipe) if args.recipe else None, read_json(Path(args.parameters)),
-                                   Path(args.output), engine=args.engine, **tools)
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(json.dumps({"path": str(cue_path), "mismatches": data["mismatches"]}, ensure_ascii=False))
 
 
 def command_account_character(root: Path, args: argparse.Namespace) -> None:
@@ -5370,12 +5300,10 @@ def build_parser() -> argparse.ArgumentParser:
     script_output = script_commands.add_parser("text", help="Narration for reading, counts, TTS or alignment")
     script_output.add_argument("--anchors", action="store_true", help="Keep stable paragraph Anchor comments")
     script_output.set_defaults(handler=command_script_text)
-    for name in ("cues", "sound"):
-        group = commands.add_parser(name)
-        build = group.add_subparsers(dest=f"{name}_command", required=True).add_parser("build")
-        if name == "cues":
-            build.add_argument("--alignment", required=True)
-        build.set_defaults(handler=command_explainer_build)
+    cues = commands.add_parser("cues")
+    cues_build = cues.add_subparsers(dest="cues_command", required=True).add_parser("build")
+    cues_build.add_argument("--alignment", required=True)
+    cues_build.set_defaults(handler=command_explainer_build)
 
     beats = commands.add_parser("beats", help="Extract the formal audio beat grid with pinned upstream tools")
     beat_build = beats.add_subparsers(dest="beats_command", required=True).add_parser("build")
@@ -5455,27 +5383,6 @@ def build_parser() -> argparse.ArgumentParser:
     interface.add_argument('component', help='Card/asset identity, exact legacy version, or explicit listed source path')
     interface.add_argument('--candidate', action='store_true', help='Read an explicit candidate package or editable source path; never authorize installation')
     interface.set_defaults(handler=command_component_interface)
-    sfx = component_commands.add_parser("import-sfx", help="Import local seed SFX into an editable card asset directory")
-    sfx.add_argument("--from", dest="package", required=True)
-    sfx.add_argument("--source", required=True)
-    sfx.set_defaults(handler=command_import_sfx)
-    bgm = component_commands.add_parser("import-bgm", help="Import one downloaded open-library music track as an editable BGM source")
-    bgm.add_argument("--file", required=True, help="Downloaded mp3/wav/ogg/flac/m4a track")
-    bgm.add_argument("--source", required=True, help="AssetSource root; the track lands in <source>/<id>")
-    bgm.add_argument("--id", required=True)
-    bgm.add_argument("--title", required=True)
-    bgm.add_argument("--library", required=True, help="Open music library the track came from")
-    bgm.add_argument("--source-url", required=True, help="Track page in that library")
-    bgm.add_argument("--license", required=True, help="Exact license, e.g. CC BY 4.0; no-derivatives is refused")
-    bgm.add_argument("--attribution", required=True, help="Credit line as the license asks for it")
-    bgm.add_argument("--mood", action="append", help="Mood tag; repeatable")
-    bgm.set_defaults(handler=command_import_bgm)
-    generate_sfx = component_commands.add_parser("generate-sfx", help="Render one SFX (earshot bank, SuperCollider or jsfxr) into a new editable source")
-    generate_sfx.add_argument("--engine", choices=("earshot", "supercollider", "jsfxr"), required=True)
-    generate_sfx.add_argument("--parameters", required=True, help="JSON parameters; earshot takes id plus seed/duration/apex/pitch/peak_db")
-    generate_sfx.add_argument("--output", required=True, help="New directory under an AssetSource root")
-    generate_sfx.add_argument("--recipe", help="SuperCollider/jsfxr recipe file instead of the bundled one")
-    generate_sfx.set_defaults(handler=command_generate_sfx)
     component_validate = component_commands.add_parser("validate")
     component_validate.add_argument("component")
     component_validate.add_argument("--candidate", action="store_true", help="Validate a package path without declaring it accepted or production-ready")

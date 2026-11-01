@@ -71,8 +71,7 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
 ## 7. 声音与封面
 
 示例静音。若某 Variant 需要音效：**只**为结构重击与关键 hit 配音效（如 S4 折叠落定），
-**不要**给普通入场自动配音效；音效来自 earshot 音效库渲染、SuperCollider / jsfxr 配方或 HyperFrames 自带音效导入。
-配置开启 `bgm.enabled` 时可铺一条开源曲库的现成 BGM（按 `bgm.policy`，`work component import-bgm` 带许可导入），
-不用音乐模型或代码合成 BGM。cue 对应同帧可见事件并按 `data-start` 调度，保证 seek 安全。
+**不要**给普通入场自动配音效。
+配置开启 `bgm.enabled` 时可铺一条 BGM（取向见 `bgm.policy`）。工具不生成、不混合音频，音轨以 `data-audio-role="stem"` 的本地 `<audio>` 放进工程。cue 对应同帧可见事件并按 `data-start` 调度，保证 seek 安全。
 
 封面与 stage-full 相同：本卡不规定封面，按工具的封面合同（`.studio/spec/creative.md`）合成。

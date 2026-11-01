@@ -81,9 +81,7 @@ A1 约束第 4 层及资产明确声明的 embedded 独立文字：新增解释�
 
 ## 声音层与字幕
 
-Plan 列 BGM 精确资产引用、情绪、起止 cue 与 gain；音效列资产、cue、画面事件、层级与 gain。
-
-BGM 只用开源曲库的现成曲目：按账号 `bgm.policy` 选曲，下载后用 `work component import-bgm` 带来源、许可与署名导入（禁演绎 ND 拒收，NC/SA 单独记录）；不用音乐模型或代码合成 BGM，Plan 未写 BGM 时缺 BGM 不阻塞。音效来源：earshot 音效库渲染（`work component generate-sfx --engine earshot`，按动作调时长与峰值时刻）、SuperCollider / jsfxr 配方，或 HyperFrames 自带音效导入。
+Plan 写声音意图：BGM 情绪、起止 cue，音效对应的画面事件。工具不生成、不选取也不混合音频，具体音轨在 Draft 阶段备好，以 `data-audio-role="stem"` 的本地 `<audio>` 放进工程。
 
 1. 每个音效对应同帧可见事件；允许服务于接触感的微偏移，保持可见事件与声音因果一致。
 2. 类别与含义一致，错误音不配正面结论。

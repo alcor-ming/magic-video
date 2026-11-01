@@ -362,6 +362,9 @@ def explainer_diagnostics(project, dependencies, lock, plan=""):
             ref, src = attrs.get("data-asset-ref"), attrs.get("src", "")
             url = urlsplit(src)
             path = (project / name).parent / unquote(url.path)
+            if (attrs.get("data-audio-role") == "stem" and not url.scheme and not url.netloc
+                    and path.resolve().is_relative_to(project.resolve()) and path.is_file()):
+                continue
             valid = not url.scheme and not url.netloc and path.resolve() in allowed.values()
             if ref:
                 valid = valid and allowed.get(ref) == path.resolve()
