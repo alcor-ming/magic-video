@@ -501,6 +501,9 @@ def _validate_runtime(identity: str, value) -> None:
     plugins = value.get("plugins", [])
     if not isinstance(plugins, list) or any(not isinstance(item, str) or not item.strip() for item in plugins):
         raise DesignError(f"Invalid runtime plugins: {identity}")
+    three = value.get("three")
+    if three is not None and (not isinstance(three, str) or not three.strip()):
+        raise DesignError(f"Invalid three runtime version: {identity}")
 
 
 def _validate_design_body(identity: str, card: dict) -> None:
@@ -743,6 +746,16 @@ def version_satisfies(version, spec) -> bool:
 
 def host_gsap(root=None):
     """The GSAP version pinned by the host lock file, or None."""
+    return host_package("gsap", root)
+
+
+def host_three(root=None):
+    """The Three.js version pinned by the host lock file, or None."""
+    return host_package("three", root)
+
+
+def host_package(name, root=None):
+    """A package version pinned by the host lock file, or None."""
     path = repository(root) / LOCK_NAME
     if not path.is_file():
         return None
@@ -751,7 +764,7 @@ def host_gsap(root=None):
     except (OSError, ValueError):
         return None
     packages = data.get("packages") if isinstance(data, dict) else None
-    entry = packages.get("node_modules/gsap") if isinstance(packages, dict) else None
+    entry = packages.get("node_modules/" + name) if isinstance(packages, dict) else None
     version = entry.get("version") if isinstance(entry, dict) else None
     return version if _version_tuple(version) else None
 
@@ -791,6 +804,11 @@ def _strip_comments(text: str) -> str:
     text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
     text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
     return re.sub(r"//[^\n]*", "", text)
+
+
+def _is_three_file(name: str) -> bool:
+    lowered = name.casefold()
+    return lowered in {"three.js", "three.min.js", "three.module.js", "three.module.min.js", "three.cjs"}
 
 
 def _is_gsap_file(name: str) -> bool:
@@ -1193,6 +1211,13 @@ def _validate_one(name, card, found, root, config, runtime_root, tracked_root=No
             warnings.append("host GSAP version is not locked by " + LOCK_NAME)
         elif not version_satisfies(version, spec):
             errors.append(f"gsap {spec} is not satisfied by host {version}")
+    spec = runtime.get("three")
+    if spec is not None:
+        version = host_three(root)
+        if version is None:
+            warnings.append("host Three.js version is not locked by " + LOCK_NAME)
+        elif not version_satisfies(version, spec):
+            errors.append(f"three {spec} is not satisfied by host {version}")
     plugins = runtime.get("plugins") or []
     if plugins:
         available = host_plugin_files(runtime_root if runtime_root is not None else root)
@@ -1211,6 +1236,8 @@ def _validate_one(name, card, found, root, config, runtime_root, tracked_root=No
         relative = path.relative_to(card_dir).as_posix()
         if _is_gsap_file(path.name):
             errors.append(f"card ships a GSAP file: {relative}")
+        if runtime.get("three") is not None and _is_three_file(path.name):
+            errors.append(f"card ships a Three.js file: {relative}")
         if path.suffix.lower() not in _SCAN_SUFFIXES:
             continue
         try:

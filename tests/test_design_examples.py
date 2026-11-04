@@ -62,6 +62,32 @@ class ExampleBuildTest(unittest.TestCase):
                     self.assertFalse(any('gsap' in item['source'].casefold() for item in receipt['files']))
                     design_examples.build(identity, project, runtime_root=runtime)
 
+    def test_declared_three_is_injected_from_host(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = host_runtime(Path(tmp) / 'host')
+            three = runtime / 'runtime/npm/node_modules/three/build/three.min.js'
+            three.parent.mkdir(parents=True)
+            three.write_text('/* three host fixture */\n')
+            original = designs.get
+            designs.get = lambda identity, **kwargs: {'runtime': {'gsap': '^3.14', 'three': '0.160.0'}}
+            try:
+                entries = design_examples.runtime_manifest('stage-full', runtime_root=runtime)
+                (three).unlink()
+                with self.assertRaisesRegex(ValueError, 'three.min.js'):
+                    design_examples.runtime_manifest('stage-full', runtime_root=runtime)
+            finally:
+                designs.get = original
+            targets = {entry['target']: entry for entry, _source in entries}
+            self.assertEqual({'runtime/gsap.min.js', 'runtime/three.min.js'}, set(targets))
+            self.assertEqual('three', targets['runtime/three.min.js']['package'])
+
+    def test_three_runtime_declaration_is_validated(self):
+        designs._validate_runtime('card', {'gsap': '^3.14', 'three': '0.160.0'})
+        with self.assertRaisesRegex(designs.DesignError, 'three'):
+            designs._validate_runtime('card', {'three': ' '})
+        self.assertTrue(designs._is_three_file('three.min.js'))
+        self.assertFalse(designs._is_three_file('three-scene.js'))
+
     def test_missing_host_runtime_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaisesRegex(ValueError, 'Host runtime'):

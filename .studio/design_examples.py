@@ -101,6 +101,12 @@ def runtime_manifest(identity, repo=REPO, config=None, runtime_root=None):
             raise ValueError('Host runtime does not provide: ' + name)
         entries.append(({"target": 'runtime/' + name, "sha256": sha256(source),
                          "package": 'gsap', "version": version}, source))
+    if runtime.get('three'):
+        source = runtime_paths(Path(runtime_root) if runtime_root is not None else Path(repo))['THREE_FILE']
+        if not source.is_file():
+            raise ValueError('Host runtime does not provide: three.min.js')
+        entries.append(({"target": 'runtime/three.min.js', "sha256": sha256(source),
+                         "package": 'three', "version": designs.host_three(repo)}, source))
     return entries
 
 

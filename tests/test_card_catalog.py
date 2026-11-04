@@ -253,6 +253,22 @@ class AuthoringTest(unittest.TestCase):
         self.assertTrue(any('Math.random' in item for item in warnings), warnings)
         self.assertTrue(any('repeat: -1' in item for item in warnings), warnings)
 
+    def test_vendored_three_is_refused_only_when_host_three_is_declared(self):
+        (self.repo / 'windows-npm.lock.json').write_text(json.dumps({
+            'packages': {'node_modules/three': {'version': '0.160.0'}}}))
+        for identity, runtime in (('own-three', {}), ('host-three', {'three': '0.160.0'})):
+            card = designs._skeleton(identity, 'design')
+            card['runtime'] = runtime
+            directory = write_card(self.user, identity, card)
+            (directory / 'assets').mkdir()
+            (directory / 'three.module.js').write_text('/* vendored copy */\n')
+        result = designs.validate('own-three', root=self.repo, config=self.config)
+        self.assertFalse(any('Three.js file' in item for item in result['cards']['own-three']['errors']), result)
+        result = designs.validate('host-three', root=self.repo, config=self.config)
+        errors = result['cards']['host-three']['errors']
+        self.assertTrue(any('Three.js file: three.module.js' in item for item in errors), errors)
+        self.assertFalse(any('not satisfied by host' in item for item in errors), errors)
+
     def test_shipped_cards_validate_clean(self):
         result = designs.validate()
         self.assertTrue(result['ok'], result)
