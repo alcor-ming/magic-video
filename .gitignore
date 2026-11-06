@@ -5,6 +5,8 @@ idea.md
 /assets/
 /canvas/
 /outputs/
+/.venv/
+node_modules/
 /dist/
 /works/
 /sample-library/

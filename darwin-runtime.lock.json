@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "target": "darwin-arm64",
+  "python": "3.12.16",
+  "versions": {
+    "node": "24.14.0",
+    "chromium": "152.0.7977.30",
+    "ffmpeg": "4.4",
+    "ffprobe": "n4.4.1",
+    "acorn": "8.15.0",
+    "gsap": "3.14.2",
+    "hyperframes": "0.8.150",
+    "koffi": "3.3.2",
+    "onnxruntime-node": "1.21.1",
+    "three": "0.160.0"
+  },
+  "python_packages": {
+    "pillow": "12.3.0",
+    "numpy": "2.4.2",
+    "scipy": "1.17.1"
+  },
+  "required_files": [
+    "runtime/python/bin/python3",
+    "runtime/node/node",
+    "runtime/chromium/chrome-headless-shell",
+    "runtime/ffmpeg/bin/ffmpeg",
+    "runtime/ffmpeg/bin/ffprobe",
+    "runtime/npm/package-lock.json",
+    "runtime/npm/node_modules/hyperframes/bin/hyperframes.mjs",
+    "runtime/npm/node_modules/hyperframes/dist/hyperframes-player.global.js",
+    "runtime/npm/node_modules/hyperframes/dist/hyperframe.runtime.iife.js",
+    "runtime/npm/node_modules/gsap/dist/gsap.min.js",
+    "runtime/npm/node_modules/three/build/three.min.js",
+    "runtime/npm/node_modules/acorn/dist/acorn.js",
+    "runtime/npm/node_modules/esbuild/lib/main.js",
+    "runtime/npm/node_modules/@esbuild/darwin-arm64/bin/esbuild"
+  ],
+  "assets": [
+    {
+      "kind": "zip",
+      "file": "darwin-runtime.zip",
+      "target": "runtime",
+      "sha256": "465dba2c68030106bd87dc231235be1db36cda4277711c0c157138832b9926c1"
+    }
+  ],
+  "browser_source": {
+    "url": "https://storage.googleapis.com/chrome-for-testing-public/152.0.7977.30/mac-arm64/chrome-headless-shell-mac-arm64.zip",
+    "sha256": "1db16c16e72bedfa747ed01c207a3fe8ee7370c35f2094279eb8878c996e8c79"
+  }
+}

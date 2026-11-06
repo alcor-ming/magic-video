@@ -38,6 +38,8 @@ class CharacterAssetsTest(unittest.TestCase):
             harness.mkdir()
             import shutil
             shutil.copyfile(Path(__file__).resolve().parents[1] / "windows-runtime.lock.json", harness / "windows-runtime.lock.json")
+            # This fixture models a Windows package, regardless of the test host.
+            (harness / ".release.json").write_text('{"target": "windows-x64", "channel": "local"}')
             asset_store.accept_component(store, candidate["component_ref"], candidate["package_sha256"], "Synthetic test", runtime_root=harness)
             # The accepted closure is also the authority used by the figure loader.
             closure = asset_store._accepted_closure(store, [{"ref": candidate["component_ref"], "kind": "character", "package_sha256": candidate["package_sha256"]}], runtime_root=harness)

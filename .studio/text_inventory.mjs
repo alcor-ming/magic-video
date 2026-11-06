@@ -8,7 +8,7 @@ if (!process.env.HYPERFRAMES_CLI) throw new Error('Runtime is not configured: HY
 const puppeteer = createRequire(process.env.HYPERFRAMES_CLI)('puppeteer-core');
 const input = JSON.parse(await fs.readFile(process.argv[2], 'utf8'));
 const directory = await fs.realpath(input.project);
-const browser = await puppeteer.launch({executablePath: process.env.HYPERFRAMES_BROWSER_PATH || process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox']});
+const browser = await puppeteer.launch({executablePath: process.env.HYPERFRAMES_BROWSER_PATH || process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true, args: process.platform === 'linux' ? ['--no-sandbox'] : []});
 const errors = [], items = new Map(), domTexts = [];
 try {
   const page = await browser.newPage();

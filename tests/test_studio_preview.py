@@ -11,6 +11,16 @@ studio_preview = WORK_CLI.studio_preview
 
 
 class StudioPreviewTest(unittest.TestCase):
+    def test_mac_browser_discovery_and_explicit_override(self):
+        chrome = Path('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+        with mock.patch.object(studio_preview.sys, 'platform', 'darwin'), \
+                mock.patch.dict(studio_preview.os.environ, {}, clear=True), \
+                mock.patch.object(Path, 'is_file', lambda path: path == chrome):
+            self.assertEqual(chrome, studio_preview.browser_path())
+            with mock.patch.dict(studio_preview.os.environ, {'HYPERFRAMES_STUDIO_BROWSER_PATH': '/missing/browser'}):
+                with self.assertRaises(studio_preview.VisualPlanError):
+                    studio_preview.browser_path()
+
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)

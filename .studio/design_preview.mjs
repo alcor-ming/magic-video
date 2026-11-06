@@ -11,7 +11,7 @@ const puppeteer = createRequire(process.env.HYPERFRAMES_CLI)('puppeteer-core');
 const [directory, output] = process.argv.slice(2).map(value => path.resolve(value));
 assert(directory && output && output !== directory);
 await fs.mkdir(output, {recursive: true});
-const browser = await puppeteer.launch({executablePath: process.env.HYPERFRAMES_BROWSER_PATH || process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox']});
+const browser = await puppeteer.launch({executablePath: process.env.HYPERFRAMES_BROWSER_PATH || process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true, args: process.platform === 'linux' ? ['--no-sandbox'] : []});
 const errors = [], requests = [], seeks = [], rasterDifferences = [];
 const hash = buffer => createHash('sha256').update(buffer).digest('hex');
 try {

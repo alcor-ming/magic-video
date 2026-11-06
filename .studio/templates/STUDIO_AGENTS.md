@@ -27,4 +27,4 @@
 
 部署、安装切换、应用交付与 commit/tag/push 需要覆盖准确目标的用户授权；测试接受不转为生产接受。
 
-生产会话以本根为 cwd，读取 `.agents/skills/hyperframes-production-workflow/SKILL.md`。Windows 原生使用 `work.cmd`，WSL 生产会话使用 `./work-wsl.sh`；开发会话只使用隔离夹具。执行者可能无法看图：返回诊断 JSON、seek 检查结果及截图路径，需要人工动态观看或试听的项目标为未验证。
+生产会话以本根为 cwd，读取 `.agents/skills/hyperframes-production-workflow/SKILL.md`。macOS 原生使用 `./work`，Windows 原生使用 `work.cmd`，WSL 生产会话使用 `./work-wsl.sh`；开发会话只使用隔离夹具。执行者可能无法看图：返回诊断 JSON、seek 检查结果及截图路径，需要人工动态观看或试听的项目标为未验证。

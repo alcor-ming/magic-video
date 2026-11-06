@@ -60,6 +60,7 @@ def scoped_path(root: Path, relative: str) -> Path:
 
 def snapshot_files(project: Path) -> tuple[str, ...] | None:
     """Explicit dynamic entries supplement the existing literal-reference parser."""
+    project = project.resolve()
     config = project / "project-config.json"
     if not config.is_file():
         return None

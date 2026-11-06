@@ -36,3 +36,7 @@ Work 管一期内容，Variant 管独立制作版本，生命周期通过 Work C
 
 - 更新完成后重启相关工具进程，Agent 重读根规则；下一条根命令用新版本，无需创建 Harness session。单次命令/长进程固定输入，不宣称整次聊天跨命令固定版本。
 - 日常使用统一根目录的 `work.cmd` / `work.ps1`，WSL 生产会话使用 `work-wsl.sh`；`doctor` 报告实际部署身份、规则、内容路径与 Review 范围。新命令或参数仅在实现后写入可执行帮助；Windows 原生结果与 WSL/mock 分别报告。
+
+## macOS 开发与预览
+
+使用根 `dev-macos` 与 [本机说明](../docs/PRD/macos-development-preview.md)。原生工具、配置与 Review 夹具在忽略的 `.studio/.runtime/macos-preview/`；Python 在 `.venv/`。临时根先解析系统符号链接，内容内链接仍禁止。开发测试中的 Windows runtime 夹具需明确包身份；不以本机宿主替代包目标。Apple Silicon 本地安装使用 `release deploy`；运行时、个人包与验证边界见 [macOS 部署说明](../docs/macos-deployment.md)。

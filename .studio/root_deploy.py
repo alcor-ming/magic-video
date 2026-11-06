@@ -215,9 +215,11 @@ def idle(root, *, target='windows-x64'):
             pid = int(pid_text)
             executable = command.split(None, 1)[0].rsplit('/', 1)[-1]
             matched = re.fullmatch(
-                r'(python|pythonw|node|ffmpeg|ffprobe|chrome|chrome-headless-shell|esbuild)(\.exe)?',
+                r'(python(?:w|[0-9.]+)?|node|ffmpeg|ffprobe|chrome|chrome-headless-shell|esbuild)(\.exe)?',
                 executable, re.IGNORECASE)
-            if matched and pid != os.getpid() and prefix in command:
+            # macOS ps emits unquoted executable paths, including spaces in the root.
+            consumes_runtime = command.startswith(prefix + "runtime/")
+            if (matched or consumes_runtime) and pid != os.getpid() and prefix in command:
                 raise ValueError(f'Root process {pid} is active; close preview/render before updating')
         return
     if os.name != "nt":

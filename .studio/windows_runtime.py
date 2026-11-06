@@ -49,13 +49,17 @@ def validate_review_tree(root: Path) -> None:
 
 def runtime_paths(root: Path) -> dict[str, Path]:
     npm = root / "runtime" / "npm" / "node_modules"
+    manifest = root / ".release.json"
+    target = read_json(manifest).get("target", "windows-x64") if manifest.is_file() else (
+        "darwin-arm64" if sys.platform == "darwin" else "windows-x64")
+    suffix = "" if target == "darwin-arm64" else ".exe"
     return {
-        "HYPERFRAMES_NODE": root / "runtime/node/node.exe",
+        "HYPERFRAMES_NODE": root / ("runtime/node/node" + suffix),
         "HYPERFRAMES_CLI": npm / "hyperframes/bin/hyperframes.mjs",
         "HYPERFRAMES_DIST": npm / "hyperframes/dist",
-        "HYPERFRAMES_BROWSER_PATH": root / "runtime/chromium/chrome-headless-shell.exe",
-        "HYPERFRAMES_FFMPEG_PATH": root / "runtime/ffmpeg/bin/ffmpeg.exe",
-        "HYPERFRAMES_FFPROBE_PATH": root / "runtime/ffmpeg/bin/ffprobe.exe",
+        "HYPERFRAMES_BROWSER_PATH": root / ("runtime/chromium/chrome-headless-shell" + suffix),
+        "HYPERFRAMES_FFMPEG_PATH": root / ("runtime/ffmpeg/bin/ffmpeg" + suffix),
+        "HYPERFRAMES_FFPROBE_PATH": root / ("runtime/ffmpeg/bin/ffprobe" + suffix),
         "GSAP_FILE": npm / "gsap/dist/gsap.min.js",
         "THREE_FILE": npm / "three/build/three.min.js",
     }
@@ -217,7 +221,17 @@ def environment(root: Path, config: dict | None = None) -> dict[str, str]:
     })
     env["PATH"] = os.pathsep.join([str(root / "runtime/node"), str(root / "runtime/ffmpeg/bin"), env.get("PATH", "")])
     # Every Node child uses this physical root, not a caller's preload from another installation.
-    env["NODE_OPTIONS"] = "--require " + json.dumps(str(root / ".studio/windows_node.cjs"), ensure_ascii=False)
+    if manifest.get("target") == "darwin-arm64":
+        env.pop("NODE_OPTIONS", None)
+        env.pop("PYTHONHOME", None)
+        env.pop("PYTHONPATH", None)
+        env["PYTHONNOUSERSITE"] = "1"
+        env["HYPERFRAMES_DEPENDENCY_MODULE_ROOT"] = str(root / "runtime/npm")
+        # Interactive Studio needs a GUI browser; its existing macOS lookup selects Chrome.
+        env.pop("HYPERFRAMES_STUDIO_BROWSER_PATH", None)
+        env["TMPDIR"] = str(cache)
+    else:
+        env["NODE_OPTIONS"] = "--require " + json.dumps(str(root / ".studio/windows_node.cjs"), ensure_ascii=False)
     env["FFMPEG_PATH"] = env["HYPERFRAMES_FFMPEG_PATH"]
     env["FFPROBE_PATH"] = env["HYPERFRAMES_FFPROBE_PATH"]
     for key in ("work_root", "asset_root"):
@@ -230,13 +244,16 @@ def environment(root: Path, config: dict | None = None) -> dict[str, str]:
 
 
 def doctor(root: Path, env: dict[str, str]) -> dict:
-    lock = read_json(root / "windows-runtime.lock.json")
+    from root_deploy import runtime_lock_path
+    lock_path = runtime_lock_path(root, target=read_json(root / ".release.json").get("target", "windows-x64"))
+    lock = read_json(lock_path)
+    backend = "darwin-native" if lock.get("target") == "darwin-arm64" else "windows-native"
     config = json.loads(env["HYPERFRAMES_AI_RESOLVED_CONFIG"])
-    result = {"release": read_json(root / ".release.json")["release"], "backend": "windows-native",
-              "invocation": "wsl-forwarded" if env.get("HYPERFRAMES_INVOCATION") == "wsl-forwarded" else "windows-native",
+    result = {"release": read_json(root / ".release.json")["release"], "backend": backend,
+              "invocation": "wsl-forwarded" if env.get("HYPERFRAMES_INVOCATION") == "wsl-forwarded" else backend,
               "review": env["HYPERFRAMES_AI_REVIEW"] == "1", "runtime": str(root),
               "rules_root": str(root / "AGENTS.md"),
-              "skills_root": str(root / ".agents/skills"), "runtime_lock": str(root / "windows-runtime.lock.json"),
+              "skills_root": str(root / ".agents/skills"), "runtime_lock": str(lock_path),
               "release_manifest_sha256": hashlib.sha256((root / ".release.json").read_bytes()).hexdigest(),
               "config": env["HYPERFRAMES_AI_CONFIG"], "asset_config": env["HYPERFRAMES_AI_ASSET_CONFIG"],
               "work_root": config.get("work_root", "not-configured"),
@@ -311,7 +328,8 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(result, indent=2))
             return int(any(value == "not-installed" or isinstance(value, dict) and value["status"] != "available"
                            for value in result["checks"].values()))
-        return subprocess.call([sys.executable, "-B", str(root / ".studio/work.py"), *(argv or ["--help"])], env=env)
+        return subprocess.call([sys.executable, *(["-I"] if read_json(root / ".release.json").get("target") == "darwin-arm64" else []),
+                                "-B", str(root / ".studio/work.py"), *(argv or ["--help"])], env=env)
 
 
 if __name__ == "__main__":

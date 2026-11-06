@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 from urllib.parse import unquote, urlsplit
 from urllib.request import ProxyHandler, build_opener
 
@@ -36,6 +37,10 @@ def browser_path():
                        for key in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA") if os.environ.get(key)]
     if not configured and os.environ.get("HYPERFRAMES_BROWSER_PATH"):
         candidates.append(Path(os.environ["HYPERFRAMES_BROWSER_PATH"]))
+    if not configured and sys.platform == "darwin":
+        for applications in (Path("/Applications"), Path.home() / "Applications"):
+            for app, executable in (("Google Chrome", "Google Chrome"), ("Chromium", "Chromium")):
+                candidates.append(applications / f"{app}.app" / "Contents" / "MacOS" / executable)
     for candidate in candidates:
         if candidate.is_file() and "headless" not in candidate.name:
             return candidate

@@ -468,6 +468,14 @@
     "tests/stage-kit-browser.mjs",
     "tests/test_stage_checks.py",
     ".studio/alignment_audit.py",
-    "tests/test_alignment_audit.py"
+    "tests/test_alignment_audit.py",
+    ".studio/prepare_darwin_runtime.py",
+    ".studio/templates/MACOS_AGENTS.md",
+    ".studio/templates/MACOS_CLAUDE.md",
+    ".studio/templates/work-macos.sh",
+    "darwin-npm.lock.json",
+    "darwin-runtime.lock.json",
+    "docs/macos-deployment.md",
+    "tests/test_darwin_release.py"
   ]
 }

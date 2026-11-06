@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+"""Configure and run the repository's isolated macOS development environment."""
+import argparse
+import json
+import os
+from pathlib import Path
+import platform
+import shutil
+import subprocess
+import sys
+import tempfile
+
+ROOT = Path(__file__).resolve().parent
+LOCAL = ROOT / '.studio/.runtime/macos-preview'
+CONFIG = LOCAL / 'config.json'
+
+
+def executable(value):
+    path = Path(value).expanduser().absolute()
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise ValueError(f'Executable unavailable: {path}')
+    return str(path)
+
+
+def environment(config, *, review=False):
+    # A developer shell may have inherited a production root or Windows runtime.
+    env = {key: value for key, value in os.environ.items()
+           if not key.startswith('HYPERFRAMES_') and key != 'NODE_OPTIONS'}
+    python = executable(config['python'])
+    node = executable(config['node'])
+    browser = executable(config['browser'])
+    npm = LOCAL / 'npm'
+    cli = npm / 'node_modules/hyperframes/dist/cli.js'
+    if not cli.is_file():
+        raise ValueError('Preview runtime missing; run dev-macos setup first')
+    env.update({
+        'PATH': os.pathsep.join([str(Path(python).parent), str(Path(node).parent),
+                                str(LOCAL / 'bin'), env.get('PATH', '')]),
+        'VIRTUAL_ENV': str(ROOT / '.venv'),
+        'PYTHON': python,
+        'TMPDIR': str(Path(tempfile.gettempdir()).resolve()),
+        'PYTHONDONTWRITEBYTECODE': '1',
+        'HYPERFRAMES_NODE': node,
+        'HYPERFRAMES_CLI': str(cli),
+        'HF_PACKAGE': str(cli.parent.parent),
+        'HYPERFRAMES_DEPENDENCY_MODULE_ROOT': str(npm),
+        'HYPERFRAMES_BROWSER_PATH': browser,
+        'HYPERFRAMES_STUDIO_BROWSER_PATH': browser,
+        'CHROME_PATH': browser,
+        'PLAYWRIGHT_PACKAGE': str(ROOT / '.studio/parser/node_modules/playwright-core'),
+        'HYPERFRAMES_FFMPEG_PATH': executable(config['ffmpeg']),
+        'HYPERFRAMES_FFPROBE_PATH': executable(config['ffprobe']),
+        'HYPERFRAMES_NO_TELEMETRY': '1', 'DO_NOT_TRACK': '1',
+    })
+    if review:
+        env.update({
+            'HYPERFRAMES_AI_ROOT': str(ROOT),
+            'HYPERFRAMES_AI_CONFIG': str(LOCAL / 'content.json'),
+            'HYPERFRAMES_AI_ASSET_CONFIG': str(LOCAL / 'content.json'),
+            'HYPERFRAMES_AI_WORK_ROOT': str(LOCAL / 'sandbox/review/macos'),
+            'HYPERFRAMES_AI_REVIEW': '1',
+        })
+    return env
+
+
+def unit_environment(config):
+    # Unit fixtures supply their own stub runtimes; native pins would override them.
+    return {key: value for key, value in environment(config).items()
+            if not key.startswith('HYPERFRAMES_')
+            and key not in ('HF_PACKAGE', 'CHROME_PATH', 'PLAYWRIGHT_PACKAGE')}
+
+
+def setup(args):
+    if sys.platform != 'darwin' or platform.machine() != 'arm64':
+        raise ValueError('This setup currently supports native Apple Silicon macOS')
+    if sys.version_info < (3, 11):
+        raise ValueError('Python 3.11+ is required')
+    node = shutil.which('node')
+    if not node or int(subprocess.check_output([node, '-p', 'process.versions.node.split(".")[0]'], text=True)) < 22:
+        raise ValueError('Node.js 22+ is required on PATH')
+    config = {'python': executable(ROOT / '.venv/bin/python'), 'node': executable(node),
+              'browser': executable(args.browser), 'ffmpeg': executable(args.ffmpeg),
+              'ffprobe': executable(args.ffprobe)}
+    subprocess.run([config['python'], '-c',
+                    'from PIL import Image; assert Image.__version__ == "12.3.0"; print("Pillow", Image.__version__)'], check=True)
+    LOCAL.mkdir(parents=True, exist_ok=True)
+    npm = LOCAL / 'npm'
+    npm.mkdir(exist_ok=True)
+    # Preview does not need Windows DLL loading or the optional inference engine.
+    lock = json.loads((ROOT / 'windows-npm.lock.json').read_text())
+    original = json.loads(json.dumps(lock))
+    for name in ('koffi', 'onnxruntime-node'):
+        lock['packages']['']['dependencies'].pop(name, None)
+    (npm / 'package.json').write_text(json.dumps(lock['packages'][''], indent=2) + '\n')
+    (npm / 'package-lock.json').write_text(json.dumps(lock, indent=2) + '\n')
+    subprocess.run(['npm', 'install', '--prefix', str(npm), '--package-lock-only', '--offline',
+                    '--ignore-scripts', '--no-audit', '--no-fund'], check=True)
+    derived = json.loads((npm / 'package-lock.json').read_text())
+    for name, package in derived['packages'].items():
+        if name and any(package.get(key) != original['packages'].get(name, {}).get(key)
+                        for key in ('version', 'resolved', 'integrity')):
+            raise ValueError(f'Preview dependency changed outside the existing lock: {name}')
+    subprocess.run(['npm', 'ci', '--prefix', str(npm), '--ignore-scripts', '--no-audit', '--no-fund'], check=True)
+    for name in ('parser', 'sfx'):
+        subprocess.run(['npm', 'ci', '--prefix', str(ROOT / '.studio' / name), '--no-audit', '--no-fund'], check=True)
+    binaries = LOCAL / 'bin'
+    binaries.mkdir(exist_ok=True)
+    for name in ('ffmpeg', 'ffprobe'):
+        link = binaries / name
+        if link.is_symlink():
+            link.unlink()
+        link.symlink_to(config[name])
+    # Reuse the existing Review contract; never bind to a production WorkStore.
+    store = LOCAL / 'sandbox'
+    (store / 'works').mkdir(parents=True, exist_ok=True)
+    sys.path.insert(0, str(ROOT / '.studio'))
+    from work_requests import init_review
+    if not (store / 'review/macos').exists():
+        init_review(store, 'macos')
+    (LOCAL / 'content.json').write_text(json.dumps({'work_root': str(store / 'review/macos')}) + '\n')
+    environment(config)
+    CONFIG.write_text(json.dumps(config, indent=2) + '\n')
+    print(f'Configured native development and preview: {LOCAL}')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest='command', required=True)
+    configure = commands.add_parser('setup', help='Install pinned npm dependencies and bind local native tools')
+    for name in ('browser', 'ffmpeg', 'ffprobe'):
+        configure.add_argument('--' + name, required=True)
+    commands.add_parser('doctor', help='Check the configured tools without starting a server')
+    commands.add_parser('check', help='Run Python unit tests with fixture-controlled runtimes')
+    run = commands.add_parser('run', help='Run a development command in the isolated environment')
+    run.add_argument('argv', nargs=argparse.REMAINDER)
+    work = commands.add_parser('work', help='Run Work CLI against the isolated macOS Review store')
+    work.add_argument('argv', nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+    try:
+        if args.command == 'setup':
+            setup(args)
+            return 0
+        config = json.loads(CONFIG.read_text())
+        if args.command == 'check':
+            return subprocess.run([config['python'], '-m', 'unittest', 'discover', '-s', 'tests', '-q'],
+                                  env=unit_environment(config), cwd=ROOT).returncode
+        env = environment(config, review=args.command == 'work')
+        if args.command == 'doctor':
+            for command in ([config['python'], '--version'], [config['node'], '--version'],
+                            [config['browser'], '--version'], [config['ffmpeg'], '-version'],
+                            [config['ffprobe'], '-version']):
+                result = subprocess.run(command, env=env, capture_output=True, text=True, check=True)
+                print(result.stdout.splitlines()[0])
+            subprocess.run([config['node'], '-e',
+                'const r=require("node:module").createRequire(process.env.HYPERFRAMES_CLI);'
+                'r("puppeteer-core");r("sharp");r("esbuild").transformSync("let x=1");'
+                'console.log("Preview dependencies OK")'], env=env, check=True)
+            return 0
+        argv = args.argv[1:] if args.argv[:1] == ['--'] else args.argv
+        if args.command == 'work':
+            argv = [config['python'], str(ROOT / 'work'), *argv]
+        if not argv:
+            raise ValueError('A command is required after run')
+        return subprocess.run(argv, env=env, cwd=ROOT).returncode
+    except (ValueError, OSError, subprocess.CalledProcessError) as error:
+        print(f'dev-macos: {error}', file=sys.stderr)
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -14,6 +14,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const {HF_PACKAGE, PLAYWRIGHT_PACKAGE, CHROME_PATH, WORK_COMMAND, FIXTURE_ROOT} = process.env;
+const previewOnly = process.argv.includes('--preview-only');
 assert(HF_PACKAGE && PLAYWRIGHT_PACKAGE && CHROME_PATH, 'Set local HF_PACKAGE, PLAYWRIGHT_PACKAGE, CHROME_PATH');
 assert(process.platform !== 'win32' || WORK_COMMAND && FIXTURE_ROOT,
   'Windows must use an explicitly bound Review root work.cmd and FIXTURE_ROOT');
@@ -38,6 +39,7 @@ if (!WORK_COMMAND) {
   delete env.HYPERFRAMES_AI_SESSION;
   delete env.HYPERFRAMES_AI_REVIEW;
   await fs.cp(path.join(repo, '.studio/templates'), path.join(base, '.studio/templates'), {recursive: true});
+  await fs.cp(path.join(repo, '.studio/designs'), path.join(base, '.studio/designs'), {recursive: true});
   for (const location of ['active', 'parked', 'archive']) await fs.mkdir(path.join(base, 'works', location), {recursive:true});
 }
 function invoke(args, expectedSuccess = true) {
@@ -83,15 +85,18 @@ async function treeHashes(directory) {
   return values;
 }
 async function fixture(label) {
-  const id = work('new', `Studio fixture ${label}`, '--workflow', 'hyperframes_video', '--detached');
-  const variant = path.join(root, 'works/active', id, 'variants/main');
+  const id = work('new', `Studio fixture ${label}`, '--workflow', 'hyperframes_video', '--design', 'stage-light', '--variant-id', 'main', '--detached');
+  const variant = path.join(root, 'works/test', id, 'variants/main');
   const project = path.join(variant, 'project');
   const run = (...args) => work('--work', id, '--variant', 'main', ...args);
-  const research = path.join(variant, 'RESEARCH.md');
+  const research = path.join(variant, '../../shared/RESEARCH.md');
   await fs.writeFile(research, (await fs.readFile(research, 'utf8')).replace('"pending"', '"ready"'));
   const plan = path.join(variant, 'ANIMATION_PLAN.md');
   // Approved here denotes synthetic fixture input, never acceptance of a production Work.
   await fs.writeFile(plan, (await fs.readFile(plan, 'utf8')).replace('"draft"', '"approved"')
+    .replace(/^\*\*延续信息：\*\*.*$/m, '')
+    .replace('**参考机制：** persistent-anchor', '**参考机制：** 跨线:persistent-anchor')
+    .replace('<独立上屏正文，实际换行，不照搬口播>', `Studio ${label}: evidence to answer`)
     + '\n| Scene | Intent |\n| --- | --- |\n| S01 | Synthetic process and source attribution |\n');
   await fs.mkdir(path.join(project, 'compositions'), {recursive: true});
   await fs.writeFile(path.join(project, 'DESIGN.md'), 'Synthetic Studio process fixture; no production claim.');
@@ -112,9 +117,9 @@ async function fixture(label) {
   }
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Studio fixture ${label}</title>
 <style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;letter-spacing:0}main{width:960px;height:540px;background:#eef3f1;padding:48px;color:#162725}h1{font-size:38px;margin:0 0 20px}p{font-size:22px;margin:0 0 30px}.process{display:flex;align-items:center;gap:20px}.node{width:220px;height:170px;padding:24px;background:#fff;border-top:8px solid #188b72;font-size:26px}.node:last-child{border-color:#cf5068}span{font-size:32px}.footer{margin-top:34px;font-size:20px}</style></head><body>
-<main data-composition-id="studio-${label}" data-width="960" data-height="540" data-start="0" data-duration="1"${label === 'A' ? '' : ' data-no-timeline="true"'}>
+<main id="index" data-composition-id="index" data-width="960" data-height="540" data-start="0" data-duration="1"${label === 'A' ? '' : ' data-no-timeline="true"'}>
 <section id="S01" class="clip" data-start="0" data-duration="1" data-track-index="0"><h1 id="fixture-title">Studio ${label}: evidence to answer</h1><p>Keep the retrieved source attached to the answer.</p><div class="process"><div class="node">Question<br>Which policy?</div><span aria-hidden="true">&rarr;</span><div class="node">Evidence<br>Policy 7</div><span aria-hidden="true">&rarr;</span><div class="node">Answer<br>Source: Policy 7</div></div><p class="footer">A visible relationship, not a repeated explanation.</p></section></main>
-${label === 'A' ? '<script src="assets/gsap.min.js"></script><script src="assets/MotionPathPlugin.min.js"></script><script>window.__timelines={"studio-A":gsap.timeline({paused:true}).to(".node:first-child",{y:8,duration:.4}).to({},{duration:.6})};</script>' : ''}
+${label === 'A' ? '<script src="assets/gsap.min.js"></script><script src="assets/MotionPathPlugin.min.js"></script><script>window.__timelines={};window.__timelines["index"]=gsap.timeline({paused:true}).to(".node:first-child",{y:8,duration:.4}).to({},{duration:.6});</script>' : ''}
 </body></html>`;
   const source = label === 'A' ? html.replaceAll('data-duration="1"', 'data-duration="4"')
     .replace('duration:.6', 'duration:3.6')
@@ -174,13 +179,18 @@ async function show(record, label) {
   evidence.checks.push({label, title:await frame.locator('#fixture-title').textContent(), frameUrl:frame.url(), pixels:{green,pink}});
   return {page, frame};
 }
-async function edit(record, before, after) {
+async function edit(record, before, after, readonly = false) {
   const projectName = decodeURIComponent(new URL(record.url).hash.slice('#project/'.length));
   const url = new URL(`/api/projects/${encodeURIComponent(projectName)}/files/index.html`, record.url);
   const response = await fetch(url); assert.equal(response.status, 200);
   const file = await response.json(); assert(file.content.includes(before));
   const changed = file.content.replace(before, after);
   const saved = await fetch(url, {method:'PUT', headers:{'Content-Type':'text/plain', 'If-Match':file.version}, body:changed});
+  if (readonly) {
+    assert(saved.status >= 400, 'Registered preview source must reject file writes');
+    assert.equal(await fs.readFile(path.join(record.project, 'index.html'), 'utf8'), file.content);
+    return;
+  }
   assert.equal(saved.status, 200, await saved.text());
   assert.equal(await fs.readFile(path.join(record.project, 'index.html'), 'utf8'), changed,
     'Official Studio must write the selected project, not merely update the DOM');
@@ -239,7 +249,8 @@ try {
   const playbackTime = await player.evaluate(element => element.currentTime);
   assert(playbackTime > 0, 'Native Studio playback must advance its actual player clock');
   await player.evaluate(element => element.seek(0.25));
-  assert.equal(await player.evaluate(element => element.currentTime), 0.25);
+  const seekTime = await player.evaluate(element => element.currentTime);
+  assert(Math.abs(seekTime - 0.25) <= 1 / 30, `Seek must land within one 30 fps frame: ${seekTime}`);
   await player.evaluate(element => element.seek(0));
   await shown.page.waitForTimeout(150);
   await shown.page.getByRole('button',{name:'Play',exact:true}).click();
@@ -253,10 +264,10 @@ try {
   const planStudio = await open(first, planId);
   assert.notEqual(planStudio.project, path.join(plan, 'source-snapshot'));
   const shownPlan = await show(planStudio, 'registered-plan');
-  await edit(planStudio, 'Studio A:', 'Reviewed Plan A:');
+  await edit(planStudio, 'Studio A:', 'Reviewed Plan A:', true);
   await shownPlan.page.reload({waitUntil:'domcontentloaded'});
   await shownPlan.page.waitForTimeout(700);
-  assert.deepEqual(await treeHashes(plan), planBefore, 'Studio Plan edits must preserve every frozen file');
+  assert.deepEqual(await treeHashes(plan), planBefore, 'Rejected Studio Plan edits must preserve every frozen file');
   assert((await fs.readFile(path.join(first.project,'index.html'),'utf8')).includes('Studio A:'));
   const studioDraftId = first.run('preview', 'register');
   const studioDraft = path.join(first.variant, 'previews', studioDraftId);
@@ -264,23 +275,30 @@ try {
   const studioOnly = await open(first, studioDraftId);
   await show(studioOnly, 'studio-only-draft');
   evidence.checks.push({studioDraftWithoutMp4:studioDraftId,source:studioOnly.snapshot_sha256});
-  const rendered = path.join(first.variant, 'studio-fixture-draft.mp4');
-  first.run('preview', 'render', planId, '--output', rendered, '--fps', '6', '--software-gl');
-  assert((await fs.stat(rendered)).size > 1000, 'Use a real rendered MP4, not fake test bytes');
-  const draftId = first.run('preview', 'register', rendered);
-  const draft = path.join(first.variant, 'previews', draftId), draftBefore = await treeHashes(draft);
-  const draftStudio = await open(first, draftId);
-  await show(draftStudio, 'registered-draft');
-  await edit(draftStudio, 'Studio A:', 'Reviewed Draft A:');
-  assert.deepEqual(await treeHashes(draft), draftBefore, 'Studio Draft edits must preserve every frozen file');
-  await edit(current, 'Studio A:', 'Edited Current A:');
-  const changed = JSON.parse(first.run('preview', 'context', 'current', '--fields', 'selection'));
-  assert.equal(changed.source_changed, true);
-  assert.equal(changed.render_matches_source, false);
-  const stale = invoke(['--work', first.id, '--variant', 'main', 'preview', 'register', rendered], false);
-  assert.notEqual(stale.status, 0, 'Old MP4 must not be registered against newly edited source');
-  assert.match(stale.stderr, /different source|changed project/i);
-  evidence.checks.push('official file writes isolate Plan/Draft snapshots and stale MP4 is rejected');
+  if (!previewOnly) {
+    const rendered = path.join(first.variant, 'studio-fixture-draft.mp4');
+    first.run('preview', 'render', planId, '--output', rendered, '--fps', '6', '--software-gl');
+    assert((await fs.stat(rendered)).size > 1000, 'Use a real rendered MP4, not fake test bytes');
+    const draftId = first.run('preview', 'register', rendered);
+    const draft = path.join(first.variant, 'previews', draftId), draftBefore = await treeHashes(draft);
+    const draftStudio = await open(first, draftId);
+    await show(draftStudio, 'registered-draft');
+    await edit(draftStudio, 'Studio A:', 'Reviewed Draft A:', true);
+    assert.deepEqual(await treeHashes(draft), draftBefore, 'Rejected Studio Draft edits must preserve every frozen file');
+    await edit(current, 'Studio A:', 'Edited Current A:');
+    const changed = JSON.parse(first.run('preview', 'context', 'current', '--fields', 'selection'));
+    assert.equal(changed.source_changed, true);
+    assert.equal(changed.render_matches_source, false);
+    const stale = invoke(['--work', first.id, '--variant', 'main', 'preview', 'register', rendered], false);
+    assert.notEqual(stale.status, 0, 'Old MP4 must not be registered against newly edited source');
+    assert.match(stale.stderr, /different source|changed project/i);
+    evidence.checks.push('official file writes isolate Plan/Draft snapshots and stale MP4 is rejected');
+  } else {
+    await edit(current, 'Studio A:', 'Edited Current A:');
+    const changed = JSON.parse(first.run('preview', 'context', 'current', '--fields', 'selection'));
+    assert.equal(changed.source_changed, true);
+    evidence.checks.push({scope:'preview-only',videoExport:'not run',currentEdits:true});
+  }
   const layout = path.join(second.variant, 'layout');
   await fs.mkdir(layout);
   await fs.writeFile(path.join(layout, 'index.html'), second.html.replace(/ data-composition-id="[^"]+"/, '')
