@@ -90,6 +90,8 @@ class AppearanceAssetTest(unittest.TestCase):
 
     def test_schema2_module_uses_the_existing_executable_pipeline(self):
         shutil.copyfile(REPO / "windows-runtime.lock.json", self.harness / "windows-runtime.lock.json")
+        # This fixture models a Windows package, regardless of the test host.
+        (self.harness / ".release.json").write_text('{"target": "windows-x64", "channel": "local"}')
         source = self.source("module", {}, entry="main.mjs")
         (source / "main.mjs").write_text("export const ready = true;")
         reference = self.accept(source)

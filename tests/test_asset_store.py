@@ -27,6 +27,8 @@ class AssetStoreTest(unittest.TestCase):
         self.harness = self.root / "harness"
         self.harness.mkdir()
         shutil.copyfile(REPO / "windows-runtime.lock.json", self.harness / "windows-runtime.lock.json")
+        # This fixture models a Windows package, regardless of the test host.
+        (self.harness / ".release.json").write_text('{"target": "windows-x64", "channel": "local"}')
         self.store = self.root / "assets"
         self.environment = patch.dict(os.environ, {
             "HYPERFRAMES_AI_ASSET_CONFIG": str(self.root / "local.json"),

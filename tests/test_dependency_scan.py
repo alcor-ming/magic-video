@@ -126,6 +126,21 @@ p { content: "url(missing-string.png)"; background: url('./image.png'); }
         with self.assertRaises(VisualPlanError):
             snapshot_files(self.root)
 
+    def test_snapshot_accepts_aliased_parent_but_rejects_linked_dependency(self):
+        from storage import snapshot_files, StorageError
+        self.write('project/index.html', '<p>fixture</p>')
+        self.write('project/DESIGN.md', 'fixture')
+        self.write('project/project-config.json', json.dumps({'snapshot_dependencies': ['data.json']}))
+        self.write('project/data.json', '{}')
+        alias = self.root / 'alias'
+        alias.symlink_to(self.root / 'project', target_is_directory=True)
+        self.assertIn('data.json', snapshot_files(alias))
+        (self.root / 'project/data.json').unlink()
+        self.write('outside.json', '{}')
+        (self.root / 'project/data.json').symlink_to(self.root / 'outside.json')
+        with self.assertRaises(StorageError):
+            snapshot_files(alias)
+
     def test_dynamic_loading_requires_and_traverses_declarations(self):
         with self.assertRaisesRegex(VisualPlanError, 'requires explicit'):
             self.scan('fetch(name); import(`./${name}.js`);')

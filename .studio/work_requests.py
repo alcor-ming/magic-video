@@ -119,11 +119,11 @@ def init_review(store, review_id):
         (destination / "works" / location).mkdir(parents=True)
     write(destination / ".runtime" / "review.json", {"mode": "review", "review_id": review_id, "ready": True})
     (destination / "AGENTS.md").write_text(
-        "# Isolated Windows Review\n\n"
-        "This root is test content, never production. Use the independent deployed root's work.cmd, "
-        "root rules and Skills. Windows authors Scene/GSAP/Three/shader/media content here; "
-        "only Harness or host/tool defects go to WSL. This overrides any older parent rule "
-        "requiring WSL content rendering. Never edit production Work, assets, defaults, "
+        "# Isolated Review\n\n"
+        "This root is test content, never production. Use the explicitly configured native "
+        "Work CLI, root rules and Skills. Author Scene/GSAP/Three/shader/media content here; "
+        "report Harness or host/tool defects to the development checkout. "
+        "Never edit production Work, assets, defaults, "
         "frozen vendor or accepted snapshots. No production Final, archive or platform drafts.\n",
         encoding="utf-8")
     review_identity(destination)

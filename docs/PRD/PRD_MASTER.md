@@ -10,6 +10,10 @@
 
 现行生产入口与恢复协议见 [生产会话接口](production-session-interface.md)。历史 ledger（含 `component-authoring-m0-m1.md` D8）、v3.x Skill 旧名及客户端/模型分工已被该接口取代；历史原文仅保留背景，不构成现行入口或执行限制。
 
+## 本机开发增量
+
+[macOS 原生开发与预览](macos-development-preview.md)：Apple Silicon 本地 CLI、隔离 Review、Studio 与开发测试；正式渲染与生产部署另行处理。
+
 ## 历史版本索引
 
 以下 v3.x 说明保留当时背景；v4.0/v4.1 的设计身份、工作流开关与声线增量继续适用，其旧自用包装配规则由 v4.2 替代。

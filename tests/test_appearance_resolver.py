@@ -112,6 +112,8 @@ class AppearanceResolverTest(unittest.TestCase):
         harness = self.root / "harness"
         harness.mkdir()
         shutil.copyfile(REPO / "windows-runtime.lock.json", harness / "windows-runtime.lock.json")
+        # This fixture models a Windows package, regardless of the test host.
+        (harness / ".release.json").write_text('{"target": "windows-x64", "channel": "local"}')
         store = self.root / "store"
         with mock.patch.dict(os.environ, {"HYPERFRAMES_AI_ASSET_ROOT": str(store), "HYPERFRAMES_AI_ROOT": str(harness)}):
             selections = {}

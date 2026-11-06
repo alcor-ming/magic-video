@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the immutable Windows Harness release for production sessions."""
+"""Build immutable native Harness packages for production sessions."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import hashlib
 import io
 import json
 import os
+import platform
 from pathlib import Path
 import re
 import shutil
@@ -63,7 +64,7 @@ LOCAL_SKILLS = {
 VERSION_PATTERN = re.compile(r"^(?:harness-)?(\d{4}\.\d{2}\.\d+)$")
 PUBLIC_ROOT_FILES = {"AGENTS.md", "CLAUDE.md", "work-wsl.sh", "README.md", "LICENSE", ".gitignore", "release", "release.ps1",
                      "work", "work.cmd", "work.ps1", "windows-runtime.lock.json",
-                     "windows-npm.lock.json", "skills-lock.json", "workspace.ps1", "THIRD_PARTY_NOTICES.md"}
+                     "windows-npm.lock.json", "darwin-runtime.lock.json", "darwin-npm.lock.json", "skills-lock.json", "workspace.ps1", "THIRD_PARTY_NOTICES.md"}
 
 # Shipped artifacts that must never enter a product package (D13/D14/D16).
 FORBIDDEN_ASSET_DIRS = (".studio/components", ".studio/backgrounds", ".studio/designs/shared")
@@ -130,6 +131,7 @@ def directory_sha256(root: Path) -> str:
 def check_env() -> dict:
     env = os.environ.copy()
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["TMPDIR"] = str(Path(tempfile.gettempdir()).resolve())
     parser = REPO / ".studio/.runtime/dependency-parser"
     if not all((parser / "node_modules" / name).is_dir() for name in ("acorn", "esbuild")):
         raise ReleaseError("Install the pinned WSL dependency parser with prepare_windows_runtime.py dev-parser before building")
@@ -185,21 +187,22 @@ def extract_zip(source: Path, destination: Path, strip_prefix: str = "") -> None
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with bundle.open(entry) as stream, target.open("xb") as output:
                     shutil.copyfileobj(stream, output)
+                target.chmod(0o755 if (entry.external_attr >> 16) & 0o111 else 0o644)
 
 
-def stage_runtime(staging: Path, cache: Path) -> dict[str, str]:
-    lock = json.loads((staging / "windows-runtime.lock.json").read_text(encoding="utf-8"))
+def stage_runtime(staging: Path, cache: Path, target: str = "windows-x64") -> dict[str, str]:
+    lock = json.loads((staging / runtime_lock_name(target)).read_text(encoding="utf-8"))
     assets = lock.get("assets")
-    if lock.get("target") != "windows-x64" or not isinstance(assets, list) or not assets:
-        raise ReleaseError("Invalid Windows runtime lock")
+    if lock.get("target") != target or not isinstance(assets, list) or not assets:
+        raise ReleaseError("Invalid target runtime lock")
     if lock.get("pending_assets"):
         raise ReleaseError("Windows runtime closure incomplete: " + ", ".join(lock["pending_assets"]))
     if not lock.get("required_files"):
         raise ReleaseError("Runtime lock must declare the complete native execution chain")
     runtime = staging / "runtime" / "python"
     site_packages = runtime / "Lib" / "site-packages"
-    runtime.mkdir(parents=True)
-    site_packages.mkdir(parents=True)
+    if target == "windows-x64":
+        site_packages.mkdir(parents=True)
     hashes: dict[str, str] = {}
     for asset in assets:
         if len(safe_member(asset["file"]).parts) != 1:
@@ -221,12 +224,13 @@ def stage_runtime(staging: Path, cache: Path) -> dict[str, str]:
         extract_zip(source, destination, asset.get("strip_prefix", ""))
         if sha256(source) != asset["sha256"]:
             raise ReleaseError(f"Runtime changed while staging: {source.name}")
-    pth_files = list(runtime.glob("python*._pth"))
-    if len(pth_files) != 1:
-        raise ReleaseError("Embedded Python ._pth file is missing")
-    lines = [line for line in pth_files[0].read_text(encoding="utf-8").splitlines() if line != "#import site"]
-    lines.extend(["Lib/site-packages", "import site"])
-    pth_files[0].write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    if target == "windows-x64":
+        pth_files = list(runtime.glob("python*._pth"))
+        if len(pth_files) != 1:
+            raise ReleaseError("Embedded Python ._pth file is missing")
+        lines = [line for line in pth_files[0].read_text(encoding="utf-8").splitlines() if line != "#import site"]
+        lines.extend(["Lib/site-packages", "import site"])
+        pth_files[0].write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     for name in lock["required_files"]:
         relative = safe_member(name)
         if relative.parts[0] != "runtime" or not (staging / relative).is_file():
@@ -409,8 +413,8 @@ def freeze_sources(staging: Path, includes: list[str], repo: Path = REPO) -> dic
     return hashes
 
 
-def candidate_fingerprint(includes, channel, runtime_files, personal_source=None):
-    value = {'sources': source_hashes(includes), 'skills': {}, 'channel': channel,
+def candidate_fingerprint(includes, channel, runtime_files, personal_source=None, target="windows-x64"):
+    value = {'sources': source_hashes(includes), 'skills': {}, 'channel': channel, 'target': target,
              'runtime_files': runtime_files, 'private': {}}
     data = personal_manifest(personal_source) if personal_source is not None else {}
     for name, expected in LOCAL_SKILLS.items():
@@ -436,7 +440,7 @@ def candidate_fingerprint(includes, channel, runtime_files, personal_source=None
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
-def module_manifest(staging: Path) -> dict:
+def module_manifest(staging: Path, target: str = "windows-x64") -> dict:
     groups = {}
     for path in sorted(staging.rglob('*')):
         if not path.is_file():
@@ -467,9 +471,9 @@ def module_manifest(staging: Path) -> dict:
             if card.is_file():
                 version = json.loads(card.read_text(encoding='utf-8'))['version']
         result[name] = {'version': version, 'sha256': digest, 'compatibility': {'product': '4.0.0'}, 'files': files}
-    lock = staging / 'windows-runtime.lock.json'
+    lock = staging / runtime_lock_name(target)
     if lock.is_file():
-        result['runtime'] = {'sha256': sha256(lock), 'version': 'locked', 'compatibility': {'target': 'windows-x64'}}
+        result['runtime'] = {'sha256': sha256(lock), 'version': 'locked', 'compatibility': {'target': target}}
     return result
 
 
@@ -709,16 +713,17 @@ def validate_distribution(staging: Path, personal_cards=()) -> None:
             raise ReleaseError('Personal card resource in product package: ' + relative)
 
 
-def candidate(build_id: str, output_dir: Path, runtime_cache: Path, includes: list[str], *, channel: str = "candidate", runtime_files: dict | None = None, personal_source: Path | None = None) -> Path:
+def candidate(build_id: str, output_dir: Path, runtime_cache: Path, includes: list[str], *, channel: str = "candidate", runtime_files: dict | None = None, personal_source: Path | None = None, target: str = "windows-x64") -> Path:
+    runtime_lock_name(target)
     if not re.fullmatch(r"[a-z0-9][a-z0-9.-]{0,79}", build_id):
         raise ReleaseError("Candidate ID must use lowercase letters, digits, dots or hyphens")
     if channel not in {"candidate", "local"}:
         raise ReleaseError("Unsupported local build channel")
     identity = f"{channel}-{build_id}"
     output_dir.mkdir(parents=True, exist_ok=True)
-    archive = output_dir / f"magic-video-{identity}-windows-x64.zip"
+    archive = output_dir / f"magic-video-{identity}-{target}.zip"
     checksum = archive.with_suffix(archive.suffix + ".sha256")
-    fingerprint = candidate_fingerprint(includes, channel, runtime_files, personal_source)
+    fingerprint = candidate_fingerprint(includes, channel, runtime_files, personal_source, target)
     if archive.exists() or checksum.exists():
         cached_identity = verified_archive(archive)
         with zipfile.ZipFile(archive) as bundle:
@@ -737,11 +742,13 @@ def candidate(build_id: str, output_dir: Path, runtime_cache: Path, includes: li
         personal = stage_personal(staging, personal_source)
         validate_distribution(staging)
         skills = stage_skills(staging, personal.get('exclude_skills', []))
-        runtime = stage_runtime(staging, runtime_cache) if runtime_files is None else {}
+        runtime = stage_runtime(staging, runtime_cache, target) if runtime_files is None else {}
         verified_runtime = {p.relative_to(staging).as_posix(): sha256(p)
                             for p in (staging / "runtime").rglob("*") if p.is_file()} if runtime_files is None else {}
         stage_windows_rules(staging)
         stage_personal_rules(staging, personal_source, personal)
+        if target == "darwin-arm64":
+            stage_darwin_rules(staging, personal_source is not None)
         release_checks(staging)
         strip_bundled_assets(staging)
         release_checks(staging, packaged=True)
@@ -757,17 +764,17 @@ def candidate(build_id: str, output_dir: Path, runtime_cache: Path, includes: li
                     "product_version": PRODUCT_VERSION, "flavor": "personal" if personal_source else "public",
                     "personal_source": personal,
                     "package_kind": "full" if runtime_files is None else "tools",
-                    "commit": head, "dirty": dirty, "target": "windows-x64",
+                    "commit": head, "dirty": dirty, "target": target,
                     "built_at": datetime.fromtimestamp(timestamp, timezone.utc).isoformat(),
                     "source_file_sha256": sources, "runtime_asset_sha256": runtime,
-                    "modules": module_manifest(staging),
+                    "modules": module_manifest(staging, target),
                     "local_skill_sha256": skills,
                     "files": {p.relative_to(staging).as_posix(): sha256(p)
                               for p in sorted(staging.rglob("*")) if p.is_file()}}
         if runtime_files is not None:
-            manifest.update(runtime_files=runtime_files, runtime_lock_sha256=sha256(staging / "windows-runtime.lock.json"))
+            manifest.update(runtime_files=runtime_files, runtime_lock_sha256=sha256(staging / runtime_lock_name(target)))
         (staging / ".release.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-        if candidate_fingerprint(includes, channel, runtime_files, personal_source) != fingerprint:
+        if candidate_fingerprint(includes, channel, runtime_files, personal_source, target) != fingerprint:
             raise ReleaseError('Candidate inputs changed during build; retry from stable inputs')
         write_zip(staging, archive, identity, timestamp, verified_runtime=verified_runtime)
     checksum.write_text(f"{sha256(archive)}  {archive.name}\n", encoding="ascii")
@@ -845,7 +852,7 @@ def reusable_runtime(root: Path, lock_path: Path) -> dict | None:
     if not state_path.exists():
         return None
     state = json.loads(state_path.read_text(encoding="utf-8"))
-    if state["files"].get("windows-runtime.lock.json") != sha256(lock_path):
+    if state["files"].get(runtime_lock_name(json.loads(lock_path.read_text()).get("target", "windows-x64"))) != sha256(lock_path):
         return None
     files = {name: value for name, value in state["files"].items() if name.startswith("runtime/")}
     lock = json.loads(lock_path.read_text(encoding="utf-8"))
@@ -908,6 +915,8 @@ def deploy_windows(args) -> dict:
         raise ReleaseError("Run deploy in WSL with an absolute Windows drive path")
     if args.keep < 1:
         raise ReleaseError("Keep at least one rollback version")
+    if args.runtime_cache is None:
+        args.runtime_cache = REPO / ".studio/.runtime/windows-runtime-cache"
     personal_source = args.personal_source.resolve() if args.personal_source else None
     root = Path(run("wslpath", "-u", args.root, capture=True))
     sys.path.insert(0, str(REPO / ".studio"))
@@ -1020,6 +1029,68 @@ def deploy_windows(args) -> dict:
         return receipt
 
 
+def runtime_lock_name(target: str) -> str:
+    if target not in {"windows-x64", "darwin-arm64"}:
+        raise ReleaseError("Unsupported target: " + target)
+    return "darwin-runtime.lock.json" if target == "darwin-arm64" else "windows-runtime.lock.json"
+
+
+def stage_darwin_rules(staging: Path, personal: bool) -> None:
+    for name in ("AGENTS.md", "CLAUDE.md"):
+        source = staging / ("personal/macos-" + name if personal else ".studio/templates/MACOS_" + name)
+        if not source.is_file():
+            raise ReleaseError("Missing macOS production rules: " + str(source))
+        shutil.copyfile(source, staging / name)
+    shutil.copyfile(staging / ".studio/templates/work-macos.sh", staging / "work")
+    (staging / "work").chmod(0o755)
+
+
+def deploy_darwin(args) -> dict:
+    if sys.platform != "darwin" or platform.machine() != "arm64":
+        raise ReleaseError("darwin-arm64 deployment requires native Apple Silicon macOS")
+    if not Path(args.root).is_absolute() or any(c in args.root for c in "\r\n\0"):
+        raise ReleaseError("Use an absolute macOS deployment root")
+    if args.keep < 1:
+        raise ReleaseError("Keep at least one rollback version")
+    root = Path(args.root).absolute()
+    personal_source = args.personal_source.resolve() if args.personal_source else None
+    sys.path.insert(0, str(REPO / ".studio"))
+    from root_deploy import safe, preflight
+    safe(root.parent, root.name)
+    target = str(root)
+    parent = args.output_dir.resolve() / "deployments" / hashlib.sha256(target.casefold().encode()).hexdigest()[:16]
+    # Build artifacts must never become installed user content or contain the destination.
+    if root == parent or root in parent.parents or parent in root.parents:
+        raise ReleaseError("Build output and deployment root must be independent")
+    parent.mkdir(parents=True, exist_ok=True)
+    import fcntl
+    with (parent / ".lock").open("a") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        started = time.monotonic()
+        config = Path(args.config).absolute() if args.config else None
+        preliminary = preflight(root, config, recover_pending=True)
+        runtime_files = None if args.full else reusable_runtime(root, REPO / runtime_lock_name("darwin-arm64"))
+        fingerprint = candidate_fingerprint(args.include, "local", runtime_files, personal_source, "darwin-arm64")
+        output = parent / fingerprint[:32]
+        output.mkdir(exist_ok=True)
+        cache = args.runtime_cache or REPO / ".studio/.runtime/darwin-runtime-cache"
+        archive = candidate(fingerprint[:32], output, cache.resolve(), args.include, channel="local",
+                            runtime_files=runtime_files, personal_source=personal_source, target="darwin-arm64")
+        # Fresh extraction on each run supports idempotent installs and preserves failed evidence.
+        with tempfile.TemporaryDirectory(prefix="install-", dir=parent) as temporary:
+            transferred = Path(temporary) / archive.name
+            shutil.copy2(archive, transferred)
+            shutil.copy2(archive.with_suffix(".zip.sha256"), transferred.with_suffix(".zip.sha256"))
+            receipt = install_archive(transferred, root, sha256(archive), args.keep, config)
+        receipt.update(owner="release-deploy-v1", target=target, preflight=preliminary,
+                       archive_bytes=archive.stat().st_size, timings={"total_seconds": time.monotonic() - started})
+        receipt["artifacts"] = {p.name: sha256(p) for p in output.iterdir() if p.is_file() and p.name != "receipt.json"}
+        (output / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+        receipt["removed_artifacts"] = prune_artifacts(parent, target, args.keep + 1, output)
+        (output / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+        return receipt
+
+
 def parser() -> argparse.ArgumentParser:
     command = argparse.ArgumentParser(description=__doc__)
     subcommands = command.add_subparsers(dest="command", required=True)
@@ -1029,6 +1100,7 @@ def parser() -> argparse.ArgumentParser:
     build_parser.add_argument("--runtime-cache", type=Path, required=True)
     candidate_parser = subcommands.add_parser("candidate", aliases=["local"])
     candidate_parser.add_argument("build_id")
+    candidate_parser.add_argument("--target", choices=["windows-x64", "darwin-arm64"], default="windows-x64")
     candidate_parser.add_argument("--output-dir", type=Path, default=REPO / "dist")
     candidate_parser.add_argument("--runtime-cache", type=Path, required=True)
     candidate_parser.add_argument("--include", action="append", default=[], help="Explicit new public file; repeat for each untracked addition")
@@ -1037,12 +1109,12 @@ def parser() -> argparse.ArgumentParser:
     check_parser.add_argument("--personal-source", type=Path, required=True)
     verify_parser = subcommands.add_parser("verify")
     verify_parser.add_argument("archive", type=Path)
-    deploy_parser = subcommands.add_parser("deploy", help="Build and deploy from WSL to a Windows root")
+    deploy_parser = subcommands.add_parser("deploy", help="Build and deploy to a native macOS root or from WSL to Windows")
     deploy_parser.add_argument("--root", required=True)
-    deploy_parser.add_argument("--runtime-cache", type=Path, default=REPO / ".studio/.runtime/windows-runtime-cache")
+    deploy_parser.add_argument("--runtime-cache", type=Path, default=None)
     deploy_parser.add_argument("--output-dir", type=Path, default=REPO / "dist")
     deploy_parser.add_argument("--include", action="append", default=[])
-    deploy_parser.add_argument("--config", help="Windows JSON path for first installation only")
+    deploy_parser.add_argument("--config", help="Native JSON path for first installation only")
     deploy_parser.add_argument("--keep", type=int, default=1, help="Rollback versions (minimum 1); archives keep this many plus current")
     deploy_parser.add_argument("--full", action="store_true", help="Include runtime even if its lock matches")
     deploy_parser.add_argument("--personal-source", type=Path, help="Assemble exact private release-sources.json; omitted deploys public content")
@@ -1062,12 +1134,12 @@ def main(arguments: list[str] | None = None) -> int:
             build(args.version, args.output_dir.resolve(), args.runtime_cache.resolve())
         elif args.command in {"candidate", "local"}:
             candidate(args.build_id, args.output_dir.resolve(), args.runtime_cache.resolve(), args.include, channel=args.command,
-                      personal_source=args.personal_source.resolve() if args.personal_source else None)
+                      personal_source=args.personal_source.resolve() if args.personal_source else None, target=args.target)
         elif args.command == "check-personal":
             with tempfile.TemporaryDirectory(prefix="personal-check-") as temporary:
                 print(json.dumps(stage_personal(Path(temporary), args.personal_source.resolve()), indent=2))
         elif args.command == "deploy":
-            print(json.dumps(deploy_windows(args), indent=2))
+            print(json.dumps(deploy_darwin(args) if sys.platform == "darwin" else deploy_windows(args), indent=2))
         elif args.command == "_install":
             if sys.platform != "win32":
                 raise ReleaseError("Internal installer requires native Windows Python")

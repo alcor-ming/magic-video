@@ -15,18 +15,32 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            python: '3.11'
+            node: '22'
+          - os: macos-latest
+            python: '3.12'
+            node: '24'
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python }}
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - name: System tools
+          node-version: ${{ matrix.node }}
+      - name: Linux system tools
+        if: runner.os == 'Linux'
         run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+      - name: macOS system tools
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg
       - name: Python image dependency
         run: python3 -m pip install Pillow==12.3.0
       - name: Tool parser
@@ -37,4 +51,6 @@ jobs:
         env:
           TMPDIR: ${{ runner.temp }}
           PYTHONDONTWRITEBYTECODE: '1'
-        run: python3 -m unittest discover -s tests -q
+        run: |
+          export TMPDIR="$(python3 -c 'import pathlib, tempfile; print(pathlib.Path(tempfile.gettempdir()).resolve())')"
+          python3 -m unittest discover -s tests -q

@@ -1,5 +1,5 @@
 // Real Studio HTTP handlers; isolated files only, no WorkStore or production data.
-// Run as a non-root Linux user with HF_PACKAGE pointing to existing Studio 0.8.150.
+// Run as a non-root Linux/macOS user with HF_PACKAGE pointing to existing Studio 0.8.150.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -9,7 +9,7 @@ import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 
-assert.equal(process.platform, 'linux');
+assert(['linux', 'darwin'].includes(process.platform), 'This fixture requires POSIX permissions');
 assert.notEqual(process.getuid(), 0, 'Root bypasses readonly file permissions');
 const {HF_PACKAGE} = process.env;
 assert(HF_PACKAGE, 'Set HF_PACKAGE to the installed HyperFrames package');

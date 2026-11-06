@@ -219,6 +219,13 @@ work --work <Work-ID> --variant <Variant-ID> variant design-update
 
 卡片变化只提示，不自动更新工程。按 Variant 更新卡片快照时保留工程副本，列出待重新安装的资产；新 Draft 沿用原接受流程，不跨 Variant 更新。
 
+## macOS 原生开发与预览
+
+Apple Silicon 本机使用 `./dev-macos setup` 配置原生工具，`./dev-macos doctor` 检查环境，
+`./dev-macos work` 操作独立 Review 夹具，`./dev-macos check` 执行 Python 单元测试，`./dev-macos run -- <命令>` 执行原生预览检查。
+配置、依赖、临时目录与浏览器路径说明见 [macOS 开发与预览](docs/PRD/macos-development-preview.md)。
+Apple Silicon 本地安装使用 [macOS 部署说明](docs/macos-deployment.md) 与 `release deploy`；正式渲染与声音质量需按具体 Work 单独验收。
+
 ## WSL 解析器开发依赖
 
 `python3 .studio/prepare_windows_runtime.py dev-parser` 从 `windows-npm.lock.json` 派生并安装本地 Acorn/esbuild，写入忽略目录 `.studio/.runtime/dependency-parser`，不创建第二份受管依赖清单。缓存齐全时可加 `--offline`。Windows 产品包使用同根 `runtime/npm` 的锁定解析器；扫描只解析输入代码，不执行待检查工程。

@@ -149,6 +149,8 @@ class BrollFixturePipelineTest(unittest.TestCase):
             harness.mkdir()
             project.mkdir()
             shutil.copyfile(REPO / "windows-runtime.lock.json", harness / "windows-runtime.lock.json")
+            # This fixture models a Windows package, regardless of the test host.
+            (harness / ".release.json").write_text('{"target": "windows-x64", "channel": "local"}')
             source = copy_source(root / "synthetic-broll")
             manifest = fixture_manifest()
             with mock.patch.dict(os.environ, {"HYPERFRAMES_AI_ASSET_ROOT": str(store), "HYPERFRAMES_AI_ROOT": str(harness)}):
@@ -194,6 +196,8 @@ class BrollFixturePipelineTest(unittest.TestCase):
             harness, store = root / "harness", root / "store"
             harness.mkdir()
             shutil.copyfile(REPO / "windows-runtime.lock.json", harness / "windows-runtime.lock.json")
+            # This fixture models a Windows package, regardless of the test host.
+            (harness / ".release.json").write_text('{"target": "windows-x64", "channel": "local"}')
             card = harness / '.studio/designs/kit'
             card.mkdir(parents=True)
             (card / 'design.json').write_text(json.dumps({'id': 'kit', 'version': 1, 'type': 'material',
@@ -219,6 +223,8 @@ class BrollFixturePipelineTest(unittest.TestCase):
             harness = root / "harness"
             harness.mkdir()
             shutil.copyfile(REPO / "windows-runtime.lock.json", harness / "windows-runtime.lock.json")
+            # This fixture models a Windows package, regardless of the test host.
+            (harness / ".release.json").write_text('{"target": "windows-x64", "channel": "local"}')
             with mock.patch.dict(os.environ, {"HYPERFRAMES_AI_ASSET_ROOT": str(store), "HYPERFRAMES_AI_ROOT": str(harness)}):
                 malformed = copy_source(root / "malformed")
                 broken = fixture_manifest()

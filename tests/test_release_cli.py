@@ -47,7 +47,8 @@ class ReleaseCliTest(unittest.TestCase):
                 self.assertEqual(expected['skills-lock.json'], hashlib.sha256(
                     RELEASE.skill_lock_bytes(REPO / 'skills-lock.json', ['dbs'])).hexdigest())
                 return subprocess.CompletedProcess(argv, 1, '', 'fixture stop before build')
-            with mock.patch.object(RELEASE, 'RUNTIME_LOCK', lock), \
+            with mock.patch.object(RELEASE.sys, 'platform', 'linux'), \
+                 mock.patch.object(RELEASE, 'RUNTIME_LOCK', lock), \
                  mock.patch.object(RELEASE, 'run', side_effect=lambda *argv, **kw: str(root) if argv[1] == '-u' else argv[2]), \
                  mock.patch.object(RELEASE, 'source_hashes', return_value={}), \
                  mock.patch.object(RELEASE, 'LOCAL_SKILLS', {}), \

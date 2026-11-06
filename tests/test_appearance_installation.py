@@ -23,6 +23,8 @@ class AppearanceInstallationTest(unittest.TestCase):
             harness.mkdir()
             project.mkdir()
             shutil.copyfile(REPO / "windows-runtime.lock.json", harness / "windows-runtime.lock.json")
+            # This fixture models a Windows package, regardless of the test host.
+            (harness / ".release.json").write_text('{"target": "windows-x64", "channel": "local"}')
             environment = {"HYPERFRAMES_AI_ASSET_CONFIG": str(root / "config.json"),
                            "HYPERFRAMES_AI_ASSET_ROOT": "", "HYPERFRAMES_AI_ROOT": str(harness)}
             with patch.dict(os.environ, environment):
