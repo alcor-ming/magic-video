@@ -396,6 +396,77 @@ class TTSTests(unittest.TestCase):
         memory.carry(self.variant, 2, 2, reference_hash)
         self.assertEqual(reference_hash, memory.digest(self.variant / 'reference-memory/2/references.json'))
 
+    def test_formal_voice_accepts_one_existing_audio_group_route(self):
+        api, args, project = self.adoption_fixture()
+        work_tts.command(self.root, args, api)
+        index = project / 'index.html'
+        html = index.read_text()
+        for group in ('sound-master', 'other.bus'):
+            with self.subTest(group=group):
+                routed = html.replace('<audio ', f'<audio data-audio-group="{group}" ', 1)
+                routed = routed.replace('</body>', f'<hf-audio-group id="{group}"></hf-audio-group></body>')
+                index.write_text(routed)
+                work_tts.verify(self.variant, api)
+                audio = work_api.read_json(self.variant / 'variant.yaml')['audio']
+                self.assertEqual(routed, work_tts.voice_block(routed, audio['path'], audio['duration']))
+
+    def test_formal_voice_rejects_invalid_routes_and_other_block_changes(self):
+        api, args, project = self.adoption_fixture()
+        work_tts.command(self.root, args, api)
+        index = project / 'index.html'
+        html = index.read_text()
+        routed = html.replace('<audio ', '<audio data-audio-group="sound-master" ', 1)
+        routed = routed.replace('</body>', '<hf-audio-group id="sound-master"></hf-audio-group></body>')
+        invalid = [
+            routed.replace('id="sound-master"', 'id="missing"'),
+            routed.replace('<hf-audio-group', '<div').replace('</hf-audio-group>', '</div>'),
+            routed.replace(' id="sound-master"', ' data-id="sound-master"'),
+            routed.replace('<hf-audio-group id="sound-master"></hf-audio-group>',
+                           '<!-- <hf-audio-group id="sound-master"></hf-audio-group> -->'),
+            routed.replace('<audio ', '<audio data-audio-group="sound-master" ', 1),
+            routed.replace('<audio ', '<audio data-audio-group="other" ', 1),
+            routed.replace('src="assets/voice/', 'src="changed/'),
+            routed.replace('data-duration="0.5"', 'data-duration="0.6"'),
+            routed.replace('data-track-index="5"', 'data-track-index="6"'),
+            routed.replace('data-start="0"', 'data-start="1"'),
+            routed.replace('harness-voice:start', 'harness-voice:changed'),
+            routed.replace('harness-voice:end', 'harness-voice:changed'),
+            routed.replace('<!-- harness-voice:start -->', '<!-- harness-voice:start --> '),
+        ]
+        for changed in invalid:
+            with self.subTest(html=changed):
+                index.write_text(changed)
+                with self.assertRaisesRegex(ValueError, '^Formal TTS voice track changed$'):
+                    work_tts.verify(self.variant, api)
+
+    def test_adoption_preserves_only_a_valid_existing_voice_route(self):
+        api, args, project = self.adoption_fixture()
+        work_tts.command(self.root, args, api)
+        index = project / 'index.html'
+        html = index.read_text()
+        routed = html.replace('<audio ', '<audio data-audio-group="sound-master" ', 1)
+        routed = routed.replace('</body>', '<hf-audio-group id="sound-master"></hf-audio-group></body>')
+        text = work_api.script_text(self.variant / 'SCRIPT.md')
+        result = tts.generate(self.variant, self.rows, {**self.config, 'model': 'fixture-v2'}, tts.digest(text.encode()))
+        previous = args.candidate
+        args.candidate = result['id']
+        index.write_text(routed)
+        work_tts.command(self.root, args, api)
+        updated = index.read_text()
+        self.assertEqual(routed.replace(previous, args.candidate), updated)
+        self.assertIn('<audio data-audio-group="sound-master" id="harness-voice"', updated)
+        work_tts.verify(self.variant, api)
+        work_tts.command(self.root, args, api)
+        self.assertEqual(updated, index.read_text())
+        for changed in (updated.replace('id="sound-master"', 'id="missing"'),
+                        updated.replace('<audio ', '<audio data-audio-group="other" ', 1),
+                        updated.replace('data-track-index="5"', 'data-track-index="6"')):
+            with self.subTest(html=changed):
+                index.write_text(changed)
+                work_tts.command(self.root, args, api)
+                self.assertNotIn('data-audio-group=', index.read_text())
+                work_tts.verify(self.variant, api)
+
     def test_formal_adoption_rolls_back_failure_then_guards_stale_script_audio_alignment(self):
         api, args, project = self.adoption_fixture()
 

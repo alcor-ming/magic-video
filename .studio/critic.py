@@ -100,6 +100,18 @@ def package(directory, report, direction, previous, entry):
     for i, tile in enumerate(tiles):
         sheet.paste(tile, ((i % 4) * 240, (i // 4) * 158))
     sheet.save(directory / 'contact-sheet.png')
+    tiles = []
+    for sample in sorted(shots, key=lambda sample: sample['time']):
+        with Image.open(directory / 'images' / sample['screenshot']) as image:
+            image = image.convert('RGB'); image = image.resize((480, round(image.height * 480 / image.width)))
+            tile = Image.new('RGB', (480, image.height + 23), 'white'); tile.paste(image, (0, 0))
+            ImageDraw.Draw(tile).text((4, image.height + 5), f"{sample['time']:.3f}s", fill='black')
+            tiles.append(tile)
+    height = max(tile.height for tile in tiles)
+    sheet = Image.new('RGB', (1920, height * ((len(tiles) + 3) // 4)), 'white')
+    for i, tile in enumerate(tiles):
+        sheet.paste(tile, ((i % 4) * 480, (i // 4) * height))
+    sheet.save(directory / 'feed-sheet.png')
     figures = ''.join(f'<figure><img loading="lazy" src="images/{html.escape(s["screenshot"], quote=True)}" alt="Frame at {s["time"]:.3f} seconds"><figcaption>{s["time"]:.3f}s</figcaption></figure>' for s in shots)
     strips = []
     for boundary in report.get('boundaries', []):
@@ -118,7 +130,7 @@ def package(directory, report, direction, previous, entry):
         pairs.append({'boundary': boundary, 'before': frames[0], 'after': frames[1],
                       'status': 'sampled' if all(frames) else 'unmeasured'})
     (directory / 'boundary-pairs.json').write_text(json.dumps(pairs, indent=2) + '\n', encoding='utf-8')
-    (directory / 'index.html').write_text('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Draft 逐帧评审</title><style>body{font:16px sans-serif;margin:24px}main{display:flex;flex-wrap:wrap;gap:12px}figure{margin:0}img{width:320px;height:auto}</style><h1>Draft 逐帧评审</h1><p>只读证据；不代表接受。时间标记单位为秒。</p><a href="contact-sheet.png">Contact sheet</a><main>' + figures + '</main></html>', encoding='utf-8')
+    (directory / 'index.html').write_text('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Draft 逐帧评审</title><style>body{font:16px sans-serif;margin:24px}main{display:flex;flex-wrap:wrap;gap:12px}figure{margin:0}img{width:320px;height:auto}</style><h1>Draft 逐帧评审</h1><p>只读证据；不代表接受。时间标记单位为秒。</p><a href="contact-sheet.png">Contact sheet</a> <a href="feed-sheet.png">feed-sheet.png</a><p>480 px 宽约等于手机信息流里的实际大小；在这张图上读不出的字和脸，手机上也读不出</p><main>' + figures + '</main></html>', encoding='utf-8')
     if entry['settings']['critic.provider']['value'] != 'off':
         prompt = ('只读本包的 direction.json、measurements.json、previous.json、strips.json 与全部相关 PNG，'
                   '不得读取制作过程或修改源。必须实际看图，不能用文本检查代替；模型名只记录来源，不证明看图能力；缺实际图像读取或人工观看证据时报告未验证，不用自述代替。'

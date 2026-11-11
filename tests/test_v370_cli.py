@@ -156,6 +156,33 @@ class V370CliTest(unittest.TestCase):
             self.call('preview', 'accept', draft)
         self.assertIsNone(cli.read_json(self.variant / 'variant.yaml')['accepted_preview'])
 
+    def test_critic_feed_sheet_keeps_every_frame_at_phone_width_in_time_order(self):
+        package = self.root / 'feed-evidence'
+        images = package / 'images'
+        images.mkdir(parents=True)
+        samples = []
+        for time in reversed(range(81)):
+            name = f'{time}.png'
+            Image.new('RGB', (640, 360), (time + 1, 50, 100)).save(images / name)
+            samples.append({'time': time, 'ready': True, 'screenshot': name})
+        report = {'status': 'diagnostic_only', 'samples': samples}
+        entry = {'settings': {'critic.provider': {'value': 'off'}}}
+        files = critic.package(package, report, {}, [], entry)
+        self.assertTrue((package / 'feed-sheet.png').is_file())
+        self.assertEqual(critic.hashes(package)['feed-sheet.png'], files['feed-sheet.png'])
+        with Image.open(package / 'feed-sheet.png') as sheet:
+            self.assertEqual((4 * 480, 21 * (270 + 23)), sheet.size)
+            for time in range(81):
+                x, y = (time % 4) * 480, (time // 4) * 293
+                with self.subTest(time=time):
+                    self.assertEqual((time + 1, 50, 100), sheet.getpixel((x, y)))
+                    self.assertEqual((time + 1, 50, 100), sheet.getpixel((x + 479, y + 269)))
+                    self.assertEqual((255, 255, 255), sheet.getpixel((x + 479, y + 270)))
+                    self.assertLess(sheet.crop((x, y + 270, x + 480, y + 293)).convert('L').getextrema()[0], 255)
+        viewer = (package / 'index.html').read_text()
+        self.assertIn('<a href="contact-sheet.png">Contact sheet</a> <a href="feed-sheet.png">feed-sheet.png</a>', viewer)
+        self.assertIn('480 px 宽约等于手机信息流里的实际大小；在这张图上读不出的字和脸，手机上也读不出', viewer)
+
     def test_two_rounds_off_mode_and_previous_issue_coverage(self):
         mock.patch.object(cli.visual_diagnostics, 'probe', side_effect=self.sampled).start()
         self.call('settings', 'set', 'critic.provider', 'external')

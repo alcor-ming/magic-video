@@ -55,7 +55,11 @@ def verify(variant, api):
         if api.file_sha256(storage.scoped_path(project, name)) != expected:
             raise ValueError('Formal TTS timing changed; adopt the measured alignment again')
     html = (project / 'index.html').read_text(encoding='utf-8')
-    if voice_block(html, audio['path'], audio['duration']) != html:
+    try:
+        unchanged = voice_block(html, audio['path'], audio['duration']) == html
+    except ValueError:
+        unchanged = False
+    if not unchanged:
         raise ValueError('Formal TTS voice track changed')
 
 
@@ -68,7 +72,13 @@ def voice_block(html, path, duration):
         if html.count(start) != 1 or html.count(end) != 1 or html.index(start) > html.index(end):
             raise ValueError('Invalid generated voice markers')
         before, tail = html.split(start)
-        _, after = tail.split(end)
+        original, after = tail.split(end)
+        routing = re.search(r'<audio (data-audio-group="([^"]+)" )id="harness-voice"', original)
+        if (routing and start + original.replace(routing[1], '', 1) + end == block
+                and re.search(r'<hf-audio-group(?=\s|>)[^>]*\sid\s*=\s*(["\'])'
+                              + re.escape(routing[2]) + r'\1(?=\s|/?>)',
+                              re.sub(r'<!--.*?-->', '', html, flags=re.S), re.I)):
+            block = block.replace('<audio ', '<audio ' + routing[1], 1)
         outside = before + after
     if re.search(r'<audio\b[^>]*data-audio-role\s*=\s*[\"\']voice[\"\']', outside, re.I):
         raise ValueError('Project already has a manual voice track; remove it before TTS adoption')
@@ -144,7 +154,14 @@ def command(root, args, api):
         if voice.exists() and (voice.stat().st_nlink != 1 or voice.read_bytes() != audio_bytes):
             raise ValueError('Refusing to replace different or linked voice media')
         index = storage.scoped_path(project, 'index.html')
-        updated = voice_block(index.read_text(encoding='utf-8'), voice_name, report['duration'])
+        html = index.read_text(encoding='utf-8')
+        updated = voice_block(html, voice_name, report['duration'])
+        audio = state.get('audio', {})
+        if audio.get('source') == 'tts' and voice_block(html, audio['path'], audio['duration']) == html:
+            routing = re.search(r'<audio (data-audio-group="[^"]+" )id="harness-voice"', html)
+            if routing and '<audio id="harness-voice"' in updated:
+                updated = updated.replace('<audio id="harness-voice"',
+                                          '<audio ' + routing[1] + 'id="harness-voice"', 1)
         names = {'runtime/cues.json': tts.json_bytes(cues), 'runtime/section_map.json': tts.json_bytes(sections),
                  'runtime/voice-alignment.json': alignment_bytes, 'runtime/alignment-report.json': tts.json_bytes(checked),
                  voice_name: audio_bytes}
