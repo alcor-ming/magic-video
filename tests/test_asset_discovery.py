@@ -90,14 +90,53 @@ class DiscoveryTest(unittest.TestCase):
         codes = [item["code"] for item in warnings]
         self.assertEqual(2, codes.count("missing_discovery_fields"))
         self.assertIn("unknown_source_approval", codes)
-        self.assertEqual(6, codes.count("unsafe_reference_path"))
-        self.assertIn("missing_reference_file", codes)
+        self.assertCountEqual(
+            [(str(directory / name), entry) for name, entry in (
+                ("traversal/manifest.json", "../../outside.html"),
+                ("absolute/manifest.json", str(outside)),
+                ("symlink/manifest.json", "linked.html"),
+                ("linked.md", None),
+                ("loop/manifest.json", None),
+                ("entry-loop/manifest.json", "index.html"),
+            )],
+            [(item["path"], item.get("entry")) for item in warnings if item["code"] == "unsafe_reference_path"],
+        )
+        self.assertCountEqual(
+            [{"path": str(directory / name), "code": "missing_reference_file", "entry": "index.html"}
+             for name in ("manifest.json", "entry-only/manifest.json")],
+            [item for item in warnings if item["code"] == "missing_reference_file"],
+        )
         self.assertIn("missing_selection_fields", codes)
         self.assertFalse(any("request.json" in item["path"] or "repair.json" in item["path"] for item in warnings))
         self.assertFalse(any(row.get("reference_only") for row in result["assets"]))
         (self.store / "selection.json").write_text(json.dumps({self.ref: {"purpose": "Explain", "tags": ["text"]}}))
         self.assertFalse(any(item["code"] == "missing_selection_fields"
                             for item in STORE.legacy_discover_components(self.harness, audit=True)["audit"]["warnings"]))
+
+    def test_reference_entry_intermediate_loops_and_missing_paths(self):
+        directory, metadata = self.reference_source()
+        (directory / "cycle").symlink_to("cycle", target_is_directory=True)
+        (directory / "link-a").symlink_to("link-b", target_is_directory=True)
+        (directory / "link-b").symlink_to("link-a", target_is_directory=True)
+        (directory / "valid-link.html").symlink_to("index.html")
+        (directory / "broken-link.html").symlink_to("absent.html")
+        outside = self.root / "outside-dir"
+        outside.mkdir()
+        (directory / "escape").symlink_to(outside, target_is_directory=True)
+        for entry, expected in (("cycle/index.html", "unsafe_reference_path"),
+                                ("link-a/index.html", "unsafe_reference_path"),
+                                ("broken-link.html", "unsafe_reference_path"),
+                                ("escape/missing.html", "unsafe_reference_path"),
+                                ("absent.html", "missing_reference_file"),
+                                ("absent/index.html", "missing_reference_file"),
+                                ("valid-link.html", None)):
+            with self.subTest(entry=entry):
+                (directory / "manifest.json").write_text(json.dumps({**metadata, "entry": entry}))
+                with patch.object(STORE, "_atomic_json", side_effect=AssertionError("Audit must not write")):
+                    result = STORE.legacy_discover_components(self.harness, audit=True)
+                warnings = [item["code"] for item in result["audit"]["warnings"]
+                            if item["path"] == str(directory / "manifest.json")]
+                self.assertEqual([] if expected is None else [expected], warnings)
 
     def test_cli_and_doctor_audit(self):
         from contextlib import redirect_stdout

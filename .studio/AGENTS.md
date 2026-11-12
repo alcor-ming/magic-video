@@ -40,3 +40,7 @@ Work 管一期内容，Variant 管独立制作版本，生命周期通过 Work C
 ## macOS 开发与预览
 
 使用根 `dev-macos` 与 [本机说明](../docs/PRD/macos-development-preview.md)。原生工具、配置与 Review 夹具在忽略的 `.studio/.runtime/macos-preview/`；Python 在 `.venv/`。临时根先解析系统符号链接，内容内链接仍禁止。开发测试中的 Windows runtime 夹具需明确包身份；不以本机宿主替代包目标。Apple Silicon 本地安装使用 `release deploy`；运行时、个人包与验证边界见 [macOS 部署说明](../docs/macos-deployment.md)。
+
+## Python 路径兼容性
+
+旧资产库参考发现的 manifest 对已有目录项使用严格真实路径解析；entry 先严格解析整个路径，只在 `FileNotFoundError` 且末端目录项不存在时允许缺文件回退，并继续检查是否越界。循环链接（含中间目录循环）归 `unsafe_reference_path`，普通不存在的入口仍归 `missing_reference_file`。Python 3.13 的非严格 `Path.resolve()` 不再对循环链接抛错；中间目录循环时 `lexists(entry)` 也可能为假，不能据此跳过严格解析。回归见 [test_asset_discovery.py](../tests/test_asset_discovery.py)，逐项核对直接与中间循环、合法链接、越界及缺文件告警。
