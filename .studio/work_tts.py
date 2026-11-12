@@ -1,5 +1,6 @@
 """Explicit Variant speech generation and transactional adoption into the existing project."""
-from html import escape
+from html import escape, unescape
+from html.parser import HTMLParser
 import json
 import os
 import re
@@ -55,11 +56,43 @@ def verify(variant, api):
         if api.file_sha256(storage.scoped_path(project, name)) != expected:
             raise ValueError('Formal TTS timing changed; adopt the measured alignment again')
     html = (project / 'index.html').read_text(encoding='utf-8')
-    if voice_block(html, audio['path'], audio['duration']) != html:
+    try:
+        unchanged = voice_block(html, audio['path'], audio['duration']) == html
+    except ValueError:
+        unchanged = False
+    if not unchanged:
         raise ValueError('Formal TTS voice track changed')
 
 
-def voice_block(html, path, duration):
+class AudioGroups(HTMLParser):
+    """Collect live group IDs, excluding inert markup and ambiguous attributes."""
+    CDATA_CONTENT_ELEMENTS = ('script', 'style', 'textarea', 'title', 'xmp', 'iframe', 'noembed', 'noframes')
+
+    def __init__(self, html):
+        super().__init__()
+        self.template_depth = 0
+        self.ids = set()
+        self.feed(html)
+        self.close()
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'template':
+            self.template_depth += 1
+        if not self.template_depth and tag == 'hf-audio-group':
+            ids = [value for key, value in attrs if key == 'id']
+            if len(ids) == 1 and ids[0]:
+                self.ids.add(ids[0])
+
+    def handle_endtag(self, tag):
+        if tag == 'template' and self.template_depth:
+            self.template_depth -= 1
+
+    def handle_startendtag(self, tag, attrs):
+        # HTML ignores the self-closing slash on non-void elements.
+        self.handle_starttag(tag, attrs)
+
+
+def voice_block(html, path, duration, *, previous_audio=None):
     start, end = '<!-- harness-voice:start -->', '<!-- harness-voice:end -->'
     block = (start + '\n<audio id="harness-voice" data-audio-role="voice" data-start="0" '
              f'data-duration="{duration}" data-track-index="5" src="{escape(path, quote=True)}"></audio>\n' + end)
@@ -68,7 +101,14 @@ def voice_block(html, path, duration):
         if html.count(start) != 1 or html.count(end) != 1 or html.index(start) > html.index(end):
             raise ValueError('Invalid generated voice markers')
         before, tail = html.split(start)
-        _, after = tail.split(end)
+        original, after = tail.split(end)
+        routing = re.search(r'<audio (data-audio-group="([^"]+)" )id="harness-voice"', original)
+        if (routing and start + original.replace(routing[1], '', 1) + end == block
+                and unescape(routing[2]) in AudioGroups(html).ids):
+            block = block.replace('<audio ', '<audio ' + routing[1], 1)
+        elif (routing and previous_audio and previous_audio.get('source') == 'tts'
+              and voice_block(html, previous_audio['path'], previous_audio['duration']) == html):
+            block = block.replace('<audio ', '<audio ' + routing[1], 1)
         outside = before + after
     if re.search(r'<audio\b[^>]*data-audio-role\s*=\s*[\"\']voice[\"\']', outside, re.I):
         raise ValueError('Project already has a manual voice track; remove it before TTS adoption')
@@ -144,7 +184,8 @@ def command(root, args, api):
         if voice.exists() and (voice.stat().st_nlink != 1 or voice.read_bytes() != audio_bytes):
             raise ValueError('Refusing to replace different or linked voice media')
         index = storage.scoped_path(project, 'index.html')
-        updated = voice_block(index.read_text(encoding='utf-8'), voice_name, report['duration'])
+        html = index.read_text(encoding='utf-8')
+        updated = voice_block(html, voice_name, report['duration'], previous_audio=state.get('audio'))
         names = {'runtime/cues.json': tts.json_bytes(cues), 'runtime/section_map.json': tts.json_bytes(sections),
                  'runtime/voice-alignment.json': alignment_bytes, 'runtime/alignment-report.json': tts.json_bytes(checked),
                  voice_name: audio_bytes}
