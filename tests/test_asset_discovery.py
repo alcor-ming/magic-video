@@ -90,8 +90,22 @@ class DiscoveryTest(unittest.TestCase):
         codes = [item["code"] for item in warnings]
         self.assertEqual(2, codes.count("missing_discovery_fields"))
         self.assertIn("unknown_source_approval", codes)
-        self.assertEqual(6, codes.count("unsafe_reference_path"))
-        self.assertIn("missing_reference_file", codes)
+        self.assertCountEqual(
+            [(str(directory / name), entry) for name, entry in (
+                ("traversal/manifest.json", "../../outside.html"),
+                ("absolute/manifest.json", str(outside)),
+                ("symlink/manifest.json", "linked.html"),
+                ("linked.md", None),
+                ("loop/manifest.json", None),
+                ("entry-loop/manifest.json", "index.html"),
+            )],
+            [(item["path"], item.get("entry")) for item in warnings if item["code"] == "unsafe_reference_path"],
+        )
+        self.assertCountEqual(
+            [{"path": str(directory / name), "code": "missing_reference_file", "entry": "index.html"}
+             for name in ("manifest.json", "entry-only/manifest.json")],
+            [item for item in warnings if item["code"] == "missing_reference_file"],
+        )
         self.assertIn("missing_selection_fields", codes)
         self.assertFalse(any("request.json" in item["path"] or "repair.json" in item["path"] for item in warnings))
         self.assertFalse(any(row.get("reference_only") for row in result["assets"]))

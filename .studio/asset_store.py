@@ -358,7 +358,7 @@ def _discover_references(directory: Path, seen: set | None = None) -> tuple[list
             warnings.append({"path": str(acceptance), "code": "invalid_source_approval", "error": str(error)})
     for path, kind in sorted(candidates.items()):
         try:
-            # Strict for existing entries: a link loop resolves silently on Python 3.11 and would vanish behind is_file().
+            # Resolve existing entries strictly so link loops cannot vanish behind is_file().
             inside = Path(os.path.realpath(path, strict=os.path.lexists(path))).is_relative_to(directory.resolve())
         except (OSError, RuntimeError):
             inside = False
@@ -407,7 +407,9 @@ def _discover_references(directory: Path, seen: set | None = None) -> tuple[list
             if "entry" in metadata:
                 try:
                     entry = path.parent / _safe_relative(metadata["entry"], "reference entry")
-                    if not entry.resolve().is_relative_to(path.parent.resolve()):
+                    # Python 3.13 non-strict resolve no longer raises for link loops.
+                    resolved_entry = Path(os.path.realpath(entry, strict=os.path.lexists(entry)))
+                    if not resolved_entry.is_relative_to(path.parent.resolve()):
                         raise ComponentError("Reference entry escapes its directory")
                     if not entry.is_file():
                         warnings.append({"path": str(path), "code": "missing_reference_file", "entry": metadata["entry"]})
