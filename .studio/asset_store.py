@@ -407,8 +407,13 @@ def _discover_references(directory: Path, seen: set | None = None) -> tuple[list
             if "entry" in metadata:
                 try:
                     entry = path.parent / _safe_relative(metadata["entry"], "reference entry")
-                    # Python 3.13 non-strict resolve no longer raises for link loops.
-                    resolved_entry = Path(os.path.realpath(entry, strict=os.path.lexists(entry)))
+                    # Check every parent strictly: lexists(entry) is false when a parent loops.
+                    try:
+                        resolved_entry = Path(os.path.realpath(entry, strict=True))
+                    except FileNotFoundError:
+                        if os.path.lexists(entry):
+                            raise  # A dangling final symlink remains unsafe.
+                        resolved_entry = Path(os.path.realpath(entry))
                     if not resolved_entry.is_relative_to(path.parent.resolve()):
                         raise ComponentError("Reference entry escapes its directory")
                     if not entry.is_file():

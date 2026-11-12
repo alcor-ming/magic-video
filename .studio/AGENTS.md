@@ -43,4 +43,4 @@ Work 管一期内容，Variant 管独立制作版本，生命周期通过 Work C
 
 ## Python 路径兼容性
 
-旧资产库参考发现的 manifest 与 entry 对已有目录项使用严格真实路径解析（`os.path.realpath(..., strict=os.path.lexists(...))`）；循环链接归 `unsafe_reference_path`，普通不存在的入口仍归 `missing_reference_file`。Python 3.13 的非严格 `Path.resolve()` 不再对循环链接抛错，不能靠后续 `is_file()` 区分循环与缺文件。回归见 [test_asset_discovery.py](../tests/test_asset_discovery.py)，逐项核对六种不安全路径及缺文件告警。
+旧资产库参考发现的 manifest 对已有目录项使用严格真实路径解析；entry 先严格解析整个路径，只在 `FileNotFoundError` 且末端目录项不存在时允许缺文件回退，并继续检查是否越界。循环链接（含中间目录循环）归 `unsafe_reference_path`，普通不存在的入口仍归 `missing_reference_file`。Python 3.13 的非严格 `Path.resolve()` 不再对循环链接抛错；中间目录循环时 `lexists(entry)` 也可能为假，不能据此跳过严格解析。回归见 [test_asset_discovery.py](../tests/test_asset_discovery.py)，逐项核对直接与中间循环、合法链接、越界及缺文件告警。

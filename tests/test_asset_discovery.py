@@ -113,6 +113,31 @@ class DiscoveryTest(unittest.TestCase):
         self.assertFalse(any(item["code"] == "missing_selection_fields"
                             for item in STORE.legacy_discover_components(self.harness, audit=True)["audit"]["warnings"]))
 
+    def test_reference_entry_intermediate_loops_and_missing_paths(self):
+        directory, metadata = self.reference_source()
+        (directory / "cycle").symlink_to("cycle", target_is_directory=True)
+        (directory / "link-a").symlink_to("link-b", target_is_directory=True)
+        (directory / "link-b").symlink_to("link-a", target_is_directory=True)
+        (directory / "valid-link.html").symlink_to("index.html")
+        (directory / "broken-link.html").symlink_to("absent.html")
+        outside = self.root / "outside-dir"
+        outside.mkdir()
+        (directory / "escape").symlink_to(outside, target_is_directory=True)
+        for entry, expected in (("cycle/index.html", "unsafe_reference_path"),
+                                ("link-a/index.html", "unsafe_reference_path"),
+                                ("broken-link.html", "unsafe_reference_path"),
+                                ("escape/missing.html", "unsafe_reference_path"),
+                                ("absent.html", "missing_reference_file"),
+                                ("absent/index.html", "missing_reference_file"),
+                                ("valid-link.html", None)):
+            with self.subTest(entry=entry):
+                (directory / "manifest.json").write_text(json.dumps({**metadata, "entry": entry}))
+                with patch.object(STORE, "_atomic_json", side_effect=AssertionError("Audit must not write")):
+                    result = STORE.legacy_discover_components(self.harness, audit=True)
+                warnings = [item["code"] for item in result["audit"]["warnings"]
+                            if item["path"] == str(directory / "manifest.json")]
+                self.assertEqual([] if expected is None else [expected], warnings)
+
     def test_cli_and_doctor_audit(self):
         from contextlib import redirect_stdout
         import io
