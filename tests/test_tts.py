@@ -467,6 +467,45 @@ class TTSTests(unittest.TestCase):
                 self.assertNotIn('data-audio-group=', index.read_text())
                 work_tts.verify(self.variant, api)
 
+    def test_formal_voice_requires_a_live_unambiguous_group(self):
+        api, args, project = self.adoption_fixture()
+        work_tts.command(self.root, args, api)
+        index = project / 'index.html'
+        routed = index.read_text().replace('<audio ', '<audio data-audio-group="sound-master" ', 1)
+        group = '<hf-audio-group id="sound-master"></hf-audio-group>'
+        invalid = [f'<script>const example = \'{group}\';</script>',
+                   f'<template>{group}</template>',
+                   f'<template><template>{group}</template>{group}</template>',
+                   f'<textarea>{group}</textarea>', f'<style>{group}</style>',
+                   '<hf-audio-group id="other" id="sound-master"></hf-audio-group>',
+                   '<hf-audio-group id="sound-master" id="other"></hf-audio-group>']
+        for markup in invalid:
+            with self.subTest(markup=markup):
+                index.write_text(routed.replace('</body>', markup + '</body>'))
+                with self.assertRaisesRegex(ValueError, '^Formal TTS voice track changed$'):
+                    work_tts.verify(self.variant, api)
+        index.write_text(routed.replace('</body>', f'<template>{group}</template>{group}</body>'))
+        work_tts.verify(self.variant, api)
+
+    def test_readoption_ignores_voice_examples_outside_generated_block(self):
+        api, args, project = self.adoption_fixture()
+        work_tts.command(self.root, args, api)
+        index = project / 'index.html'
+        routed = index.read_text().replace('<audio ', '<audio data-audio-group="sound-master" ', 1)
+        routed = routed.replace('</body>', '<hf-audio-group id="sound-master"></hf-audio-group></body>')
+        examples = ('<!-- <audio data-audio-group="old-bus" id="harness-voice"></audio> -->'
+                    '<!-- <audio id="harness-voice"></audio> -->')
+        routed = routed.replace('<body>', '<body>' + examples)
+        index.write_text(routed)
+        work_tts.verify(self.variant, api)
+        text = work_api.script_text(self.variant / 'SCRIPT.md')
+        result = tts.generate(self.variant, self.rows, {**self.config, 'model': 'fixture-v2'}, tts.digest(text.encode()))
+        previous = args.candidate
+        args.candidate = result['id']
+        work_tts.command(self.root, args, api)
+        self.assertEqual(routed.replace(previous, args.candidate), index.read_text())
+        work_tts.verify(self.variant, api)
+
     def test_formal_adoption_rolls_back_failure_then_guards_stale_script_audio_alignment(self):
         api, args, project = self.adoption_fixture()
 

@@ -1,5 +1,6 @@
 """Explicit Variant speech generation and transactional adoption into the existing project."""
-from html import escape
+from html import escape, unescape
+from html.parser import HTMLParser
 import json
 import os
 import re
@@ -63,7 +64,35 @@ def verify(variant, api):
         raise ValueError('Formal TTS voice track changed')
 
 
-def voice_block(html, path, duration):
+class AudioGroups(HTMLParser):
+    """Collect live group IDs, excluding inert markup and ambiguous attributes."""
+    CDATA_CONTENT_ELEMENTS = ('script', 'style', 'textarea', 'title', 'xmp', 'iframe', 'noembed', 'noframes')
+
+    def __init__(self, html):
+        super().__init__()
+        self.template_depth = 0
+        self.ids = set()
+        self.feed(html)
+        self.close()
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'template':
+            self.template_depth += 1
+        if not self.template_depth and tag == 'hf-audio-group':
+            ids = [value for key, value in attrs if key == 'id']
+            if len(ids) == 1 and ids[0]:
+                self.ids.add(ids[0])
+
+    def handle_endtag(self, tag):
+        if tag == 'template' and self.template_depth:
+            self.template_depth -= 1
+
+    def handle_startendtag(self, tag, attrs):
+        # HTML ignores the self-closing slash on non-void elements.
+        self.handle_starttag(tag, attrs)
+
+
+def voice_block(html, path, duration, *, previous_audio=None):
     start, end = '<!-- harness-voice:start -->', '<!-- harness-voice:end -->'
     block = (start + '\n<audio id="harness-voice" data-audio-role="voice" data-start="0" '
              f'data-duration="{duration}" data-track-index="5" src="{escape(path, quote=True)}"></audio>\n' + end)
@@ -75,9 +104,10 @@ def voice_block(html, path, duration):
         original, after = tail.split(end)
         routing = re.search(r'<audio (data-audio-group="([^"]+)" )id="harness-voice"', original)
         if (routing and start + original.replace(routing[1], '', 1) + end == block
-                and re.search(r'<hf-audio-group(?=\s|>)[^>]*\sid\s*=\s*(["\'])'
-                              + re.escape(routing[2]) + r'\1(?=\s|/?>)',
-                              re.sub(r'<!--.*?-->', '', html, flags=re.S), re.I)):
+                and unescape(routing[2]) in AudioGroups(html).ids):
+            block = block.replace('<audio ', '<audio ' + routing[1], 1)
+        elif (routing and previous_audio and previous_audio.get('source') == 'tts'
+              and voice_block(html, previous_audio['path'], previous_audio['duration']) == html):
             block = block.replace('<audio ', '<audio ' + routing[1], 1)
         outside = before + after
     if re.search(r'<audio\b[^>]*data-audio-role\s*=\s*[\"\']voice[\"\']', outside, re.I):
@@ -155,13 +185,7 @@ def command(root, args, api):
             raise ValueError('Refusing to replace different or linked voice media')
         index = storage.scoped_path(project, 'index.html')
         html = index.read_text(encoding='utf-8')
-        updated = voice_block(html, voice_name, report['duration'])
-        audio = state.get('audio', {})
-        if audio.get('source') == 'tts' and voice_block(html, audio['path'], audio['duration']) == html:
-            routing = re.search(r'<audio (data-audio-group="[^"]+" )id="harness-voice"', html)
-            if routing and '<audio id="harness-voice"' in updated:
-                updated = updated.replace('<audio id="harness-voice"',
-                                          '<audio ' + routing[1] + 'id="harness-voice"', 1)
+        updated = voice_block(html, voice_name, report['duration'], previous_audio=state.get('audio'))
         names = {'runtime/cues.json': tts.json_bytes(cues), 'runtime/section_map.json': tts.json_bytes(sections),
                  'runtime/voice-alignment.json': alignment_bytes, 'runtime/alignment-report.json': tts.json_bytes(checked),
                  voice_name: audio_bytes}
