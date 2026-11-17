@@ -105,6 +105,16 @@ class DarwinReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'active'):
                 root_deploy.idle(Path('/fixture/Root With Spaces'), target='darwin-arm64')
 
+    def test_native_process_detection_tolerates_multiline_commands(self):
+        listing = ('123 /bin/zsh -c echo start\nexport A=1\n'
+                   '987654 /fixture/runtime/node/node /fixture/.studio/preview.js\n')
+        with patch.object(root_deploy.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, listing, '')):
+            with self.assertRaisesRegex(ValueError, 'Root process 987654 is active'):
+                root_deploy.idle(Path('/fixture'), target='darwin-arm64')
+        idle_listing = '123 /bin/zsh -c echo start\nexport A=1\n456 /usr/bin/login\n'
+        with patch.object(root_deploy.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, idle_listing, '')):
+            root_deploy.idle(Path('/fixture'), target='darwin-arm64')
+
     def test_source_runtime_paths_do_not_require_release_manifest(self):
         with tempfile.TemporaryDirectory() as temp, patch.object(runtime.sys, 'platform', 'darwin'):
             self.assertEqual(Path(temp) / 'runtime/node/node', runtime.runtime_paths(Path(temp))['HYPERFRAMES_NODE'])
