@@ -208,12 +208,18 @@ def idle(root, *, target='windows-x64'):
         result = subprocess.run(['ps', '-axo', 'pid=,command='],
                                 capture_output=True, encoding='utf-8', check=True)
         prefix = str(root).rstrip('/') + '/'
+        processes = []
         for line in result.stdout.splitlines():
             if not line.strip():
                 continue
-            pid_text, command = line.strip().split(None, 1)
-            pid = int(pid_text)
-            executable = command.split(None, 1)[0].rsplit('/', 1)[-1]
+            pid_text, _, command = line.strip().partition(' ')
+            if pid_text.isdigit():
+                processes.append([int(pid_text), command.strip()])
+            elif processes:
+                # ps prints embedded newlines raw; a non-numeric line continues the previous command.
+                processes[-1][1] += '\n' + line
+        for pid, command in processes:
+            executable = (command.split(None, 1) or [''])[0].rsplit('/', 1)[-1]
             matched = re.fullmatch(
                 r'(python(?:w|[0-9.]+)?|node|ffmpeg|ffprobe|chrome|chrome-headless-shell|esbuild)(\.exe)?',
                 executable, re.IGNORECASE)
