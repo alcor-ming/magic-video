@@ -1,6 +1,6 @@
 {
   "id": "stage-full",
-  "version": 11,
+  "version": 12,
   "type": "design",
   "compatibility": {
     "supersedes": [
@@ -26,12 +26,12 @@
   },
   "subjects": {
     "A": {
-      "primary": "第2层动态图解或第4层文字",
+      "primary": "动态图解或承载信息的文字",
       "secondary": "角色反应与第3层指示"
     },
     "B": {
       "primary": "第2层媒体",
-      "secondary": "第4层B文字组与第3层指示"
+      "secondary": "B 的信息文字与指示"
     }
   },
   "stages": {

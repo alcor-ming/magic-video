@@ -43,12 +43,12 @@
 | 层 | `data-hf-layer` | 责任与宿主 |
 |---|---|---|
 | 1 | `background` | 根常驻背景，只呈现世界/情绪 |
-| 2 | `stage` | Scene 主体、角色、图片、图解及附着标签 |
+| 2 | `stage` | Scene 主体、角色、图片、图解及世界里、页面里的文字 |
 | 3 | `overlay` | Scene 强调与转场，不独立承载信息，不遮挡阅读 |
-| 4 | `text` | Scene 独立文字，主题样式与阅读保护 |
+| 4 | `text` | 屏幕文字组（可选），使用主题样式 |
 | 5 | `captions` | 根唯一口播字幕宿主，最高层安全区；关闭时不生成 |
 
-根 composition 显式标注宿主，Scene 内第 2/3/4 层是同一 sub-composition 的三个显式容器。CSS `z-index` 决定叠放顺序，Studio 轨道号只决定显示，不代替 CSS；声音另占 audio 轨。
+根 composition 显式标注卡片声明的宿主，Scene 内 `stage`、`overlay` 和采用的 `text` 各有同一 sub-composition 内的显式容器；必需项按卡片 `capabilities.layers` 检查。文字归属与阅读合同见 [visual-design.md](visual-design.md#文字归属与阅读)。CSS `z-index` 决定叠放顺序，Studio 轨道号只决定显示，不代替 CSS；声音另占 audio 轨。
 
 运行时用法按需读 [runtime-interfaces.md](runtime-interfaces.md)，资产接线按需读 [hyperframes-assets.md](hyperframes-assets.md)。只使用已安装合同；按接口卡取用，不读取组件与助手源码，派生时才读源码。
 
@@ -56,7 +56,7 @@
 
 showcase 不要求 explainer 分层/角色检查、Q1 或节奏诊断必经闭环；下文表现形式要求不适用，但 CDN、闭包外资产及 `onUpdate` 状态等硬约束继续检查。英语按教学 Plan 核对发音、拼写、词义、记忆提示、回忆任务及声画对应，保留合理阅读停顿，不强加通用角色、生图或 A/B 配额。诊断和代码证据不代替用户观看。
 
-explainer 的 `preview diagnose` 另报告 `explainer_layer_missing`、`captions_lock_mismatch` 与 `sound_asset_outside_closure`，闭包检查覆盖音轨和 character。口播 audio 显式标注 `data-audio-role="voice"`、工程内本地烘焙音轨标注 `data-audio-role="stem"` 才豁免声音资产检查，其余 audio 必须来自 media 闭包，不能把 BGM/SFX 标为 voice 绕过校验。角色 DOM 标注 `data-character-ref="<id@vN>"` 辅助静态 diagnose 核对 character 闭包。均为静态疑点；第 5 层口播字幕不按第 4 层 A1 判为照搬。Plan/Q1 还需人工核验每场可见事件、角色与图片风格、遮挡和有声观看，技术报告不代替接受。
+explainer 的 `preview diagnose` 另报告 `explainer_layer_missing`、`captions_lock_mismatch` 与 `sound_asset_outside_closure`，闭包检查覆盖音轨和 character。口播 audio 显式标注 `data-audio-role="voice"`、工程内本地烘焙音轨标注 `data-audio-role="stem"` 才豁免声音资产检查，其余 audio 必须来自 media 闭包，不能把 BGM/SFX 标为 voice 绕过校验。角色 DOM 标注 `data-character-ref="<id@vN>"` 辅助静态 diagnose 核对 character 闭包。均为静态疑点；第 5 层口播字幕不按 A1 判为照搬。Plan/Q1 还需人工核验每场可见事件、角色与图片风格、遮挡和有声观看，技术报告不代替接受。
 
 使用安装根内的锁定 Node、CLI 和浏览器。`npx --no-install` 仍按项目/npm 缓存解析包，不能保证选中安装根的版本；工程不需要另装 `node_modules`。Windows PowerShell 示例（替换安装根和工程路径）：
 
@@ -73,9 +73,9 @@ $env:HYPERFRAMES_NO_TELEMETRY = '1'
 
 修复错误、空 Scene、越界、遮挡、不可读和严重节奏问题。对照 Plan 检查问题 Scene 的稳定状态及核心变化：连接有指向，条件分支可区分，反馈在状态中可见，选稿与必需 Slots 不丢失。只看开头或 contact sheet、仅有字段 / CSS 差异不算语义通过；同 easing 或相似外观不自动失败。普通 Warning 不阻止 Draft。Plan 登记的 planned placeholders 允许全片预览，准确标出缺口；占位不是代码错误的豁免，也不具备最终交付资格。只有 full 范围且必需素材齐备的版本能获得完整接受并进入 Final；单 Scene 方向批准不能代替。
 
-表达与观看检查按所选链路合同及 `visual-design.md` 的适用项：对照来源与实际可见文字核验上屏提炼和必要信息完整性，并在准确 Studio Draft 中连续观看，核验按层节奏事件、可读性和声画含义。确认缺陷阻止该版本作出相应 QA 通过和接受就绪声明，但不阻止保存、打开与继续修复 Draft；沿用原有方向确认、准确 Draft 接受及无导出边界。技术检查、设计兑现与用户接受分别保留。Windows Studio 实际声音、连续播放、暂停、seek/回拖缺证据时记未验证；播放受限交工具缺口，不导出带声短段或整片 Draft。
+表达与观看检查按所选链路合同及 `visual-design.md` 的适用项：对照来源与实际可见文字核验上屏提炼和必要信息完整性，并在准确 Studio Draft 中连续观看，核验内容节奏事件、可读性和声画含义。确认缺陷阻止该版本作出相应 QA 通过和接受就绪声明，但不阻止保存、打开与继续修复 Draft；沿用原有方向确认、准确 Draft 接受及无导出边界。技术检查、设计兑现与用户接受分别保留。Windows Studio 实际声音、连续播放、暂停、seek/回拖缺证据时记未验证；播放受限交工具缺口，不导出带声短段或整片 Draft。
 
-辅助诊断使用 `work --work <id> --variant <id> preview diagnose <target>`，`target` 为 `current` 或准确的 executable Plan/Draft 登记 ID（`plan-vNNN` / `draft-vNNN`）；静态 `reference` 和 `layout` 类型不支持。先用既有 `preview open <target>` 打开同一目标，参数见诊断命令 `--help`。登记 Plan/Draft 使用同版冻结的 Script、Research、Plan 和工程，当前文稿的跨版本差异单列；诊断中输入变化标过期。`scope: scene` 的 Plan 参考按登记的 `sample_scenes` 投影和采样，D1 只核对这些 Scene 映射的信息单元；其他 Scene 在 `d1.out_of_scope` 中以 `outside_reference_scope` 标明“不在本参考范围”，不报缺失或未验证。可见文字归属信息单元依次按元素最近的 `data-info-id`、与该 Scene 唯一信息块全文或某行完全相同、为唯一信息块的子串判定；多块同时匹配或无匹配保持未归属，按元素单列待人工核验，不合并做照搬比对，该 Scene 未观测的信息标 `plan_information_mapping_unresolved` 而非缺失。`data-info-id` 可选，多信息 Scene 推荐在信息块容器上标注。第 4 层上屏文字照搬定位（D1）与按层节奏定位只输出疑点、版本/Scene/文字或时间范围及未验证项。文本相似度、timeline 空档和画面采样只定位候选问题，范围内未覆盖部分标未验证；不报告工具 PASS，不以 tween 数量或像素变化代替观看判断。诊断只读 Work，不写 Plan、接受状态或 Final，不导出或编码视频；`--frames` 只写 Variant 运行目录下的自看帧。制作中自看可加 `--range START END` 或 `--times a,b,c` 只采样正在做的段：只投影与该段重叠的 Scene，D1 与节奏、舞台线索只覆盖这些 Scene，报告 `scope` 并标 `range_limited_sampling`；`--frames` 把每个采样存为 PNG 到 Variant `.runtime/diagnose-frames/`（只保留最近 3 次），配合 `--times` 时逐点经片首、片尾重 seek 比对像素，报告 `determinism`。报告的 `sampling` 给出已验证采样数，为 0 时附重开预览的提示。这些帧只供执行者自看，不作交付或审片证据；交付 Draft 前仍对准确版本做不带范围的全片诊断。
+辅助诊断使用 `work --work <id> --variant <id> preview diagnose <target>`，`target` 为 `current` 或准确的 executable Plan/Draft 登记 ID（`plan-vNNN` / `draft-vNNN`）；静态 `reference` 和 `layout` 类型不支持。先用既有 `preview open <target>` 打开同一目标，参数见诊断命令 `--help`。登记 Plan/Draft 使用同版冻结的 Script、Research、Plan 和工程，当前文稿的跨版本差异单列；诊断中输入变化标过期。`scope: scene` 的 Plan 参考按登记的 `sample_scenes` 投影和采样，D1 只核对这些 Scene 映射的信息单元；其他 Scene 在 `d1.out_of_scope` 中以 `outside_reference_scope` 标明“不在本参考范围”，不报缺失或未验证。可见文字归属信息单元依次按元素最近的 `data-info-id`、与该 Scene 唯一信息块全文或某行完全相同、为唯一信息块的子串判定；多块同时匹配或无匹配保持未归属，按元素单列待人工核验，不合并做照搬比对，该 Scene 未观测的信息标 `plan_information_mapping_unresolved` 而非缺失。`data-info-id` 可选，多信息 Scene 推荐在信息块容器上标注。上屏文字照搬定位（D1）与按层节奏定位只输出疑点、版本/Scene/文字或时间范围及未验证项；D1 检测范围见 `visual-design.md`「文字归属与阅读」。文本相似度、timeline 空档和画面采样只定位候选问题，范围内未覆盖部分标未验证；不报告工具 PASS，不以 tween 数量或像素变化代替观看判断。诊断只读 Work，不写 Plan、接受状态或 Final，不导出或编码视频；`--frames` 只写 Variant 运行目录下的自看帧。制作中自看可加 `--range START END` 或 `--times a,b,c` 只采样正在做的段：只投影与该段重叠的 Scene，D1 与节奏、舞台线索只覆盖这些 Scene，报告 `scope` 并标 `range_limited_sampling`；`--frames` 把每个采样存为 PNG 到 Variant `.runtime/diagnose-frames/`（只保留最近 3 次），配合 `--times` 时逐点经片首、片尾重 seek 比对像素，报告 `determinism`。报告的 `sampling` 给出已验证采样数，为 0 时附重开预览的提示。这些帧只供执行者自看，不作交付或审片证据；交付 Draft 前仍对准确版本做不带范围的全片诊断。
 
 D1 读取 Plan 逐 Scene 内的 `screen` 信息块，使用其稳定信息 ID。就绪样本已覆盖的 Scene 中，未出现的信息报 `plan_information_missing`，真子集或明显缩短的表达报 `plan_information_truncated`，其他差异报 `plan_implementation_difference`；诊断范围内未覆盖 Scene 仍为未验证。截短是相对 Plan 的疑点，不是按字数判断内容质量，仍需人工核验语义和阅读效果。
 

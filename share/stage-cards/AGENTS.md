@@ -18,7 +18,7 @@
 1. **确定性**：一条 paused 主时间线；画面状态是全片秒数 `t` 的纯函数，统一在 `renderAt(t)` 里调用背景、积木与动作的 `apply(t)`。不用 `requestAnimationFrame`、定时器、`Date`、`Math.random`（需要随机用固定种子），不依赖 seek 事件回调；正放、倒放、重复 seek 结果一致。
 2. **动作只用动词**：前景物体的出现、退场、强调、移动、落定、换场、归位只用 `MOTION.md` 里的动作名，不手写缓动或关键帧。动作拥有目标的 `transform`、`opacity`、`visibility`，工程不再写这三项；同一物体同一通道同一时段只能有一个动作，重叠会在添加时抛错。`appear`、`sortTo` 已含落稳，不再接 `settle`。
 3. **背景顺序**：默认背景用 `HarnessStageRig.createBackdrop`，动作顺序必须是 `unfold` → `refold`… → `fold`，互不重叠。前景在换景开始前退场、换景完成后再出现。用了 `disc.scene` 进阶背景就不再另放 `createBackdrop`。
-4. **分层**：第 1 层 background、第 2 层 stage、第 3 层 overlay、第 4 层 text。布景件带 `data-hf-set`；全屏层宿主写 `pointer-events: none`，直接子节点恢复 `auto`。第 3 层不遮挡第 4 层正文。
+4. **分层**：第 1 层 background、第 2 层 stage、第 3 层 overlay、第 4 层 text。布景件带 `data-hf-set`；全屏层宿主写 `pointer-events: none`，直接子节点恢复 `auto`。各层不遮挡仍需阅读的信息；文字归属与阅读保护按 [visual-design.md](spec/visual-design.md)，必需宿主仍按各卡 capabilities 声明。
 5. **内容**：每镜写具体的物和它的动作，不用文字卡或灰矩形代替主体；主物约占台面区 40% 以上；屏上字每镜 8 字以内；第一镜和最后一镜落在物上。示范编排里的秒数是可读检查点，不是口播对齐。
 6. **资源闭包**：不加网络字体、CDN 或新依赖。所有可能含中文的文字 `font-family` 最后落到 SourceHanSansCN，否则显示方框。
 7. **积木是工具不是菜单**：积木只省掉定位、显隐、皮肤与插值的工程活；本期专属的物用 `prop.states` 描述或手写，不为了用积木把物换成纸框、牌子或光。

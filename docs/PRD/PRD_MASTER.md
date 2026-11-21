@@ -4,6 +4,8 @@
 
 当前设计：内置卡＋用户卡双根 Catalog、设计卡/素材卡、跨卡引用与本地化、Draft 文件快照与按 Variant 更新。更新保留工程副本并报告待重新安装资产。现行使用合同见 [README](../../README.md)、[工作流](../../.studio/workflow.md) 和 [资产合同](../../.studio/spec/hyperframes-assets.md)。
 
+文字归属的现行合同见 [visual-design.md](../../.studio/spec/visual-design.md#五层分工)：承载信息的文字按归属落在世界里、页面里或屏幕上。v3.x 文档里「第 4 层文字」的说法只作历史背景。
+
 开发设计记录（本地、不配送）：[本任务 PRD](../../.trellis/tasks/10-10-hyperframes-docs-discipline-extension/prd.md) 与 [脚手架细则](../../.trellis/tasks/10-10-hyperframes-docs-discipline-extension/scaffold-design.md)。P9 卡片迁移、P10 历史清理另行授权。
 
 数学卡已于 2026-10-20 退役（卡、`math build`、数学图积木与数学检查一并删除；旧数学 Work 只读，`variant reselect` 换卡后可继续），下文 v3.x 关于数学链路的描述只作历史背景。

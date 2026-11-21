@@ -22,7 +22,7 @@
 | move.zoom | [number,number] | 提供 move 时必填 | 起止正数缩放，例如 `[1,1.12]` |
 | move.pan | [[number,number],[number,number]] | 提供 move 时必填 | 起止像素平移，例如 `[[0,0],[20,-10]]` |
 | move.dur | number | 无 exit 且有 move 时必填 | 正数，从入场完成起算的运动时长 |
-| label | {text,side,size} | 否 | 第 2 层图形附着标注，不承载独立解释正文 |
+| label | {text,side,size} | 否 | 框边附着短标注；文字归属与阅读保护按 visual-design.md |
 | label.text | string | 提供 label 时必填 | 至多八个 Unicode 码点，超出抛 TypeError |
 | label.side | string | 提供 label 时必填 | `top` 或 `bottom`；贴在框边内侧 |
 | label.size | number | 否 | 标注字号 px，正数；省略时继承宿主字号。纸框推到台面区 60% 以上时建议 ≥ 32 |
@@ -61,4 +61,4 @@
 
 B 接管时纸框约占台面区 60% 以上，A 虚化或退场；小纸框只作贴在物旁的附着证据，不单独撑起一镜。
 
-B 接管期间 A 文字的冻结与恢复、独立 B 文字及字幕叠放由宿主负责；本积木只管理第 2 层纸框镜头。
+B 接管期间 A 的信息冻结与恢复、B 的屏幕文字组及字幕叠放由宿主负责；本积木只管理第 2 层纸框镜头，框内信息按 visual-design.md 核对。

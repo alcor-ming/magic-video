@@ -19,7 +19,7 @@ class V34RulesTests(unittest.TestCase):
         design = (ROOT / ".studio/spec/visual-design.md").read_text(encoding="utf-8")
         for rule in ("文字与 SVG/icon 互补", "普通图标一律从本地图标集按精确版本取用",
                      "保留原声、Anchor 与源对齐", "宿主唯一时间线",
-                     "阅读期间保持第 4 层稳定", "按用途查库"):
+                     "阅读期间保持信息可读", "按用途查库"):
             self.assertIn(rule, design)
         self.assertNotIn("必要时才少量辅助运动", design)
         self.assertNotIn("连续完全静止不超过2秒", design)

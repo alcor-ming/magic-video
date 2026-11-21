@@ -47,7 +47,7 @@ class V35RulesTests(unittest.TestCase):
     def test_design_and_plan_preserve_explainer_contract(self):
         design = read(".studio/spec/visual-design.md")
         for token in ("`math`", "`english`", "`explainer`",
-                      "任一通道", "A1 约束第 4 层及资产明确声明的 embedded 独立文字", "第 5 层口播原文不受 A1",
+                      "任一通道", "A1 约束所有承载信息的文字，不论落点", "第 5 层口播原文不受 A1",
                       "镜像回收", "系列声音签名", "同帧可见事件", "ducking",
                       "不设固定数量或间隔配额", "未试听", "Plan 检查", "Q1"):
             self.assertIn(token, design)

@@ -65,7 +65,7 @@ example-manifest.json 是文件、来源、版本、SHA-256、许可、用途和
   无 RAF / play / autoplay / Date / Math.random，不依赖 seek 事件或回调；正放、倒放、随机 seek 一致。
 - **字体**：`document.fonts.ready` 就绪后才首次渲染；`@font-face` 只指向 `media/SourceHanSansCN-Regular.otf`，
   `font-display:block`。
-- **布局**：固定 1920×1080；第 3 层读行不遮挡第 4 层文字；文字只在阅读窗口内稳定。
+- **布局**：固定 1920×1080；读行不遮挡仍需阅读的信息；文字归属与阅读保护按 `.studio/spec/visual-design.md`，本卡仍按 capabilities 提供必需宿主。
 - **闭包**：只依赖宿主放好的四个 runtime/media 文件；无图片、音频、字体下载与新依赖；道具与布景为原创内联 SVG/CSS 剪贴。
 
 ## 7. 声音与封面

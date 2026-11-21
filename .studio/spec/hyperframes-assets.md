@@ -92,7 +92,7 @@ v3 的缓动增加 back-out 与固定采样 spring；normal 可选整数 hold_fp
 
 可选 `broll` 块及挂载示例见 [创作合同](broll-assets.md)。资产校验检查角色、时长、timing、插槽/参数、各画幅安全区与完整 usage/examples；无 broll 的 module 不变。`component list --broll-role hook|concept|transition` 与 `--tag` 组合筛选，`component interface` 展示完整 broll。插槽由 Scene 源码传入，不改变 Binding schema 3、不新增 Plan 解析字段。
 
-镜头导出 mount，按全片秒数 renderAt，返回实际 moments 与 dispose；stage/text 分别挂第 2/4 层并交给既有 HarnessRolls。可复用新工程冻结的 `runtime/broll.js` 做输入、字体容量、闭包路径和时间映射校验，module 自身资源仍走正常离线闭包。开发合成样例与双 Theme/双画幅/两种 timing 的真实管道检查见 `tests/broll-browser.mjs`，不携带生产库资产。
+镜头导出 mount，按全片秒数 renderAt，返回实际 moments 与 dispose；stage 与采用的 text 分别挂第 2/4 层并交给既有 HarnessRolls；layer:text 插槽仍要求 text 宿主，文字归属见 [visual-design.md](visual-design.md#五层分工)。可复用新工程冻结的 `runtime/broll.js` 做输入、字体容量、闭包路径和时间映射校验，module 自身资源仍走正常离线闭包。开发合成样例与双 Theme/双画幅/两种 timing 的真实管道检查见 `tests/broll-browser.mjs`，不携带生产库资产。
 
 优先复用能独立解释一个含义的语义视觉对象及其内部联动，由 Work-local Scene 安排本期叙事和媒体。已有 helper 保留，只有真实独立变化或复用需求才抽取，不强制图形/动作/布局工厂拆分。组件可由 WSL 或 Windows 开发，空间舞台可内聚保存相机、遮挡和光照。布局适配须实测可读性，不以模块数量或双画幅完成率验收。
 

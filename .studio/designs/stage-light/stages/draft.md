@@ -12,7 +12,7 @@
 
 - 资源闭包：示例只依赖宿主放好的 `runtime/gsap.min.js`、`runtime/scene-binding.js`、`runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`；无图片、音频、字体下载与新依赖。Work 工程另有 `runtime/motion.js` 与 `vendor/components/stage-full/` 下装好的 `stage-rig`、`stage-motion`（见 MOTION.md「接入 Work」）。
 - 字体：`document.fonts.ready` 就绪后才首次渲染；`@font-face` 只指向 `media/SourceHanSansCN-Regular.otf`，`font-display:block`。
-- 布局：固定 1920×1080；第 3 层读行不遮挡第 4 层文字；文字只在阅读窗口内稳定。
+- 布局：固定 1920×1080；读行不遮挡仍需阅读的信息；文字归属与阅读保护按 visual-design.md。
 
 ## 具体技术检查
 

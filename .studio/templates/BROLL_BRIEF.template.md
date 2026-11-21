@@ -9,7 +9,8 @@
 - 时长变化：stretch / hold-end / 由作者提议
 - 接管范围：inline / full-frame
 - 插槽：名称、type、stage/text、最大字数；icon 精确引用或 media 闭包路径
-- 是否承载信息：是 / 否（纯注意力，无第 4 层文字）
+- 是否承载信息：是 / 否（纯注意力，不新增可读信息）
+- 文字归属：逐条写所属画面、落点及附着对象，见 `.studio/spec/visual-design.md`
 - 字幕安全区：按画幅
 - 关键画面时刻与口播 cue：
 - 声音：建议音效打点与用途 / 由作者提议

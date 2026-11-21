@@ -2,7 +2,7 @@
 
 将 1–12 字写在第 2 层纸牌道具上，支持脚铰链立起、逐字写出与反向折下。
 
-这是第 2 层附着文字（字在物上），不是第 4 层正文；不受第 4 层 A1，但受 ≤12 字限制。先加载 `stage-kit.js`，再加载 `blocks/sign-plate.js`。
+这是字在物上的落点，受 ≤12 字限制；承载信息时按 `.studio/spec/visual-design.md` 的 A1 与阅读保护核对。先加载 `stage-kit.js`，再加载 `blocks/sign-plate.js`。
 
 ## Options
 
