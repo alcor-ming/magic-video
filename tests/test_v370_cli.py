@@ -1,6 +1,4 @@
 """Real lifecycle functions with isolated files; mock only Studio transport/sampling."""
-from contextlib import redirect_stdout
-import io
 import json
 from pathlib import Path
 import unittest
@@ -40,18 +38,14 @@ class V370CliTest(unittest.TestCase):
         mock.patch.object(cli.studio_preview, 'context', return_value={}).start()
 
     def call(self, *args):
-        with redirect_stdout(io.StringIO()) as output:
-            self.run_cli(*self.scope, *args, '--json')
-        return output.getvalue().strip()
+        return self.run_cli(*self.scope, *args, '--json').strip()
 
     def test_creator_recovers_same_object_from_cli_evidence(self):
         import os
         before_cwd = Path.cwd()
         self.addCleanup(os.chdir, before_cwd)
         os.chdir(self.root)
-        with redirect_stdout(io.StringIO()) as output:
-            self.run_cli('current')
-        located = json.loads(output.getvalue())
+        located = json.loads(self.run_cli('current'))
         self.assertEqual(self.scope[1], located['work'])
         before = json.loads(self.call('status'))
         self.call('settings', 'set', 'critic.model', 'text-only')
@@ -66,9 +60,7 @@ class V370CliTest(unittest.TestCase):
         recovered = json.loads(self.call('status'))
         self.assertEqual(before['path'], recovered['path'])
         self.assertEqual('text-only', recovered['variant']['settings']['critic.model'])
-        with redirect_stdout(io.StringIO()) as output:
-            self.run_cli('list', '--json')
-        self.assertEqual(1, len(json.loads(output.getvalue())))
+        self.assertEqual(1, len(json.loads(self.run_cli('list', '--json'))))
         self.assertIsNone(recovered['variant']['accepted_preview'])
 
     def test_settings_cli_precedence_and_creation_binding(self):

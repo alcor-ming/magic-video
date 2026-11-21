@@ -145,7 +145,7 @@ class WorkCliTest(unittest.TestCase):
         self.assertEqual("douyin-9x16", status["variant"]["id"])
 
     def test_workflow_is_required(self) -> None:
-        with self.assertRaises(SystemExit):
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             WORK_CLI.main(["new", "Missing workflow"], root=self.root)
 
     def test_script_text_excludes_scene_index_and_preserves_legacy_anchors(self) -> None:
