@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from contextlib import redirect_stdout
 from importlib.machinery import SourceFileLoader
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -221,8 +223,9 @@ class ReleaseCliTest(unittest.TestCase):
                  mock.patch.object(RELEASE, "LOCAL_SKILLS", {}), \
                  mock.patch.object(RELEASE, "release_checks", side_effect=checks) as checked, \
                  mock.patch.object(RELEASE, "stage_runtime") as stage:
-                archive = RELEASE.candidate("fixture", root / "out", root / "cache", [], channel="local", runtime_files=runtime)
-                self.assertEqual(archive, RELEASE.candidate("fixture", root / "out", root / "cache", [], channel="local", runtime_files=runtime))
+                with redirect_stdout(io.StringIO()):
+                    archive = RELEASE.candidate("fixture", root / "out", root / "cache", [], channel="local", runtime_files=runtime)
+                    self.assertEqual(archive, RELEASE.candidate("fixture", root / "out", root / "cache", [], channel="local", runtime_files=runtime))
             stage.assert_not_called()
             self.assertEqual([{}, {"packaged": True}], [call.kwargs for call in checked.call_args_list])
             with zipfile.ZipFile(archive) as bundle:

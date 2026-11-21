@@ -1,3 +1,4 @@
+from contextlib import redirect_stdout
 import importlib.util
 import io
 import json
@@ -248,7 +249,8 @@ class WindowsRootTest(unittest.TestCase):
             with patch.object(seed, "REPO", base), patch.object(seed, "ARCHIVES", []), \
                     patch.object(seed, "urlopen", side_effect=lambda *a, **k: io.BytesIO(b"")), \
                     patch.object(seed, "npm_archive", return_value=archive):
-                seed.prepare(base, npm_lock, output)
+                with redirect_stdout(io.StringIO()):
+                    seed.prepare(base, npm_lock, output)
                 result = seed.read(output)
                 self.assertEqual(result["versions"]["hyperframes"], seed.VERSIONS["hyperframes"])
                 self.assertEqual(result["versions"]["onnxruntime-node"], "1.21.1")

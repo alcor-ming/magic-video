@@ -1,4 +1,6 @@
 """Focused lifecycle checks; real browser/render exercise is visual-mixed.mjs."""
+from contextlib import redirect_stderr, redirect_stdout
+import io
 import json
 import os
 from pathlib import Path
@@ -58,7 +60,10 @@ class VisualPlanTest(unittest.TestCase):
             if "--variant-id" not in args:
                 args += ("--variant-id", "main")
         parsed = WORK_CLI.build_parser().parse_args(args)
-        return parsed.handler(self.root, parsed)
+        output = io.StringIO()
+        with redirect_stdout(output), redirect_stderr(io.StringIO()):
+            parsed.handler(self.root, parsed)
+        return output.getvalue()
 
     def update(self, name, **fields):
         path = WORK_CLI.input_path(self.variant, name)

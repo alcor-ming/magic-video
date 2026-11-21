@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -93,18 +95,21 @@ class RequestTest(unittest.TestCase):
             REQUEST.safe(self.project, "linked/scene.html")
 
     def test_review_never_uses_production_and_forbids_promotion(self):
-        with patch.dict(os.environ, {"HYPERFRAMES_AI_WORK_ROOT": str(self.store), "HYPERFRAMES_AI_REVIEW": "1"}):
-            self.assertEqual(2, WORK.main(["root", "show"], root=self.root))
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            with patch.dict(os.environ, {"HYPERFRAMES_AI_WORK_ROOT": str(self.store), "HYPERFRAMES_AI_REVIEW": "1"}):
+                self.assertEqual(2, WORK.main(["root", "show"], root=self.root))
         review = REQUEST.review(self.store, self.revision, self.delivery, WORK.read_json, WORK.write_variant)
-        with patch.dict(os.environ, {"HYPERFRAMES_AI_WORK_ROOT": str(review), "HYPERFRAMES_AI_REVIEW": "1"}):
-            for args in (["finalize", "x.mp4"], ["preview", "accept", "plan-001"], ["archive", "--outcome", "abandoned"],
-                         ["preview", "render", "plan-001", "--final", "--output", "x.mp4"]):
-                self.assertEqual(2, WORK.main(args, root=self.root))
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            with patch.dict(os.environ, {"HYPERFRAMES_AI_WORK_ROOT": str(review), "HYPERFRAMES_AI_REVIEW": "1"}):
+                for args in (["finalize", "x.mp4"], ["preview", "accept", "plan-001"], ["archive", "--outcome", "abandoned"],
+                             ["preview", "render", "plan-001", "--final", "--output", "x.mp4"]):
+                    self.assertEqual(2, WORK.main(args, root=self.root))
         self.assertFalse((self.store / ".runtime" / "current-work").exists())
         (self.root / ".release.json").write_text(json.dumps({"channel": "candidate"}))
-        with patch.dict(os.environ, {"HYPERFRAMES_AI_WORK_ROOT": str(self.store), "HYPERFRAMES_AI_REVIEW": "0"}):
-            self.assertEqual(2, WORK.main(["archive", "--outcome", "abandoned"], root=self.root))
-            self.assertEqual(0, WORK.main(["review", "init", "candidate-bootstrap"], root=self.root))
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            with patch.dict(os.environ, {"HYPERFRAMES_AI_WORK_ROOT": str(self.store), "HYPERFRAMES_AI_REVIEW": "0"}):
+                self.assertEqual(2, WORK.main(["archive", "--outcome", "abandoned"], root=self.root))
+                self.assertEqual(0, WORK.main(["review", "init", "candidate-bootstrap"], root=self.root))
         self.assertTrue((self.store / "review/candidate-bootstrap/.runtime/review.json").is_file())
         self.assertFalse((self.store / ".runtime/current-work").exists())
 
@@ -122,8 +127,9 @@ class RequestTest(unittest.TestCase):
         shutil.copytree(REPO / ".studio" / "templates", self.root / ".studio" / "templates")
         review = REQUEST.init_review(self.store, "native-smoke")
         with patch.dict(os.environ, {"HYPERFRAMES_AI_WORK_ROOT": str(review), "HYPERFRAMES_AI_REVIEW": "1"}):
-            self.assertEqual(0, WORK.main(["new", "Native test", "--workflow", "hyperframes_video",
-                                           "--design", "stage-full"], root=self.root))
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(0, WORK.main(["new", "Native test", "--workflow", "hyperframes_video",
+                                               "--design", "stage-full"], root=self.root))
         self.assertTrue((review / ".runtime" / "current-work").is_file())
         self.assertFalse((self.store / ".runtime" / "current-work").exists())
 
