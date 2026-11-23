@@ -15,6 +15,7 @@ import shutil
 import subprocess
 import tempfile
 from typing import Any
+from urllib.parse import unquote, urlsplit
 import xml.etree.ElementTree as ET
 
 
@@ -959,6 +960,8 @@ def _lock_record(
     project: Path,
     binding_entries: list[dict[str, Any]],
     vendor_path: Path,
+    *,
+    vendor_copy: Path | None = None,
 ) -> dict[str, Any]:
     vendor_rel = vendor_path.relative_to(project).as_posix()
     install_files = [f"{vendor_rel}/{item['path']}" for item in release["files"]]
@@ -966,11 +969,187 @@ def _lock_record(
     return {
         "component_ref": release["component_ref"],
         "public_package_sha256": release["package_sha256"],
-        "work_package_sha256": component_package_sha256(vendor_path),
+        "work_package_sha256": component_package_sha256(vendor_copy or vendor_path),
         "vendor_path": vendor_rel,
         "bindings": sorted(binding_entries, key=lambda item: item["path"]),
         "install_files": sorted(install_files),
     }
+
+
+def _merge_install_record(lock: dict[str, Any], components: list[dict[str, Any]], record: dict[str, Any],
+                          *, generic: bool) -> dict[str, Any]:
+    for index, existing in enumerate(components):
+        if existing.get("component_ref") == record["component_ref"]:
+            for key in ("public_package_sha256", "work_package_sha256", "vendor_path", "install_files"):
+                if existing.get(key) != record[key]:
+                    raise ComponentError(f"Existing lock record differs: {record['component_ref']}")
+            bindings = {item["path"]: item for item in _lock_bindings(existing)}
+            for entry in record["bindings"]:
+                if entry["path"] in bindings and bindings[entry["path"]] != entry:
+                    raise ComponentError(f"Existing binding hash differs: {entry['path']}")
+                bindings[entry["path"]] = entry
+            record = dict(existing)
+            record["bindings"] = [bindings[path] for path in sorted(bindings)]
+            components[index] = record
+            break
+    else:
+        components.append(record)
+    components.sort(key=lambda item: str(item.get("component_ref", "")))
+    lock["schema_version"] = 2 if generic or lock["schema_version"] == 2 else 1
+    lock["algorithm"] = PACKAGE_ALGORITHM
+    lock["components"] = components
+    return record
+
+
+def _old_vendor_references(project: Path, old_paths: list[Path]) -> dict[Path, list[str]]:
+    from dependency_scan import DependencyScanError, references
+
+    files = [project / "index.html"]
+    for directory in (project / "scenes", project / "compositions"):
+        if not directory.is_symlink():
+            files.extend(directory.rglob("*"))
+    relative_vendors = {path: path.relative_to(project) for path in old_paths}
+    found: dict[Path, set[str]] = {path: set() for path in old_paths}
+    for path in files:
+        if (path.suffix not in {".html", ".htm", ".css", ".js", ".mjs"}
+                or path.is_symlink() or not path.is_file()):
+            continue
+        try:
+            refs, _ = references(path.read_text(encoding="utf-8"), path.suffix)
+            for reference in refs:
+                value = reference["value"]
+                parsed = urlsplit(value)
+                if parsed.scheme or parsed.netloc or not parsed.path or value.startswith("/"):
+                    continue
+                base = project if reference["kind"] == "fetch" and path.suffix in {".js", ".mjs"} else path.parent
+                target = Path(os.path.normpath(base.relative_to(project) / unquote(parsed.path)))
+                for old_path, relative in relative_vendors.items():
+                    if target.is_relative_to(relative):
+                        found[old_path].add(path.relative_to(project).as_posix())
+        except (DependencyScanError, OSError, ValueError) as error:
+            raise ComponentError(f"Cannot scan component references in {path}: {error}") from error
+    return {path: sorted(names) for path, names in found.items()}
+
+
+def _replace_card_asset(release_directory: Path, release: dict[str, Any], project: Path, vendor_path: Path,
+                        lock_path: Path, lock: dict[str, Any], components: list[dict[str, Any]],
+                        old_records: list[dict[str, Any]], binding_rel: str, binding_data: dict[str, Any],
+                        *, allow_unapproved: bool, record_fields: dict[str, Any]) -> dict[str, Any]:
+    from work_requests import safe
+
+    old_paths = []
+    replaced = []
+    migrated = set()
+    for old in old_records:
+        old_ref = old.get("component_ref")
+        if not isinstance(old_ref, str):
+            raise ComponentError("Old card asset record requires component_ref")
+        old_id, old_version = parse_component_ref(old_ref)
+        old_rel = old.get("vendor_path")
+        # A lock must only retire the directory belonging to that exact version.
+        if old_id != release["card_ref"] or old_rel != _vendor_relative(old_id, old_version):
+            raise ComponentError(f"Invalid old vendor path for {old_ref}: {old_rel}")
+        old_path = safe(project, old_rel)
+        resolved = old_path.resolve()
+        if resolved != project.resolve() / old_rel or resolved == vendor_path.resolve() or not old_path.is_dir():
+            raise ComponentError(f"Cannot replace old vendor directory: {old_path}")
+        paths = [item["path"] for item in _lock_bindings(old)]
+        old_paths.append(old_path)
+        migrated.update(paths)
+        replaced.append({"component_ref": old_ref, "vendor_path": old_rel, "bindings": paths})
+
+    writes = {}
+    binding_paths = {}
+    for relative in sorted(migrated | {binding_rel}):
+        path = safe(project, relative)
+        if (path == project or path == lock_path or any(path.is_relative_to(vendor) for vendor in [vendor_path, *old_paths])
+                or path.exists() and (not path.is_file() or path.stat().st_nlink > 1)):
+            raise ComponentError(f"Invalid replacement binding target: {path}")
+        binding_paths[relative] = path
+        if relative == binding_rel:
+            if relative not in migrated and path.exists():
+                existing = _read_json(path)
+                validate_binding(existing, release)
+                if existing != binding_data:
+                    raise ComponentError(f"Existing binding differs: {path}")
+            else:
+                writes[relative] = binding_data
+        else:
+            data = _read_json(path)
+            data["component_ref"] = release["component_ref"]
+            writes[relative] = validate_binding(data, release)
+
+    references = _old_vendor_references(project, old_paths)
+    for item, path in zip(replaced, old_paths):
+        item["referenced_by"] = references[path]
+
+    install_vendor = not vendor_path.exists()
+    if not install_vendor:
+        existing = validate_component_release(vendor_path, expected_ref=release["component_ref"], allow_unapproved=allow_unapproved)
+        if existing["package_sha256"] != release["package_sha256"] or not _same_tree(release_directory, vendor_path):
+            raise ComponentError(f"Existing vendor copy differs: {vendor_path}")
+
+    staging = Path(tempfile.mkdtemp(prefix=".component-replacement-", dir=project))
+    keep_staging = False
+    try:
+        changes: list[tuple[Path, Path | None]] = []
+        vendor_copy = vendor_path
+        if install_vendor:
+            vendor_copy = staging / "vendor"
+            shutil.copytree(release_directory, vendor_copy)
+            installed = validate_component_release(vendor_copy, expected_ref=release["component_ref"], allow_unapproved=allow_unapproved)
+            if installed["package_sha256"] != release["package_sha256"] or not _same_tree(release_directory, vendor_copy):
+                raise ComponentError("Vendor copy changed during installation")
+            changes.append((vendor_path, vendor_copy))
+
+        entries = []
+        for index, (relative, path) in enumerate(binding_paths.items()):
+            payload = path
+            if relative in writes:
+                payload = staging / f"binding-{index}.json"
+                _atomic_json(payload, writes[relative])
+                changes.append((path, payload))
+            entries.append({"path": relative, "sha256": file_sha256(payload), "surfaces": []})
+        record = _lock_record(release, project, entries, vendor_path, vendor_copy=vendor_copy)
+        record.update(record_fields)
+        remaining = [item for item in components if item not in old_records]
+        record = _merge_install_record(lock, remaining, record, generic=True)
+        staged_lock = staging / lock_path.name
+        _atomic_json(staged_lock, lock)
+        changes.extend((path, None) for path in old_paths)
+        changes.append((lock_path, staged_lock))
+
+        # Publish only after preflight and staging succeed. Keep the originals
+        # by rename so a failed publish can restore their bytes and metadata.
+        undo = []
+        created = []
+        try:
+            for target, payload in changes:
+                if target.exists():
+                    backup = staging / f"backup-{len(undo)}"
+                    os.replace(target, backup)
+                    undo.append((backup, target))
+                if payload is not None:
+                    for parent in reversed(target.parents):
+                        if parent.is_relative_to(project) and not parent.exists():
+                            parent.mkdir()
+                            created.append(parent)
+                    os.replace(payload, target)
+                    undo.append((target, payload))
+        except Exception:
+            try:
+                for source, target in reversed(undo):
+                    os.replace(source, target)
+                for directory in reversed(created):
+                    directory.rmdir()
+            except OSError as error:
+                keep_staging = True
+                raise ComponentError(f"Component replacement rollback failed; backups at {staging}") from error
+            raise
+    finally:
+        if not keep_staging:
+            shutil.rmtree(staging)
+    return {"component": record, "lock_path": str(lock_path), "replaced": replaced}
 
 
 @contextmanager
@@ -1040,6 +1219,19 @@ def install_component(
             raise ComponentError(f"Installation target cannot be a hardlink: {target}")
     lock = _read_json(lock_path) if lock_path.is_file() else {"schema_version": 1, "algorithm": PACKAGE_ALGORITHM, "components": []}
     components = _lock_components(lock)
+    card_ref = release.get("card_ref")
+    if card_ref:
+        old_records = [item for item in components if item.get("card_ref") == card_ref
+                       and item.get("component_ref") != release["component_ref"]]
+        if old_records:
+            fields = {"card_ref": card_ref, "asset_kind": release["metadata"]["asset_type"]}
+            if acceptance is not None:
+                fields["acceptance"] = acceptance
+            if review_root is not None:
+                fields["review"] = review_identity(review_root)
+            return _replace_card_asset(Path(release_directory), release, project, vendor_path, lock_path, lock,
+                                       components, old_records, binding_rel, binding_data,
+                                       allow_unapproved=allow_unapproved, record_fields=fields)
     vendor_path.parent.mkdir(parents=True, exist_ok=True)
 
     if vendor_path.exists():
@@ -1082,27 +1274,7 @@ def install_component(
         record["acceptance"] = acceptance
     if review_root is not None:
         record["review"] = review_identity(review_root)
-    for index, existing in enumerate(components):
-        if existing.get("component_ref") == record["component_ref"]:
-            for key in ("public_package_sha256", "work_package_sha256", "vendor_path", "install_files"):
-                if existing.get(key) != record[key]:
-                    raise ComponentError(f"Existing lock record differs: {record['component_ref']}")
-            bindings = _lock_bindings(existing)
-            same_path = next((item for item in bindings if item["path"] == binding_entry["path"]), None)
-            if same_path is not None and same_path != binding_entry:
-                raise ComponentError(f"Existing binding hash differs: {binding_entry['path']}")
-            if same_path is None:
-                bindings.append(binding_entry)
-            record = dict(existing)
-            record["bindings"] = sorted(bindings, key=lambda item: item["path"])
-            components[index] = record
-            break
-    else:
-        components.append(record)
-    components.sort(key=lambda item: str(item.get("component_ref", "")))
-    lock["schema_version"] = 2 if generic or lock["schema_version"] == 2 else 1
-    lock["algorithm"] = PACKAGE_ALGORITHM
-    lock["components"] = components
+    record = _merge_install_record(lock, components, record, generic=generic)
     _atomic_json(lock_path, lock)
     return {"component": record, "lock_path": str(lock_path)}
 

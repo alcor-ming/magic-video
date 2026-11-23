@@ -8,7 +8,7 @@
 
 `asset_layer` 为 building-block、scene-template、content、reference，独立于 kind 与画面五层；沿用画幅、用途与标签筛选，不从名字猜能力。运行时依赖由卡声明、宿主提供，卡内禁止携带 GSAP 副本。
 
-使用显式 Work/Variant 与 Binding 安装实际文件，工程继续持有 vendor、Binding 和 COMPONENT_LOCK.json；旧冻结 Work 的校验不读取当前卡库，来源离线也不失效。Draft 提交保存卡文件与引用资产摘要，status/预览被动提示来源变化。卡片编辑不升级已有 Work；更新卡片快照保留工程副本，列出待重新安装资产，不自动接受或跨 Variant 操作。
+使用显式 Work/Variant 与 Binding 安装实际文件，工程继续持有 vendor、Binding 和 COMPONENT_LOCK.json；旧冻结 Work 的校验不读取当前卡库，来源离线也不失效。Draft 提交保存卡文件与引用资产摘要，status/预览被动提示来源变化。卡片编辑不升级已有 Work；更新卡片快照保留工程副本，列出待重新安装资产，不自动接受或跨 Variant 操作。重新安装同一卡资产的另一版本会替换旧版本的 lock 记录、Binding 和 vendor 副本，工程引用由作者更新。
 
 以下工程资产与外观合同继续适用。历史 pack/import/accept 实现保留供旧数据与用户迁移，不是 v4.2 活动入口；本任务不读取或迁移旧库。
 
