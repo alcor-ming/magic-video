@@ -1,5 +1,6 @@
 """Card asset replacement in an isolated project."""
 import json
+import os
 from pathlib import Path
 import shutil
 import sys
@@ -208,6 +209,10 @@ class ComponentUpgradeTest(unittest.TestCase):
         harness.mkdir()
         shutil.copyfile(REPO / 'windows-runtime.lock.json', harness / 'windows-runtime.lock.json')
         (harness / '.release.json').write_text('{"target": "windows-x64", "channel": "local"}', encoding='utf-8')
+        # The fixture models a Windows package on any test host, so acceptance reads this harness lock.
+        environment = patch.dict(os.environ, {'HYPERFRAMES_AI_ROOT': str(harness)})
+        environment.start()
+        self.addCleanup(environment.stop)
         entries = []
         for version in (1, 2):
             package, release = self.package(version, card=False)
