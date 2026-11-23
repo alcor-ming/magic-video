@@ -34,17 +34,19 @@ await figures.renderAt(at);
 
 ## rolls.js
 
-用途：A/B 切换、冻结与返回；画幅：16:9、9:16；占层：A/B 文字 4、装饰和媒体 2。参数：`mount({cues,scenes,reducedMotion?})`，每场 `id/startCue/endCue/a/b/continuation?`；返回 `renderAt/dispose`。A 的 items 必须是 text 内不重复的子元素，不能用 text 宿主本身。
+Rolls 的用途是切换 A/B-roll，以及冻结和恢复 A。支持 16:9 与 9:16 画幅。`mount({cues,scenes,reducedMotion?})` 接收 cue 集、Scene 列表和可选的减少动态参数，返回 `renderAt` 和 `dispose`。
+
+Rolls 的占层由节点职责决定。每个 Scene 都必须独立挂载第 4 层的 `a.text`，即使卡把 `text` 声明为可选。`a.items` 包含该组内的独立文字元素，无条目时传空数组。A 的可选装饰和 B 媒体挂第 2 层。B 的可选屏幕文字组挂第 4 层。
 
 ```js
 const rolls = HarnessRolls.mount({cues, scenes: [{id: 'S01', startCue: '主机', endCue: '结束',
-  a: {text: textHost, items: [{id: 'I01', cue: '主机', element: titleElement}]}, b: []}]});
+  a: {text: textHost, items: [{id: 'opening-title', cue: '主机', element: titleElement}]}, b: []}]});
 rolls.renderAt(at);
 ```
 
-新版冻结运行时对 A/B 交接采用固定错相窗口：媒体在 B 起点前最多 0.2 秒开始，在起点落定；A 组在其后退场/虚化，B 文字稍后出现。返回时 B 文字先退、A 在返回 cue 恢复、媒体最后淡出。窗口在 Scene 边界与相邻 B 段之间裁剪，短 B 段按比例压缩。B 对象可加 `handoff: "cut"`，减少动态同样瞬切。A 时间只在原始 B 区间暂停。
+公开 Rolls 用固定错相窗口。媒体在 B 起点前最多 0.2 秒开始淡入，于起点落定。A 组随后隐藏或虚化，再显示 B 屏幕文字组。返回时先退 B 屏幕文字组，A 在返回 cue 恢复，B 媒体最后淡出。窗口受 Scene 边界和相邻 B 区间限制，短区间按比例压缩。B 对象的 `handoff: "cut"` 或减少动态只把这一组显隐改为同 cue 切换。A 时间只在原始 B 区间暂停。B 直达 Scene 末端时，默认仍有末端错相。需要将 B 保持到边界时用 `cut`，它同时取消入段和出段错相。
 
-Rolls 独占 A/B 宿主的 opacity、visibility、filter；与 Motion 或其他动画冲突时挂载失败，给内容单独的子容器。时间状态与节奏事件均按实际目标起点计算；dispose 恢复原样式。旧工程冻结的 runtime 不升级，仍保持原交接行为。
+Rolls 独占 A/B 宿主的 opacity、visibility、filter；与 Motion 或其他动画冲突时挂载失败，给内容单独的子容器。时间状态与节奏事件均按实际目标起点计算；dispose 恢复原样式。旧工程沿用已冻结的运行时。
 
 ## appearance.js
 
@@ -107,13 +109,20 @@ shot.moments();
 shot.dispose();
 ```
 
-冻结 module 的入口为 `mount({stage,text?,appearance,slots,params,startCue,endCue,cues})`，返回 `renderAt(t)` / `moments()` / `dispose()`。stage 为第 2 层 B media，可选的 text 为 B 的屏幕文字组（第 4 层）；文字归属见 [visual-design.md](visual-design.md#五层分工)；宿主按全片秒数调用，既有 HarnessRolls 决定 B 区间和 A 的冻结/恢复。时长越界、类型/容量不符、外部 URL 与闭包外媒体明确失败，不把插槽写进 Binding。
+冻结 module 的入口为 `mount({stage,text?,appearance,slots,params,startCue,endCue,cues})`，返回 `renderAt(t)` / `moments()` / `dispose()`。`stage` 为第 2 层 B 媒体，采用的 `text` 为第 4 层 B 屏幕文字组。`broll.slots` 有 `layer: text` 时必须提供 `text`。宿主以全片秒数驱动模块并将对应节点交给 Rolls 管理显隐。文字归属见 [visual-design.md](visual-design.md#五层分工)。时长越界、类型/容量不符、外部 URL 与闭包外媒体明确失败，不把插槽写进 Binding。
 
 `runtime/broll.js` 的 `HarnessBroll.mount(metadata,options,build)` 可复用严格输入检查、Theme/冻结字体容量、stretch/hold-end 时间映射与运行时事件注册。build 返回 time-pure renderAt、带实际 target 的默认相对秒数 events、文字 labels 与 dispose。`moments()` 返回 `{key_moments:[全片秒数],sfx_cues:[{time,purpose}]}`；关键时刻来自实际注册事件，manifest 描述不直接计数。dispose 注销自身事件并释放节点；完整取用示例和 schema 见 [broll-assets.md](broll-assets.md)。
 
 ## 详细接线
 
-A/B 接线使用冻结到工程的 `runtime/rolls.js`：`HarnessRolls.mount({cues, scenes})` 返回 `renderAt(t)` / `dispose()`，由宿主按时间求值。每个 Scene 提供 `id/startCue/endCue`、`a:{text, decorations?, items:[{id,cue,element}], renderAt?}` 与 `b:[{startCue,endCue,retreat:"hide"|"blur",media,text?}]`。A text 与 B text 属于第 4 层，decorations 与 media 属于第 2 层；跨 Scene 使用 `continuation:{from,readItems}`。B 期间 A 的本地动作时间暂停，返回与直接 seek 均恢复同一状态；退出时释放实例。组件按自身合同声明占用层，不自带根背景或字幕宿主。
+Plan 分镜表只作索引。使用公开 Rolls 时，工程按以下方式手动接线：
+
+1. 以 Plan 的 Scene ID 对应 `scenes[].id`。同一 Scene 的 A、B 行共用一个 Scene 对象。Scene 按时间排序，区间不重叠。`startCue/endCue` 定位实际 Scene 边界。
+2. A 行共用 `a:{text,decorations?,items:[{id,cue,element}],renderAt?}`。A 的条目在 B 区间外揭示。跨 Scene 返回已读 A 内容时，用 `continuation:{from,readItems}` 指向前场与工程 A 组的条目 ID。分镜表的 `data-hf-carry` 和 Plan 的信息 ID 各有用途，均不生成 `readItems`。
+3. 每条 B 行接 `b` 中一个连续区间，字段为 `startCue/endCue/retreat/media/text?/handoff?`。起点取该行的口播锚点。终点取返回 A 的 cue，或以 B 结束时取 Scene 末端。一段内连续换镜头或页面，按段内锚点在这一 `media` 内实现。重新出现 A 后再进 B，另写 A、B 行并增加一个 `b` 区间。无 B 时 `b: []`。
+4. `retreat` 按 Plan 的退场方式填 `hide` 或 `blur`，选择判据见 [创作指南](visual-design.md#公开-rolls-接线)。`media` 必须是独立挂载的 `stage` 元素，`text` 按 B 文字的实际落点与模块插槽要求接入。B 行第 6 列有 `cut` 时，手动在对应 `b` 项设 `handoff: "cut"`，留空则省略 `handoff`。转场另按卡合同实现。
+
+宿主用全片秒数调用 `HarnessRolls.mount` 返回的 `renderAt(t)`。A 的 `renderAt` 收到扣除 B 区间的本地动作时间。离开时调用 `dispose()`。关闭 `rolls` 的卡按卡内时间线接线，各画面的显隐由卡负责。
 
 `work --work <id> --variant <id> cues build --alignment <characters.json>` 读取已批准的 `work script text` 口播文本，与 `characters[]` 字符级对齐，生成 `project/runtime/cues.json`，冻结文本/对齐来源 SHA-256、逐字符 start/end/aligned 与不一致报告。未匹配字符标为 `aligned:false`，不插值。将本地 `cues.js` 纳入闭包，通过 `await HarnessCues.load()` 后的 `find(token, {nth, within:[start,end], edge})` 查询全局秒数；nth 从 1 起，edge 为 start/end。缺词 `cue_not_found`、未指明重复词 `cue_ambiguous`、命中未对齐字符 `cue_unaligned` 均明确失败。
 

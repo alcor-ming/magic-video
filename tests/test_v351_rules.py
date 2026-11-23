@@ -81,11 +81,11 @@ class V351RulesTests(unittest.TestCase):
 
     def test_ab_layers_rhythm_and_hard_boundaries(self):
         design = read(".studio/spec/visual-design.md")
-        for token in ("五层管空间", "两者正交", "| IP `explainer`",
-                      "| 口播 `talking_head`", "A → B → A", "A → B", "隐藏或虚化并冻结",
-                      "B 的新信息按归属选落点", "跨 Scene 返回 A", "不重播入场",
-                      "A1 约束所有承载信息的文字，不论落点", "阅读保护适用于所有承载信息的文字",
-                      "第 5 层口播原文不受 A1", "事件间隔不超过 2 秒", "铺开再等",
+        for token in ("五层管空间", "A/B-roll 管主画面的时间职责", "| 公共 `stage-full` / `stage-light`",
+                      "| `talking_head` 模板", "A → B → A", "A → B", "B 区间暂停 A 的本地动作时间",
+                      "文字按归属写在世界里、页面里或屏幕上", "跨 Scene 返回 A", "不重播入场",
+                      "上屏提炼规则约束所有承载信息的文字，不论落点", "阅读保护适用于所有承载信息的文字",
+                      "第 5 层口播原文不受上屏提炼规则", "事件间隔不超过 2 秒", "铺开再等",
                       "第 2–4 层", "字幕推进", "背景漂移", "呼吸待机与说话起伏",
                       "持续镜头运动的中间过程不计", "逐处写明原因与区间",
                       "真人出镜区间不受 2 秒上限约束", "第 2、3 层继续产生事件",
@@ -93,7 +93,7 @@ class V351RulesTests(unittest.TestCase):
                       "快照闭包、不联网", "Draft 与 test-work 不导出视频"):
             with self.subTest(token=token):
                 self.assertIn(token, design)
-        for section in ("## Plan 检查", "## Q1"):
+        for section in ("## Plan 检查", "## Draft 观看检查"):
             self.assertIn("超过 2 秒", design.split(section, 1)[1].split("\n## ", 1)[0])
 
     def test_research_and_plan_have_one_design_source(self):
@@ -107,7 +107,7 @@ class V351RulesTests(unittest.TestCase):
         self.assertNotIn("screen", overview)
         self.assertIn("起点口播词", overview)
         scene = plan.split("## S01", 1)[1].split("\n## ", 1)[0]
-        for token in ("A/B 编排", "### I01", "```screen", "B 素材", "声音 cue", "刻意停顿例外"):
+        for token in ("A/B 编排", "### I01", "```screen", "B-roll 来源", "声音 cue", "刻意停顿例外"):
             self.assertIn(token, scene)
         intent = plan.split("## 意图回应", 1)[1].split("\n## ", 1)[0]
         for token in ("采纳", "改写", "未采纳", "`锁定` 不可未采纳", "`Variant`"):

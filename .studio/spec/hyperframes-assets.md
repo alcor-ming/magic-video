@@ -70,7 +70,7 @@ function seek(seconds) { for (const motion of motions) motion.seek(seconds); }
 function dispose() { for (const motion of motions) motion.dispose(); appearance.dispose(); }
 ```
 
-以上元素均为 Scene 已挂载的显式图层。每个绑定返回 seek/dispose，只由宿主秒数定位暂停的原生 WAAPI，不自启时钟、音轨或场景。结束/回拖保留 DOM；零时长在 cue 精确切换；reduced 转场在原 cue 而非 endCue 瞬切。emphasis 的 restoreCue 不早于常规进入结束；transition 的 endCue-cue 等于常规预设 duration，crossfade 的 overlap 必须覆盖整个交接区间，不能自行延长 Scene 或音轨。Scene 必须保持两个不同目标及祖先可绘制，不能在交接前隐藏 outgoing，Motion 只控制目标自身 opacity/visibility。
+以上元素均为 Scene 已挂载的显式图层。每个绑定返回 seek/dispose，只由宿主秒数定位暂停的原生 WAAPI，不自启时钟、音轨或场景。结束/回拖保留 DOM；零时长在 cue 精确切换；reduced 转场在原 cue 而非 endCue 瞬切。emphasis 的 restoreCue 不早于常规进入结束；transition 的 endCue-cue 等于常规预设 duration，crossfade 的 overlap 必须覆盖整个转场区间，不能自行延长 Scene 或音轨。Scene 必须保持两个不同目标及祖先可绘制，不能在转场前隐藏 outgoing，Motion 只控制目标自身 opacity/visibility。
 
 属性所有权覆盖绑定完整存续期（包括前后填充）：入退场占用 opacity/visibility 及声明的 transform，强调占用 outlineColor/Width/Style，转场占用双目标 opacity/visibility；已有动画或其他绑定争抢相同属性时在创建前拒绝。reveal 与 emphasis 可同元素组合；同元素的 reveal/exit 或转场应使用 Scene 显式隔离的运动层，不依赖创建顺序，也不自动包装表格或 SVG。绑定只采样一次基础样式，宿主不得在存续期争写所属属性；dispose 可重复调用，仅 cancel 自身效果，露出当前基础样式，不覆盖宿主对无关属性的更新。先 dispose 所有 Motion，再释放 appearance 字体。
 
@@ -88,11 +88,11 @@ v3 的缓动增加 back-out 与固定采样 spring；normal 可选整数 hold_fp
 
 账号外观可完整指定 Theme/Background；跨账号的风格叠加只指定 background、省略 theme。后者保留账号 Theme，前者覆盖，沿用当前解析合并规则，不新增资产 kind。
 
-### 动效 B-roll module
+### 动效 B-roll 镜头模块
 
 可选 `broll` 块及挂载示例见 [创作合同](broll-assets.md)。资产校验检查角色、时长、timing、插槽/参数、各画幅安全区与完整 usage/examples；无 broll 的 module 不变。`component list --broll-role hook|concept|transition` 与 `--tag` 组合筛选，`component interface` 展示完整 broll。插槽由 Scene 源码传入，不改变 Binding schema 3、不新增 Plan 解析字段。
 
-镜头导出 mount，按全片秒数 renderAt，返回实际 moments 与 dispose；stage 与采用的 text 分别挂第 2/4 层并交给既有 HarnessRolls；layer:text 插槽仍要求 text 宿主，文字归属见 [visual-design.md](visual-design.md#五层分工)。可复用新工程冻结的 `runtime/broll.js` 做输入、字体容量、闭包路径和时间映射校验，module 自身资源仍走正常离线闭包。开发合成样例与双 Theme/双画幅/两种 timing 的真实管道检查见 `tests/broll-browser.mjs`，不携带生产库资产。
+镜头导出 mount，按全片秒数 renderAt，返回实际 moments 与 dispose；使用公开 Rolls 时，`stage` 和采用的 `text` 分别挂第 2、4 层，并交给 HarnessRolls 管理显隐。有 `layer: text` 插槽时须提供 `text` 宿主，文字归属见 [visual-design.md](visual-design.md#五层分工)。可复用新工程冻结的 `runtime/broll.js` 做输入、字体容量、闭包路径和时间映射校验，module 自身资源仍走正常离线闭包。开发合成样例与双 Theme/双画幅/两种 timing 的真实管道检查见 `tests/broll-browser.mjs`，不携带生产库资产。
 
 优先复用能独立解释一个含义的语义视觉对象及其内部联动，由 Work-local Scene 安排本期叙事和媒体。已有 helper 保留，只有真实独立变化或复用需求才抽取，不强制图形/动作/布局工厂拆分。组件可由 WSL 或 Windows 开发，空间舞台可内聚保存相机、遮挡和光照。布局适配须实测可读性，不以模块数量或双画幅完成率验收。
 

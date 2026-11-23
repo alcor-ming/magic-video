@@ -47,12 +47,12 @@ class V35RulesTests(unittest.TestCase):
     def test_design_and_plan_preserve_explainer_contract(self):
         design = read(".studio/spec/visual-design.md")
         for token in ("`math`", "`english`", "`explainer`",
-                      "任一通道", "A1 约束所有承载信息的文字，不论落点", "第 5 层口播原文不受 A1",
+                      "任一通道", "上屏提炼规则约束所有承载信息的文字，不论落点", "第 5 层口播原文不受上屏提炼规则",
                       "镜像回收", "系列声音签名", "同帧可见事件", "ducking",
-                      "不设固定数量或间隔配额", "未试听", "Plan 检查", "Q1"):
+                      "数量与间隔随可见事件安排", "未试听", "Plan 检查", "Draft 观看检查"):
             self.assertIn(token, design)
         plan = read(".studio/templates/ANIMATION_PLAN.template.md")
-        for token in ("导演 Brief", "B 素材", "A/B 编排", "刻意停顿例外",
+        for token in ("导演 Brief", "B-roll 来源", "A/B 编排", "刻意停顿例外",
                       "起始 cue", "结束 cue", "起点口播词"):
             self.assertIn(token, plan)
         spec = read(".studio/spec/hyperframes.md")

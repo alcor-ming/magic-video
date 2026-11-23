@@ -1,6 +1,6 @@
 {
   "id": "stage-full",
-  "version": 12,
+  "version": 13,
   "type": "design",
   "compatibility": {
     "supersedes": [
@@ -26,12 +26,12 @@
   },
   "subjects": {
     "A": {
-      "primary": "动态图解或承载信息的文字",
-      "secondary": "角色反应与第3层指示"
+      "primary": "推进主叙事的舞台主物",
+      "secondary": "角色反应与第 3 层指示"
     },
     "B": {
-      "primary": "第2层媒体",
-      "secondary": "B 的信息文字与指示"
+      "primary": "补充画面中的说明对象",
+      "secondary": "说明对象的标注与指示"
     }
   },
   "stages": {

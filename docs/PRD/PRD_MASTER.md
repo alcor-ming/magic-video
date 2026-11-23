@@ -4,7 +4,7 @@
 
 当前设计：内置卡＋用户卡双根 Catalog、设计卡/素材卡、跨卡引用与本地化、Draft 文件快照与按 Variant 更新。更新保留工程副本并报告待重新安装资产。现行使用合同见 [README](../../README.md)、[工作流](../../.studio/workflow.md) 和 [资产合同](../../.studio/spec/hyperframes-assets.md)。
 
-文字归属的现行合同见 [visual-design.md](../../.studio/spec/visual-design.md#五层分工)：承载信息的文字按归属落在世界里、页面里或屏幕上。v3.x 文档里「第 4 层文字」的说法只作历史背景。
+承载信息的文字按归属落在世界里、页面里或屏幕上。A/B-roll 术语、七列分镜与三种文字落点见 [创作指南](../../.studio/spec/visual-design.md)。历史 PRD 见 [画面编排索引](README.md)。
 
 开发设计记录（本地、不配送）：[本任务 PRD](../../.trellis/tasks/10-10-hyperframes-docs-discipline-extension/prd.md) 与 [脚手架细则](../../.trellis/tasks/10-10-hyperframes-docs-discipline-extension/scaffold-design.md)。P9 卡片迁移、P10 历史清理另行授权。
 
@@ -26,7 +26,7 @@
 
 日期：2026-09-22；当前范围更新：2026-10-06
 
-v3.8.2 支持 `explainer`（默认）、`showcase`、`math` 与 `english` 四条专属入口、规则、Plan 和检查，共用 Work / Variant、Studio、资产及导出。showcase 舞台／白底角色处理是脱离单期作品的可选工具；数学保留原声／说唱与图解；英语采用原创教学＋TTS，更多文字 Motion、幽默例句、谐音与拼写记忆方法保留为后续方向。公共 TTS 默认火山，提供替代脚本入口，候选生成、正式声音采用与可信对齐各自记录；本期不宣称已接通未选定的本地或其他云引擎。card 专属代码、路由、模板、文档与配送内容删除，不保留兼容实现；生产历史文件和快照不删除，继续内容须显式采用到受支持的新版本。旧配置中的 card 不静默回退。当前合同见 [README](../../README.md#快速开始)、[创作契约](../../.studio/spec/creative.md)、数学链路（仅自用包）和英语链路（仅自用包）。
+v3.8.2 当时采用四条专属链路。现行制作通过 `--design <id>` 选择内置或用户设计卡，Plan 和检查按卡声明。旧身份按支持范围保留读取或提示重选。新建与正式声音流程见 [README](../../README.md#快速开始) 和 [创作契约](../../.studio/spec/creative.md)。
 
 v3.8 化繁为简的生命周期合同见[制作工作流](../../.studio/workflow.md#归档恢复与停放)、[Final 合同](../../.studio/spec/hyperframes-final.md)及 [README](../../README.md#归档反悔与导航)。本版退出播客制作，保留 Work / Variant 两层；正式导出归档准确版本，全部非空版本集合归档后汇总 Work，可在原版本取消归档。历史成片与收据共同保留；停放保持路径和会话稳定；容量与缓存清理按需执行。退役更新保留用户修改并退出活动入口，运行时按实际消费者裁剪。部署与生产结果仍单独记录。
 
@@ -34,9 +34,9 @@ v3.6.1 增量见 [Opus 动效 B-roll 与 Motion v3](./hyperframes-v361-motion-br
 
 v3.4.3 增量见 [信息承载、选择性配图与流程更新](./hyperframes-v343-text-imagery.md)：完整上屏信息单元、逐 Scene 配图取舍、Plan 阶段查库与检查、D1 反向核对、场景源/配方发现及只读漏登审计。WSL 实施与隔离回归已完成；未部署，Windows 原生与生产未验证，不包含生产 Work 修正或 Windows 资产补登记。
 
-v3.4.2 基线见 [上屏提炼与持续视觉变化](./hyperframes-v342-visual-outcomes.md)：A1/B1/Q1 与 D1/D2 保留，Plan 信息格式、检查路由与默认配图策略由 v3.4.3 更新（未部署，Windows 原生与生产未验证）。
+[v3.4.2 上屏提炼与持续视觉变化](./hyperframes-v342-visual-outcomes.md)记录历史规则。现行上屏提炼、节奏合同与 Draft 观看检查见 [创作指南](../../.studio/spec/visual-design.md)。
 
-既有增量合同见 [v3.4.1 补充方案](./hyperframes-v341-supplement.md)：归档同号继任、零 Variant 内容准备与平级账号版本；覆盖 RC2 中必须先绑定账号及 main 优先的旧假设。[RC2 执行方案](./hyperframes-rc2-execution-plan.md) 与 v3.3 制作工程合同仍为其余既有基线。下方 R0–R5 保留 v3.2 实施路径与理由，不重启历史阶段；新制作仍采用三项入口、四阶段与独立 Finalize，归档和恢复按 v3.8 当前合同执行。Remotion 原生验证与生产闭环不得由规则或 mock 测试代替。
+既有增量合同见 [v3.4.1 补充方案](./hyperframes-v341-supplement.md)：归档同号继任、零 Variant 内容准备与平级账号版本；覆盖 RC2 中必须先绑定账号及 main 优先的旧假设。[RC2 执行方案](./hyperframes-rc2-execution-plan.md) 与 v3.3 制作工程合同仍为其余既有基线。下方 R0–R5 保留 v3.2 实施路径与理由，不重启历史阶段；制作入口、阶段、导出和归档见 [现行工作流](../../.studio/workflow.md)。Remotion 原生验证与生产闭环不得由规则或 mock 测试代替。
 
 ## 历史 v3.x 路径
 
@@ -109,11 +109,12 @@ Work 沿用 vendor / Binding / `COMPONENT_LOCK.json`，schema 2 扩展通用资�
 
 ## PRD 索引
 
-- v3.8.2 独立链路、正式 TTS 与 card 删除：[入口与制作范围](../../README.md#快速开始)、[声音与 Plan 合同](../../.studio/spec/creative.md)、数学链路（仅自用包）、英语链路（仅自用包）。开发仓实现；开发计划留在本地 Trellis，不随产品配送，未声明部署、云合成或原生验收。
+- v3.8.2 独立链路、正式 TTS 与 card 删除：[入口与制作范围](../../README.md#快速开始)、[声音与 Plan 合同](../../.studio/spec/creative.md)。历史实现记录。现行入口以所选设计卡为准。
 
 - v3.8 化繁为简：[Work / Variant 生命周期与导航](../../.studio/workflow.md#归档恢复与停放)、[Final 与历史收据](../../.studio/spec/hyperframes-final.md)。开发任务计划留在本地 Trellis，不作为产品配送内容。
 
-- [v3.7 流程优化与复盘](./hyperframes-v37-simplify-retro.md)：v3.7.0（产品线档案、导演 Brief 与按 A/B 段分镜、A/B 错相交接、静止与延续测量、可切换 critic、三层设置）已在 WSL 开发仓实现并通过隔离验证；Windows 原生、宿主指定 critic 模型与生产验收未执行；v3.7.1 画面复盘（单片复盘、样片记忆、已知缺陷、跨片汇总、数学诊断修正）已按审查补定在 WSL 开发仓实施并通过隔离验证；Windows 原生、指定 critic 模型看图与生产验收未执行；v3.7.2 内容复盘（第 6 节 C1–C8 与 AC1–AC8，含实验变量、跨期对照与 6.6 数据利用）已在 WSL 开发仓实现并通过合成 fixture、包校验与浏览器 / Studio 验收；Windows 原生与生产验收未执行，未部署；简化设计移到 v3.8。
+- [v3.7 流程优化与复盘](./hyperframes-v37-simplify-retro.md)为历史文档。v3.7.0（产品线档案、导演 Brief 与按 A/B 段分镜、Rolls 错相、静止与延续测量、可切换 critic、三层设置）已在 WSL 开发仓实现并通过隔离验证；Windows 原生、宿主指定 critic 模型与生产验收未执行；v3.7.1 画面复盘（单片复盘、样片记忆、已知缺陷、跨片汇总、数学诊断修正）已按审查补定在 WSL 开发仓实施并通过隔离验证；Windows 原生、指定 critic 模型看图与生产验收未执行；v3.7.2 内容复盘已有 WSL 实现，并通过合成夹具、包校验和浏览器 / Studio 验收。历史原文的「待实施」为旧状态。Windows 原生、部署与生产验收未执行。简化设计移到 v3.8。
+- 历史格式见 [v3.5.2 资产清单与 Plan 格式](./hyperframes-v352-asset-kits.md)。现行解析器兼容 3.5.2 和 3.7.0。
 - [v3.6 showcase 模式、技术提炼与数学系列正式链路](./hyperframes-v36-showcase-math.md)：showcase、math-chain 与 math-kit 开发源码已落地，自动化验收见各自 Trellis 任务；未部署，Windows 原生与生产效果待验。
 - [v3.4.1 补充方案](./hyperframes-v341-supplement.md)：已批准并由 WSL 采用的归档同号继任及取消 main 特权；保留完整设计与合成验收，不包含真实生产对象清单。实现、测试和部署结果分别报告。
 
@@ -130,7 +131,7 @@ Work 沿用 vendor / Binding / `COMPONENT_LOCK.json`，schema 2 扩展通用资�
 
 ### v4.2 能力与外部来源补充
 
-设计卡以 capabilities 声明所需层、A/B、绑定和专属检查；旧 mode 只读兼容。上游绘制代码固定 commit 后进入独立只读来源区，许可逐文件核对；适配产物是普通用户卡，不引入第三方系统或提示词库。外部 borrowed 来源只能比较，不能自动同步。
+设计卡以 `capabilities` 声明所需层、公开 Rolls、绑定和专属检查；旧 mode 只读兼容。上游绘制代码固定 commit 后进入独立只读来源区，许可逐文件核对；适配产物是普通用户卡，不引入第三方系统或提示词库。外部 borrowed 来源只能比较，不能自动同步。
 
 非 DOM module 提供完整 texts()；独立 embedded 文字按资产声明的 text_type 授权。字体由卡声明并闭合，第 4/5 层与引擎统一使用；缺字不能接受。Draft 保存文字清单，embedded 文字逐 Scene 人工确认，排版检查标为已委托而非通过。可执行字段与参数以 [.studio/spec/broll-assets.md](../../.studio/spec/broll-assets.md#非-dom-文字与字体) 为准。
 

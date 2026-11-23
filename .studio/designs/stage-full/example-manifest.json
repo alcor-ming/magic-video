@@ -70,7 +70,7 @@
     {
       "source": ".studio/designs/stage-full/GUIDE.md",
       "target": "GUIDE.md",
-      "sha256": "2e751a6cf48e67018075be8c49474cfb59b852a8cb278facf6e587ca7fa8b3d7",
+      "sha256": "0f49d23023144d7063c684e50c298f0d942e95a710b504ed1637bd5143db3e13",
       "origin": "Project authored source extraction guide",
       "version": "1",
       "license": "Apache-2.0",
@@ -83,7 +83,7 @@
     {
       "source": ".studio/designs/stage-full/stages/draft.md",
       "target": "stages/draft.md",
-      "sha256": "55dba54b1eba2c9f265a795fad5dc4b4a5bb9a323fc69d5029db5c4e42cc04f3",
+      "sha256": "6588b2d7d363a19162bd4827b68ccdece20e7d5315f522fe8f636934de6137b6",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",
@@ -109,7 +109,7 @@
     {
       "source": ".studio/designs/stage-full/stages/plan.md",
       "target": "stages/plan.md",
-      "sha256": "34a5f9d0015ed59b66ecf060cd97f1652e314f0dc74edecdaebeaaa3937e934b",
+      "sha256": "72f9a0962ff9008b874a7241608554c9eb1e4d898b4e73ce6c4bdffc5ba0e8c9",
       "origin": "Project authored phase-specific guidance",
       "version": "1",
       "license": "Apache-2.0",

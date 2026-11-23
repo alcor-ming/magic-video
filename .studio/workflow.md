@@ -35,7 +35,11 @@ Research 按段落或 Anchor 记录事实与来源、B-roll 候选（可定位�
 Plan 模板与适用检查从冻结档案读取；形式豁免不扩大为接受豁免。
 Plan 阶段按用途运行 `work component list --query <用途> --include-references` 查包、场景源与配方，按结果的 `detail.argv`（在本根 work 入口后传入参数）查看准确接口，再选择复用、派生或自制。单查场景源或配方可直接用 `--kind scene-source` / `--kind recipe`；裸 list 保留参考项默认隐藏的包目录行为。场景源与配方不可安装，按详情中的源入口或配方说明使用，不猜派生命令。组件可在隔离开发任务或生产会话授权的可编辑源编写；生产内容制作保持根规则边界。
 
-通用 explainer 的新 `plan_format=3.7.0` 按 [创作指南](spec/visual-design.md) 填导演 Brief 与按 A/B 段的分镜表，每段一个观看任务。Research 有导演意图时，Brief 后的“意图回应”逐条写采纳、改写或未采纳及理由；`锁定` 不可未采纳，不可行时向用户报告准确冲突；本 Variant 专属意图来源写 `Variant`。锁定项是否落实由用户在 Plan 门审查，不新增工具检查。编排中发现材料缺口时回 Research 定点补材料；只补材料、不改 Script 正文时不重开文案门。逐 Scene 保留 `screen`、素材、声音与刻意停顿例外，不再写事件表。showcase、math 与 english 使用专属 Plan，不强加通用 Brief、角色／生图或 A/B 配额；数学保留符号和图形职责，英语保留教学要素、拼写合词与阅读节奏。参考机制 ID 见 [机制目录](mechanisms.yaml)。正式声音与字词对齐仍是时间依据。CLI 冻结元信息，3.5.2 Plan 继续可读，不自动转换。拟生成素材列用途、数量、风格与 Asset Brief，权限见 [AGENTS.md](AGENTS.md)。
+声音阶段完成后写 Plan。先采用正式声音，通过逐字对齐，并处理对齐疑点。口播锚点据此定位。
+
+新 Plan 使用 `plan_format=3.7.0`。按冻结设计卡和 [创作指南](spec/visual-design.md#plan-检查) 写导演 Brief、A/B-roll 分镜索引或专属 Plan。每段一个观看任务。逐 Scene 按需写 `screen`、素材、声音和刻意停顿例外。参考机制 ID 见 [机制目录](mechanisms.yaml)。CLI 冻结元信息。3.5.2 Plan 继续可读，保留旧事件表。
+
+Research 有导演意图时，Brief 后的“意图回应”逐条写采纳、改写或未采纳及理由。`锁定` 项须落实。存在冲突时向用户报告，由用户在 Plan 门审查。Variant 专属意图来源写 `Variant`。编排中发现材料缺口时回 Research 定点补材料。只补材料且 Script 正文未改时沿用原文案确认。拟生成素材列用途、数量、风格与 Asset Brief，权限见 [AGENTS.md](AGENTS.md)。
 
 通过 `work workflow show --json` 读取三道独立人工门与 Draft 建议式审查。流程值按系列 → Work → Variant（仅 Plan/Draft）解析，设计卡和账号不能关闭流程门。通过 `work workflow put --layer series|work|variant --file FILE.json` 配置；文案、Plan、Draft 门默认开启，分别由 `workflow.human_confirmation.script/plan/draft` 控制。开门时推进确认准确输入，关门时直接继续，任一开关不影响其他门。`work settings show --json` 读取表现/critic 设置，不形成第二套审批来源。
 
@@ -43,8 +47,8 @@ Plan 阶段按用途运行 `work component list --query <用途> --include-refer
 
 ## 3. Studio 制作与验收
 
-是否要求 Q1 或节奏闭环由档案 exemptions 决定；ready、seek、离线闭包、授权始终保留；完整 Draft 人工接受取决于该门是否开启。
-完成当前 Plan 门设置要求后扩成全片 Draft；按短自检单核对 ready、seek、资源闭合与正式声音。占位到素材齐备是同一阶段的准备度变化：用稳定 ID 补齐媒体，只重定时受影响范围，保持全部 Scene、A/B、动作与阅读安排。最终接受前正式声音与必需效果齐备。
+是否要求 Draft 观看检查或节奏闭环由卡的 `exemptions` 决定；ready、seek、离线闭包、授权始终保留；完整 Draft 人工接受取决于该门是否开启。
+完成当前 Plan 门设置要求后扩成全片 Draft；按 Plan 手动接入画面与转场。启用 Rolls 时按分镜索引接线，见 [运行时接口](spec/runtime-interfaces.md#详细接线)。按短自检单核对 ready、seek、资源闭合与正式声音。占位到素材齐备是同一阶段的准备度变化：用稳定 ID 补齐媒体，只重定时受影响范围，保持全部 Scene、A/B、动作与阅读安排。最终接受前正式声音与必需效果齐备。
 
 使用 CLI 返回的锁定官方 Studio URL。登记版本在独立审阅副本打开；依照 [hyperframes.md](spec/hyperframes.md) 验证 ready、seek、闭包与技术 QA，按链路适用的观看检查带声连续观看。阅读区域稳定，节奏事件与声音对应；Windows 原生连续播放、暂停、任意 seek、回拖和跨 Scene 证据单独报告。
 
@@ -52,7 +56,7 @@ Plan 阶段按用途运行 `work component list --query <用途> --include-refer
 
 `preview register` 冻结准确 Draft，`preview open <id>` 审阅，Draft 门开启时再由用户接受准确 full Draft；关闭时正常继续。技术 PASS、素材 complete 与方向确认不替代开启的人工门。反馈绑定版本、Scene 与时间范围：信息缺口回 Plan，证据缺口回 Research，布局或实现问题就地修复；等义、换行、easing、安全区与性能修复无需重新批准方向。新增事实或改变原意回权威来源。工程文字同步逐 Scene 的实际 `screen` 表达。
 
-`work --work <id> --variant <id> critic round [draft-id]` 复用登记、独立 Studio 审阅副本与诊断，一次生成准确 Draft 的截图、contact sheet、逐帧页、Scene 交界前后帧和 Scene/A/B 帧条，追加 Variant `critic/ledger.json`。不导出视频。省略 Draft ID 时先登记当前完整工程；失败不追加成功轮次。`--automatic` 在轮数上限停止；不带该参数可手动继续。
+`work --work <id> --variant <id> critic round [draft-id]` 复用登记、独立 Studio 审阅副本与诊断，一次生成准确 Draft 的截图、contact sheet、逐帧页、Scene 边界前后帧和 Scene 帧条，并追加 Variant `critic/ledger.json`。已解析的 A/B 段也有帧条。不导出视频。省略 Draft ID 时先登记当前完整工程；失败不追加成功轮次。`--automatic` 在轮数上限停止；不带该参数可手动继续。
 
 critic 提供方为 off 时仍生成证据和 ledger，不生成提示词。开启时由外部只读评审者读取评审包并实际看 PNG；`critic.model` 默认为空，仅记录评审来源，不证明看图能力。没有实际图像读取或人工观看证据时报告未验证，不用纯文本替代。CLI 不调用模型 API。`critic record --file <verdict.json>` 校验准确轮次/快照、新问题和上一轮未解决问题的 FIXED / PARTLY / STILL；意见不阻止登记或接受。
 
@@ -88,11 +92,11 @@ Work 是内容容器，各 Variant 平级；`required_variants` 不再作为第�
 
 显式传 `--work <Work ID> --variant <Variant ID>` 后运行 `retro open <Draft ID>`；有匹配且 hash 完整的 critic 包时复制证据，否则加 `--hyperframes-cli` 和 `--browser` 从冻结快照采样，不写 critic ledger。记录在 `retro/<Draft ID>/VISUAL.md`，重开保留内容，不同 Draft 独立保存。`retro check <Draft ID>` 校验字段和枚举，不判断归因。
 
-用户确认段和借鉴理由后，`sample add <样片ID> --draft <Draft ID> --segment S03·B1 --reason <借鉴维度> [--mechanism <机制ID>]` 独立复制帧；没有 A/B 段时使用 `S03`。每个样片 ID 表示一整片，可多次添加不同段。`sample list` 默认本产品线，`--all-lines` 列全库；也可显式 `--line <产品线>`。`sample show <完整段ID>` 读取证据；`sample retire <ID> --reason <理由>` 与 `sample consolidate <ID> --into mechanism:<ID>`（也支持 asset:/rule:）只改状态，不删证据。样片不自动过期。
+用户确认段和借鉴理由后，`sample add <样片ID> --draft <Draft ID> --segment S03·B1 --reason <借鉴维度> [--mechanism <机制ID>]` 独立复制帧；没有可用的分镜段时使用 `S03`。每个样片 ID 表示一整片，可多次添加不同段。`sample list` 默认本产品线，`--all-lines` 列全库；也可显式 `--line <产品线>`。`sample show <完整段ID>` 读取证据；`sample retire <ID> --reason <理由>` 与 `sample consolidate <ID> --into mechanism:<ID>`（也支持 asset:/rule:）只改状态，不删证据。样片不自动过期。
 
 制作时在 Brief（showcase 概念节）的 `**参考机制：**` 引用完整段 ID，跨线写 `跨线:<ID>`。`plan check` 读两层机制库，报告退役、巩固、已知行为变化提示；发行机制仍可引用。`plan refresh` 将有序帧、理由与 samples 设置冻结在 `reference-memory/<revision>/`，制作必须用 `sample show <ID> --plan-revision <N>` 看这组帧。引用或设置变动经 refresh 创建新 revision，Draft 继承独立副本；之后退役、巩固或设置变化不改变旧 Draft。禁止手改这些冻结文件。
 
-`samples.max_references` 默认 3，`samples.frames_per_reference` 默认 6；用户层与 Variant 层可覆盖。旧 Variant 补默认值而不重绑档案，无 line 的旧 Variant 仅允许新增 samples 设置，不改旧开关语义。通用 explainer 总引用仍 1–3；showcase、math、english 按专属档案选用，不继承通用配额。每段帧不足时取全部，超过时均匀选取；不补造帧。
+`samples.max_references` 默认 3，`samples.frames_per_reference` 默认 6；用户层与 Variant 层可覆盖。旧 Variant 补默认值而不重绑档案，无 line 的旧 Variant 仅允许新增 samples 设置，不改旧开关语义。开启 `reference-count` 时，机制引用总数为 1–3。其余按所选设计卡的规则取用。每段帧不足时取全部，超过时均匀选取；不补造帧。
 
 已知缺陷先在复盘问题行填写 `已知缺陷 ID`，用户确认后 `defect add <ID> --draft <Draft ID> --description <描述> --frame images/<帧>.png`（可重复 --frame）。`defect list` 默认本产品线；`defect retire <ID> --blocked-by <规则或诊断>` 保留证据。critic 只读本线有效缺陷，附在档案检查项后；每轮记录生效 ID。参考样片逐项评“达到 / 部分 / 未达”，按 reason 限定维度，不评相似度；`critic record` 拒绝遗漏、重复、未知引用和非法结论。
 
