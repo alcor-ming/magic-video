@@ -1,0 +1,10 @@
+@font-face {
+  font-family: '历史地图思源黑体';
+  src: url('./fonts/SourceHanSansCN-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-display: block;
+}
+html, body { margin: 0; overflow: hidden; background: #000; }
+main { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+[data-hf-layer] { position: absolute; inset: 0; }
+canvas { display: block; }

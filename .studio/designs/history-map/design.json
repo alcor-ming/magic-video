@@ -1,0 +1,126 @@
+{
+  "id": "history-map",
+  "version": 1,
+  "type": "design",
+  "compatibility": {
+    "supersedes": [],
+    "retired_entrypoints": true
+  },
+  "plan_template": "ANIMATION_PLAN.template.md",
+  "brief": {
+    "required": [
+      "核心表达",
+      "事实表",
+      "史实底线表",
+      "验收标准"
+    ],
+    "optional": []
+  },
+  "subjects": {},
+  "stages": {
+    "script": [
+      ".studio/designs/history-map/stages/script.md"
+    ],
+    "research": [
+      ".studio/designs/history-map/stages/research.md"
+    ],
+    "plan": [
+      ".studio/designs/history-map/stages/plan.md"
+    ],
+    "draft": [
+      ".studio/designs/history-map/stages/draft.md"
+    ],
+    "export": [
+      ".studio/designs/history-map/stages/export.md"
+    ]
+  },
+  "thresholds": {
+    "event_gap_seconds": 2,
+    "still_seconds": 0.6,
+    "pixel_mean_delta": 0.5
+  },
+  "critic_checks": [
+    "事实与牌面",
+    "史实底线",
+    "地图与小景的空间衔接",
+    "阅读保护",
+    "乱序定位",
+    "战斗大场面"
+  ],
+  "defaults": {
+    "captions": {
+      "enabled": false
+    },
+    "sfx": {
+      "enabled": false
+    },
+    "bgm": {
+      "enabled": false
+    },
+    "cover": {
+      "enabled": true
+    },
+    "ratio": "16:9"
+  },
+  "fields": [
+    "captions.enabled",
+    "sfx.enabled",
+    "sfx.policy",
+    "bgm.enabled",
+    "bgm.policy",
+    "cover.enabled",
+    "cover.template",
+    "cover.theme",
+    "cover.background",
+    "voice.ref",
+    "voice.duration_factor",
+    "ratio",
+    "width",
+    "height",
+    "fps",
+    "seed",
+    "cover.width",
+    "cover.height",
+    "cover.font",
+    "cover.logo",
+    "cover.background_image",
+    "cover.font_size",
+    "cover.color",
+    "cover.background_color"
+  ],
+  "assets": {
+    "directory": "assets"
+  },
+  "references": [],
+  "runtime": {
+    "gsap": "^3.14",
+    "three": "0.160.0",
+    "plugins": ["MotionPathPlugin"]
+  },
+  "exemptions": [],
+  "settings_defaults": {
+    "direction_approval": true,
+    "critic.provider": "off",
+    "critic.model": "",
+    "critic.max_rounds": 1
+  },
+  "capabilities": {
+    "layers": {
+      "required": [
+        "background",
+        "stage",
+        "overlay",
+        "text"
+      ],
+      "optional": []
+    },
+    "rolls": false,
+    "bindings": {
+      "theme": "optional",
+      "background": "none",
+      "motion": "none"
+    },
+    "checks": [],
+    "research_template": "RESEARCH.template.md"
+  }
+}

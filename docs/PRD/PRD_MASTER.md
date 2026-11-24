@@ -10,6 +10,10 @@
 
 现行生产入口与恢复协议见 [生产会话接口](production-session-interface.md)。历史 ledger（含 `component-authoring-m0-m1.md` D8）、v3.x Skill 旧名及客户端/模型分工已被该接口取代；历史原文仅保留背景，不构成现行入口或执行限制。
 
+## 当前设计卡增量
+
+[历史地图桌](history-map.md)说明公共卡 `history-map` 的无旁白创作、史料确认、时序和离线运行合同。
+
 ## 本机开发增量
 
 [macOS 原生开发与预览](macos-development-preview.md)：Apple Silicon 本地 CLI、隔离 Review、Studio 与开发测试；正式渲染与生产部署另行处理。

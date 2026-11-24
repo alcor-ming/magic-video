@@ -1344,6 +1344,35 @@ def write_variant(path: Path, data: dict[str, Any]) -> None:
     write_json(path / "variant.yaml", data)
 
 
+def materialize_design_three(root: Path, project: Path, card: dict) -> None:
+    spec = (card.get('runtime') or {}).get('three')
+    if not spec:
+        return
+    from design_examples import sha256, three_runtime
+
+    entry, source = three_runtime(spec, root)
+    relative = entry['target']
+    target = storage.scoped_path(project, relative)
+    config_path = storage.scoped_path(project, 'project-config.json')
+    config = read_json(config_path) if config_path.exists() else {}
+    dependencies = config.get('snapshot_dependencies', []) if isinstance(config, dict) else None
+    if not isinstance(dependencies, list) or not all(isinstance(item, str) for item in dependencies):
+        raise HarnessError('snapshot_dependencies must be a list of local files')
+    if target.exists():
+        if not target.is_file() or sha256(target) != entry['sha256']:
+            raise HarnessError(f'Project runtime differs from host: {relative}')
+    else:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='.three-', dir=target.parent) as temporary:
+            staged = Path(temporary) / target.name
+            shutil.copyfile(source, staged)
+            if sha256(staged) != entry['sha256']:
+                raise HarnessError('Host runtime changed while copying')
+            staged.replace(target)
+    if relative not in dependencies:
+        write_json(config_path, {**config, 'snapshot_dependencies': [*dependencies, relative]})
+
+
 def create_video_variant(
     root: Path,
     work: Path,
@@ -1388,6 +1417,7 @@ def create_video_variant(
     state = read_json(path / 'variant.yaml')
     if design:
         state['line'] = lines.bind(design)
+        materialize_design_three(root, path / 'project', designs.require(design))
     write_variant(path, state)
     if copy_script_from:
         shutil.copy2(copy_script_from, path / "SCRIPT.md")
@@ -2083,6 +2113,7 @@ def command_variant_design_update(root, args):
     changes = design_snapshot.changes(state['design_files'])
     receipt = design_snapshot.freeze(variant, state['design'])
     adopt_card_files(state, receipt)
+    materialize_design_three(root, variant / 'project', receipt['design'])
     write_variant(variant, state)
     preview_args = build_parser().parse_args(['--work', work.name, '--variant', variant.name, 'preview', 'open', 'current'])
     preview = command_preview_open(root, preview_args, emit=False)
@@ -2507,7 +2538,7 @@ def command_variant_reselect(root: Path, args: argparse.Namespace) -> None:
     args._variant_overrides = state.get('variant_overrides', {})
     args.variant_id = variant.name
     settings = adopted_settings(root, args, work)
-    # A reselect updates metadata only; authored sources and frozen outputs remain intact.
+    # Reselect preserves authored sources and frozen outputs. Install any missing card runtime locally.
     keys = set(settings) | {'appearance_lock', 'theme', 'background', 'motion', 'profile',
                             'theme_revision', 'theme_settings', 'design_snapshot', 'design_sha256', 'design_files', 'design_draft_files'}
     keys -= {'revision', 'selection_source_work'}
@@ -2546,6 +2577,7 @@ def command_variant_reselect(root: Path, args: argparse.Namespace) -> None:
         updated['design_migration'] = args._migration_record
     if (variant / 'variant.yaml').read_bytes() != before_bytes:
         raise HarnessError('Variant changed during selection; no adoption written')
+    materialize_design_three(root, variant / 'project', designs.require(settings['design']))
     write_variant(variant, updated)
     print_result(root, args, {**report, 'status': 'reselected', 'revision': updated['revision']})
 

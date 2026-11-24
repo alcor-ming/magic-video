@@ -1,0 +1,903 @@
+{
+  "design": "history-map",
+  "version": 1,
+  "files": [
+    {
+      "source": "example/ANIMATION_PLAN.md",
+      "target": "ANIMATION_PLAN.md",
+      "sha256": "232ecb677c5ad87b3ab9b4b0651028bb4a44a984b398426e4267e16338417e34",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "ASSETS.md",
+      "target": "ASSETS.md",
+      "sha256": "df5258114f42fe296979d7f1b3d3d2a3eb7335027cc75b56f6a29e27cdfcf134",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/DESIGN.md",
+      "target": "DESIGN.md",
+      "sha256": "7898a4e01380628315026583fccf99e9bb2eea56aa811c6ccb81d3c92bd9b9a8",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/RESEARCH.md",
+      "target": "RESEARCH.md",
+      "sha256": "88ae9d6ed6472c4e59e40fac82b5b90e435bad6628d47cca909128e93158ee09",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/SCRIPT.md",
+      "target": "SCRIPT.md",
+      "sha256": "b3e26f188f877a60137170de8beb423e69a7fea1a2c5fe69486b6f1a65b3ed99",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/fonts/source-han-sans/LICENSE.txt",
+      "target": "fonts/LICENSE.txt",
+      "sha256": "fcac737e761ec63dbfbdce11030a1780161920d80315edba9c8beff1c2bac5a2",
+      "origin": "公开字体库",
+      "version": "1",
+      "license": "OFL-1.1",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": ".studio/fonts/source-han-sans/SourceHanSansCN-Regular.otf",
+      "target": "fonts/SourceHanSansCN-Regular.otf",
+      "sha256": "e2bc8a2e7f37474b774fff8db758681ece40bb6947a90d571bce9dd60671a8e4",
+      "origin": "公开字体库",
+      "version": "1",
+      "license": "OFL-1.1",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/index.html",
+      "target": "index.html",
+      "sha256": "6abc419fae94684b5f098e70849e2c0a5a7dd993700eb8420063b2e5d8490a0b",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/blast-earth-a-trim.webp",
+      "target": "media/blast-earth-a-trim.webp",
+      "sha256": "776aae8dab037899b102254fdc080baee8097c47df09a319636397dbc0644722",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/blast-earth-b-trim.webp",
+      "target": "media/blast-earth-b-trim.webp",
+      "sha256": "c84e171ebe3e363d4f46f9be66a6ab6d0aa9a3262f62a9a5de05f11c81c1e911",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/blast-shell-trim.webp",
+      "target": "media/blast-shell-trim.webp",
+      "sha256": "4f12dc83dc9d081b51a53b0441a0671610899d7dba6c867edb8505e7429ac3b3",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/blast-smoke-trim.webp",
+      "target": "media/blast-smoke-trim.webp",
+      "sha256": "adfabe57928060b834cd964feb34fd0f4e6755aa8f734cfd505bf36ac79b9709",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/campfire-flame.webp",
+      "target": "media/campfire-flame.webp",
+      "sha256": "01abe44fcb19be29506c05fb3b37214e12ef2da47aa617817a277e549a0f7868",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/campfire-logs.webp",
+      "target": "media/campfire-logs.webp",
+      "sha256": "b1b7f2d6021d2494014f06f774f77a75dd7dc7e67f088e3e2744b938eb85169c",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/cannon-wreck-allied.webp",
+      "target": "media/cannon-wreck-allied.webp",
+      "sha256": "e154ac0c10c75f841821fb0b53efea8cd09dadb263faa592a3221322f2debc86",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/cavalry-french-cuirassiers.webp",
+      "target": "media/cavalry-french-cuirassiers.webp",
+      "sha256": "26f7e035211aab2a182f7dc57a37330c6f0cce276d84ffcae836edfabc09f600",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/cavalry-russian-dragoons.webp",
+      "target": "media/cavalry-russian-dragoons.webp",
+      "sha256": "b7faef9b080c90076c62e9ee6ac5bf6d6ea9247373bd0c154fab1bb818dec806",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/franz-greet.webp",
+      "target": "media/franz-greet.webp",
+      "sha256": "08af163060e3cc9d6c1973b7be604603a4ab65acb05cb83dd12f5664836478ab",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/french-gun-crew.webp",
+      "target": "media/french-gun-crew.webp",
+      "sha256": "14906bb71f19690635e061db93ca29a799b58271eb54ee9bfcba60ddebfca8c1",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/muzzle-flash-trim.webp",
+      "target": "media/muzzle-flash-trim.webp",
+      "sha256": "a3481f1dfb07b407acba9f717d95d46ff5d6390047289edc92aaabf92c8496e0",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/napoleon2-greet.webp",
+      "target": "media/napoleon2-greet.webp",
+      "sha256": "bbe502a6dad8410e905330b22d8f85bcb13ee25db77eeee5a7219a5612c2c18a",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/napoleon2-horse-telescope.webp",
+      "target": "media/napoleon2-horse-telescope.webp",
+      "sha256": "91a4efc7071b3113aefba2fd3ed5888ca055c405da5af1bbd542ce76686463a6",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/napoleon2-horse.webp",
+      "target": "media/napoleon2-horse.webp",
+      "sha256": "e61752756edda179cad0e8503fb02786b35235a5fcab91fe184f6b91bda959d6",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/napoleon2-master.webp",
+      "target": "media/napoleon2-master.webp",
+      "sha256": "14e1fb27e859b08c692529846ef6676ee1c4845d6faf372e98ca489a4e9a7307",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/napoleon2-telescope.webp",
+      "target": "media/napoleon2-telescope.webp",
+      "sha256": "1c308ca4f15d0806dd6b938da5ea3c586a235e28de64d72ae1ade212ed1a8d14",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/prop-burnt-mill.webp",
+      "target": "media/prop-burnt-mill.webp",
+      "sha256": "06764745869a6c5c64cd48c63079c8be9581b1a96b85bdba4d1458b02e5ec7ca",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/prop-ice-crack.webp",
+      "target": "media/prop-ice-crack.webp",
+      "sha256": "628ebd140055f1635cfdec9135e9e2b6d656fc12892c12b9ead7de0aee34bf1c",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/prop-letter-quill.webp",
+      "target": "media/prop-letter-quill.webp",
+      "sha256": "6a7ca55912f68ee56c3750922a6f56a5e66369a2330747b8a58393a331f817f0",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/staff-riders.webp",
+      "target": "media/staff-riders.webp",
+      "sha256": "d17605563271c34779d4a43b09fe1e847d6978e84e55e725dede499b7d16a7da",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/tree-orchard.webp",
+      "target": "media/tree-orchard.webp",
+      "sha256": "33f58fa111345db77fafc1d66fbd3d6bdaf40448baade269ea0a6cbc9165c666",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/tree-poplar.webp",
+      "target": "media/tree-poplar.webp",
+      "sha256": "fc6e6aaa1de813ed945ca3138a0650e6c89f5f996b79d2e7241793fe81703634",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-austrian-column.webp",
+      "target": "media/troops-austrian-column.webp",
+      "sha256": "65f7d504f439be3b1727ea784e5f357f47663c0e73610790cfa7d13e3766aa0b",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-austrian-retreat-dark.webp",
+      "target": "media/troops-austrian-retreat-dark.webp",
+      "sha256": "089dfe4c06cfc4b2c82097548b461c7e49a113798223c213ce875b8882543847",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-austrian-volley.webp",
+      "target": "media/troops-austrian-volley.webp",
+      "sha256": "84be28d3d45ff75acd270e2053c5840bb040052992c5b4fe3a4cb72bf3b2c65e",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-austrian.webp",
+      "target": "media/troops-austrian.webp",
+      "sha256": "37b93dd83caefef3995a1be324b3cf5031039396db679371833f6ba419375cbd",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-french-advance.webp",
+      "target": "media/troops-french-advance.webp",
+      "sha256": "d40dd84554ba5391182546d0e1f8da4e802817c1065e55b8c980303d63fa1662",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-french-column-blue.webp",
+      "target": "media/troops-french-column-blue.webp",
+      "sha256": "e3c2f276c664a74485c10db3046e52f8b7b9a57977ea7c043c4642d0dd205b09",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-french-defend.webp",
+      "target": "media/troops-french-defend.webp",
+      "sha256": "eccc2b137328e6797c2ca255a8c3b8026f931655f4464e1de221208c99824f13",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-french-volley.webp",
+      "target": "media/troops-french-volley.webp",
+      "sha256": "0f7e61b36577c10ff378c7f8a6006c843a4e0f0f30f24ae059862d8294997625",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-russian-advance.webp",
+      "target": "media/troops-russian-advance.webp",
+      "sha256": "513acb6066a110ebaca0611668498e1d98d21bdd48e418b1540f021f009eb6d7",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-russian-column.webp",
+      "target": "media/troops-russian-column.webp",
+      "sha256": "8eaee27318eb6f4a21dd7ef7c88c202eb210f2f14a6caafb84cd82d81068aa21",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-russian-retreat.webp",
+      "target": "media/troops-russian-retreat.webp",
+      "sha256": "b47df2be0141412ceff54bc2d67b0f56b4f400a19dabea424242cfa56c2d6569",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-russian-volley.webp",
+      "target": "media/troops-russian-volley.webp",
+      "sha256": "3e53849be59dd8c190f09182384882a46a2f27559a269d79f9ba7f8dacdaa2d8",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/troops-russian.webp",
+      "target": "media/troops-russian.webp",
+      "sha256": "05f40628942b570166ec41d2eef0bd3e80e0b7b4bd26b29d0b11b2fefb9218bc",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/village-church.webp",
+      "target": "media/village-church.webp",
+      "sha256": "b5ba7978224b969cfb80267749463a89463fe484330f960f2723fae83d514bd9",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/village-cottage.webp",
+      "target": "media/village-cottage.webp",
+      "sha256": "f76f5a8b0c22836c4c88bba7670e8c2d57082236992d2c8cb7d038923a818d3d",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/media/volley-smoke-trim.webp",
+      "target": "media/volley-smoke-trim.webp",
+      "sha256": "f528c728bbb2d00d3e3374acfc7e48f238edfe6080f2cd3c7fbda5c1af90f0ff",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/napoleon.js",
+      "target": "napoleon.js",
+      "sha256": "f56d3db0365d67f4687b0d4c6a2e29696b653f5ca562a2bd0d9561057f110880",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/project-config.json",
+      "target": "project-config.json",
+      "sha256": "cc188fddb30f2e420db8d203b1966af267921b81c1db04ef27e17aae1ed1fed4",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/scene.js",
+      "target": "scene.js",
+      "sha256": "4e811101dd201056a8dca9c80186ce2165657889310772f68a582e8e936896f2",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "example/style.css",
+      "target": "style.css",
+      "sha256": "7fd6eb85bd47b6526cf1bbc0835d0dd99bfafb63f90f0b2cf67c6cbf7c8eee3d",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/plates/asset.json",
+      "target": "vendor/components/history-map/plates/v1/asset.json",
+      "sha256": "8e21ea07f77b12711449d90055362cb4750d777417f26bad9b0db8761fc39802",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/plates/plates.css",
+      "target": "vendor/components/history-map/plates/v1/plates.css",
+      "sha256": "e1803795c702c9793b69168cf116dcc9e42e46568909945bb4fa2bdc1cc0893e",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/plates/plates.js",
+      "target": "vendor/components/history-map/plates/v1/plates.js",
+      "sha256": "351d3e2438ccff6579cbacad91938b14c87b59b33fdf2825acd701de18d5daa7",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/asset.json",
+      "target": "vendor/components/history-map/world/v1/asset.json",
+      "sha256": "ffdbb4254adf8c7ade7fae7008ee9413f7f42e3a162be840e74f19f232972b23",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/atmo.js",
+      "target": "vendor/components/history-map/world/v1/atmo.js",
+      "sha256": "cc982bef8fb524cd43ed95c5044a49626b2b578c047f2cc802fd4334715e8e4b",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/batches.js",
+      "target": "vendor/components/history-map/world/v1/batches.js",
+      "sha256": "0a97f59b65c1e1274cae32ecb3a0aa35f85349517385b79c25a90347f09b21c0",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/battle-particles.js",
+      "target": "vendor/components/history-map/world/v1/battle-particles.js",
+      "sha256": "dd87825292646ae6287ecc3e5a2a3390ec89aad1087f6f207fdd341e4eddd5ea",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/card.js",
+      "target": "vendor/components/history-map/world/v1/card.js",
+      "sha256": "3ab666cfebae874fbcc1a2f3ec45a83bcd7934c898e698207b901b06e653dfb5",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/diecut.js",
+      "target": "vendor/components/history-map/world/v1/diecut.js",
+      "sha256": "0d73ad23797dff22a60047be832fcdd7ed82ffb62e71fcb8f3a57cd4dd9eca7d",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/index.js",
+      "target": "vendor/components/history-map/world/v1/index.js",
+      "sha256": "5d0d4090c0ffaee753fab2f0ab41c8b163325198014fc020464a2fa4654726e9",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/mapdraw.js",
+      "target": "vendor/components/history-map/world/v1/mapdraw.js",
+      "sha256": "cf2d8938b7075b046f7fb986c7e01c806ae752f4bc333e4f78adcd46a5a39eb7",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/post.js",
+      "target": "vendor/components/history-map/world/v1/post.js",
+      "sha256": "ad6bbbac0aee2c0a03b55a6580043a7a593fe8c7213b6a023d5752a0a895187f",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/sprites.js",
+      "target": "vendor/components/history-map/world/v1/sprites.js",
+      "sha256": "a0941dfbef601b6886d1feaaf2740865bd56d7fb831f0d5741a404e3792739eb",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/table.js",
+      "target": "vendor/components/history-map/world/v1/table.js",
+      "sha256": "7d38baa1da0981505edb25d900e247ca9ca238e9dcfe45429ed60ef361807232",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/textures/fog.webp",
+      "target": "vendor/components/history-map/world/v1/textures/fog.webp",
+      "sha256": "c8199c4328dee39ca24ed913afb9e045f7ff6faa598a25b7cf43e3d8e1f29750",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/textures/paper-grain.webp",
+      "target": "vendor/components/history-map/world/v1/textures/paper-grain.webp",
+      "sha256": "d9cf5815059a77dfba5bdbdc7e83c0f24d328f1dca03dc2a7ab7aeda66174d4e",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "CC0-1.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/textures/wood.webp",
+      "target": "vendor/components/history-map/world/v1/textures/wood.webp",
+      "sha256": "0fce7047f3787bc2043be81a0c32289b49a01b574bf0585911c79378fb0b99cf",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    },
+    {
+      "source": "assets/world/util.js",
+      "target": "vendor/components/history-map/world/v1/util.js",
+      "sha256": "9dc245b4a2c95d463d04aa7362a19f4957cb2c0cc2a98d08e93d5af79a5106b3",
+      "origin": "历史地图桌",
+      "version": "1",
+      "license": "Apache-2.0",
+      "purpose": "三皇会战示例资源",
+      "packages": [
+        "public",
+        "personal"
+      ]
+    }
+  ]
+}

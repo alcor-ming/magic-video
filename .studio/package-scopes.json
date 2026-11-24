@@ -2,7 +2,8 @@
   "version": 1,
   "public_cards": [
     "stage-full",
-    "stage-light"
+    "stage-light",
+    "history-map"
   ],
   "personal_cards": [],
   "personal_prefixes": [

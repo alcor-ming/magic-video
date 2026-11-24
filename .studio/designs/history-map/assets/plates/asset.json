@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "plates",
+  "version": 1,
+  "kind": "module",
+  "entry": "plates.js",
+  "dependencies": [
+    "plates.css"
+  ],
+  "description": "九种中文纸牌和纸线，支持锚点布局、确定性定位和释放。",
+  "rights": "Apache-2.0",
+  "asset_layer": "building-block"
+}

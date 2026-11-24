@@ -21,6 +21,15 @@ stated explicitly.
 - The license notice previously carried the source copies: "GSAP 3.14.2,
   Copyright 2025 GreenSock / Webflow."
 
+## Three.js
+
+- Version: `three` 0.160.0 (r160), pinned by the host npm lock files.
+- License: MIT. Copyright © 2010–2023 three.js authors. The locked package
+  carries the full license in `runtime/npm/node_modules/three/LICENSE`.
+- The installed host supplies `build/three.min.js` to closed examples and Work
+  projects. No design card carries a copy.
+- Upstream: https://github.com/mrdoob/three.js/tree/r160
+
 ## HyperFrames
 
 - Version: `hyperframes` 0.8.150 (CLI/runtime, installed by the locked host npm

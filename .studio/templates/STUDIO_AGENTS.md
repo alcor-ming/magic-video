@@ -6,7 +6,7 @@
 
 ## 设计与流程
 
-- 设计身份来自内置卡与用户卡 Catalog，素材卡不进入选择列表。随包安装的卡位于 `.studio/designs/`，是受管理文件、只读，公共包内置 `stage-full`、`stage-light` 两张；用户卡由根配置 `design_root` 定位，默认 `asset-library/designs`。同 ID 冲突拒绝，旧身份只读并提示重选。
+- 设计身份来自内置卡与用户卡 Catalog，素材卡不进入选择列表。随包安装的卡位于 `.studio/designs/`，是受管理文件、只读，公共包内置 `stage-full`、`stage-light`、`history-map` 三张；用户卡由根配置 `design_root` 定位，默认 `asset-library/designs`。同 ID 冲突拒绝，旧身份只读并提示重选。
 - 单一制作流程：Script → Research →（可选）优化 → 文案门 → Plan → Plan 门 → Draft+封面 → Draft 门 → MP4+封面。三道人工门由独立工作流开关（`workflow_settings`）分别控制；Draft 审查为建议式，不阻断登记或继续，没有单独的 Final 阶段。
 - 导出成功后 Variant 保持 active 与可继续修改；归档与重开显式执行（`work reopen <Work-ID> --variant-id <Variant-ID>`），不改兄弟版本或等待事项的生命周期。
 - 正式导出把 MP4 与封面复制到按系列 / Work / Variant 分类的聚合导出架：只追加，文件名与索引带 hash，重复发布幂等，复制失败可重试且不重渲染；归档、更新、回滚与清理不触及导出架。
