@@ -46,14 +46,14 @@ class ProductionRulesTests(unittest.TestCase):
         design = read(".studio/spec/visual-design.md")
         for requirement in (
             "最小完整语义单元", "实际起点", "不等说完整句",
-            "不得挤动旧文字", "A → B → A", "A → B", "隐藏或虚化",
-            "不新增内容", "seek", "回拖", "事件间隔不超过 2 秒",
+            "不得挤动旧文字", "A → B → A", "A → B", "虚化（`blur`）",
+            "不新增 A 的内容", "seek", "回拖", "事件间隔不超过 2 秒",
         ):
             with self.subTest(requirement=requirement):
                 self.assertIn(requirement, design)
         plan = read(".studio/templates/ANIMATION_PLAN.template.md")
         self.assertIn("延续信息", plan)
-        self.assertIn("A/B 编排与延续", plan)
+        self.assertIn("A/B 编排说明", plan)
 
     def test_video_only_routing_retains_export_and_reopen_boundaries(self):
         workflow = read(".studio/workflow.md")

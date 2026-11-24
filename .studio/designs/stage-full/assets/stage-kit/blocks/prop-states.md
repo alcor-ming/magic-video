@@ -32,7 +32,7 @@ look：
 | `img` | src、alpha（必须显式 true/false）、fit（`contain`/`cover`）、position | alpha=true 为镂空道具；alpha=false 自动加纸边与投影，变成纸片，不会以带背景的方块直接上台。用 `fit:'cover'` + `position` 可以把一张图切成几块（如三扇闸门各取 0% / 50% / 100%） |
 | `svg` | markup 或 src | 内联 SVG 以图片数据地址呈现 |
 | `paper` | color、radius | 纯色纸片，带纸边与投影 |
-| `label` | text（1–8 字）、size、ink、paper | 第 2 层附着短标注，如闸门名牌；独立解释仍放第 4 层 |
+| `label` | text（1–8 字）、size、ink、paper | 物上的短标注，如闸门名牌；承载信息时按 visual-design.md 的文字归属与阅读合同核对 |
 
 姿态（pose）轴：`x`、`y`（像素位移）、`r`（平面旋转°）、`rx`、`ry`（3D 翻转°）、`s`（缩放）、`o`（不透明度 0–1）。未写的轴取上一状态的值；start 里没写的部件为静止姿态 `{x:0,y:0,r:0,rx:0,ry:0,s:1,o:1}`。
 

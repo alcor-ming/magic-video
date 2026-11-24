@@ -33,9 +33,9 @@
 
 ## Animation Plan
 
-`ANIMATION_PLAN.md` 以全片方向加逐 Scene 一节维护设计，元信息由 CLI 从 Variant 与 lock 生成；概览只作索引，每场的 `screen` 保留信息 ID、来源、理解目标与揭示 cue。声音使用 `sound` JSON 导出。按冻结链路选用 [创作指南](visual-design.md) 的 A/B-roll、五层与节奏合同，阅读区域稳定。
+`ANIMATION_PLAN.md` 以全片方向加逐 Scene 一节维护设计，元信息由 CLI 从 Variant 与 lock 生成；概览只作索引，每场的 `screen` 保留信息 ID、来源、理解目标与揭示 cue。Plan 写声音意图，正式音轨在 Draft 接入。按冻结链路选用 [创作指南](visual-design.md) 的 A/B-roll、五层与节奏合同，阅读区域稳定。
 
-专属 Plan、Research 字段与豁免由所选设计卡声明，不以四种模式作为创作入口。英语卡保留教学目标、准确拼写、发音依据和阅读节奏，不强加舞台卡的角色、生图或 A/B 配额。数学卡与旧 `explainer/math-rap` 已退役（2026-10-20），旧数学 Work 只读。用户专属指导随用户卡维护，不依赖自用工具包配送。
+专属 Plan、Research 字段与豁免由所选设计卡声明，不以四种模式作为创作入口。英语卡按教学目标安排画面，核对准确拼写、发音依据和阅读节奏。角色、生图与分镜要求按该卡合同取用。数学卡与旧 `explainer/math-rap` 已退役（2026-10-20），旧数学 Work 只读。用户专属指导随用户卡维护，不依赖自用工具包配送。
 
 Scene 数量、顺序、目标、Hero State、Template、整体主题、文案结构或核心内容实质变化时更新 Plan revision，只重新确认受影响 Scene 及必要衔接。精确 timing、easing、换行、安全区、性能和不改变 Hero State 的布局修复无需新的方向确认；成果与稳定 ID 保留。工程不是另一份文案真源。
 

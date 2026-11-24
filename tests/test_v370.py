@@ -60,8 +60,8 @@ class V370Test(unittest.TestCase):
     def test_storyboard_and_legacy_parser(self):
         row = plan_scene_rows(plan())['S01']
         self.assertEqual(['A', 'B', 'A'], [segment['role'] for segment in row['segments']])
-        self.assertEqual('第2层动态图解或第4层文字', row['segments'][0]['subject'])
-        self.assertEqual('第2层媒体', row['segments'][1]['subject'])
+        self.assertEqual('推进主叙事的舞台主物', row['segments'][0]['subject'])
+        self.assertEqual('补充画面中的说明对象', row['segments'][1]['subject'])
         plan_scene_rows(plan('explainer'))
         self.assertEqual([], plan_scene_rows('---\n{"plan_format":"3.5.2"}\n---\n## S01\n')['S01']['events'])
         cases = [plan().replace('**禁止项：** 说明', ''), plan().replace('S01·A1', 'S01·B1'),

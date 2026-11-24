@@ -12,10 +12,11 @@
 - 资源闭包：示例只依赖宿主放好的 `runtime/gsap.min.js`、`runtime/scene-binding.js`、`runtime/stage-rig.js` 与 `media/SourceHanSansCN-Regular.otf`；无图片、音频、字体下载与新依赖。Work 工程用自带的 `runtime/motion.js`，卡内资产用 `component install stage-full/<资产>` 装进 `vendor/components/stage-full/`，加载顺序见 GUIDE §10「动作与背景接入 Work」。
 - 动作：前景物体的出现、退场、强调、移动、落定、换场与归位只用 [MOTION.md](../MOTION.md) 里的动作；换地点用背景动作 `refold`，前景在换景开始前退场、换景完成后再出现。
 - 字体：`document.fonts.ready` 就绪后才首次渲染；`@font-face` 只指向 `media/SourceHanSansCN-Regular.otf`，`font-display:block`；不使用网络字体或系统回退排版。
-- 布局：固定 1920×1080；五层各占一层，第 3 层不遮挡第 4 层正文；文字只在阅读窗口内保持稳定。
+- 布局：固定 1920×1080；宿主按空间叠放；文字归属与阅读保护按 visual-design.md，强调不遮挡仍需阅读的信息。
 
 ## 具体技术检查
 
+- 按分镜索引核对 Rolls 区间。看 B-roll 是否对应持续的口播，返回 A 时是否恢复已读状态。按 Plan 核对世界里、页面里和屏幕上的文字。启用字幕时，核对第 5 层字幕在转场处的连续性。
 - 确定性 seek：正放、倒放、随机 seek、重复 seek 一致；对 `[t3, 0, t1, t3]` 抓帧比较同一时刻。
 - 释放：`dispose()` 解绑并 kill 时间线后不再响应 seek。
 - 声音：示例静音；若某 Variant 需要音效，只为结构重击与关键 hit（如 S4 折叠落定、S3 归位轻点）配音效，不给普通入场自动配音效；BGM 只在开启 `bgm.enabled` 时用一条备好的音轨；所有 cue 对应同帧可见事件并按 `data-start` 调度以保证 seek 安全。
@@ -44,7 +45,7 @@
 - **SVG**：GSAP 动画的 SVG 组不设 `transform-box: fill-box`。
 - **自定义数据**：不要存到 `el.dir`、`el.title`、`el.hidden` 等原生属性名上，用 `dataset`。
 - **中文字体**：所有可能含中文的文字（含英文等宽标签、层名牌）`font-family` 最后都落到 SourceHanSansCN，否则显示方框。
-- **字不出画**：字幕和第 4 层文字任何时刻完整在画内；`sample-frames.mjs` 报 `textOutsideAt`，Studio 帧里看底边。
+- **字不出画**：字幕完整在画内，信息文字在阅读窗口内完整可读；`sample-frames.mjs` 报 `textOutsideAt`，Studio 帧里看底边。
 - **滤镜态的角色**：X 光、冷色调这类处理下角色仍要认得出：保留原图，叠冷色与发光轮廓，不做成灰剪影。
 - **层宿主不吃命中测试**：全屏的层宿主写 `pointer-events: none`，直接子节点恢复 `auto`（积木核心已注入，手写宿主照 `example/style.css`）；否则第 3、4 层宿主盖住全画面，诊断把台上的物都判成被遮挡，报出大量 `rhythm_gap` 提示。
 - **合成层与重 seek**：镜头缩放或推镜下，`will-change: transform` 会按首次栅格比例锁死图层，重 seek 后边缘与小件出现 1 级像素差；不要给随镜头缩放的节点写 `will-change`。需要独立合成层时用极小的 `translateZ`（如 `translateZ(0)` 或 0.01px 的 z 位移）。`sample-frames.mjs` 报 `determinism` 不一致而属性归属没问题时，查这一条。

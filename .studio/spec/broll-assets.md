@@ -1,6 +1,6 @@
 # 动效 B-roll 与风格资产创作
 
-本指南适用于用户设计卡或素材卡内的镜头资产创作，不绑定执行模型。任务需求使用 [BROLL Brief](../templates/BROLL_BRIEF.template.md)，资产身份为 `<card-id>/<asset-id>`。
+本指南适用于用户设计卡或素材卡内的动效 B-roll 镜头模块创作。模块是 B-roll 的一种资产。任务需求使用 [BROLL Brief](../templates/BROLL_BRIEF.template.md)，资产身份为 `<card-id>/<asset-id>`。
 
 ## 创作与校验
 
@@ -21,7 +21,7 @@ Motion v3 支持 pop、stamp、wipe、glitch-in；pulse、shake、wobble、glow�
 
 ## 镜头接口
 
-module 导出 `mount({stage, text?, appearance, slots, params, startCue, endCue, cues})`，返回 `renderAt(t)` / `moments()` / `dispose()`。宿主使用全片秒数，镜头不自启时钟，不依赖历史帧、随机数或 `onUpdate` 写状态。第 2 层 stage 交给 `HarnessRolls` 的 `media`；第 4 层 text 交给 B 文字组。新版 Rolls 自动错相，B 段可声明 `handoff: "cut"` 保持瞬切；减少动态时也瞬切。镜头不要写宿主 stage/text 的 opacity、visibility、filter，动画放在其子容器；窗口和属性所有权见 [runtime-interfaces.md](runtime-interfaces.md#rollsjs)。
+module 导出 `mount({stage, text?, appearance, slots, params, startCue, endCue, cues})`，返回 `renderAt(t)` / `moments()` / `dispose()`。宿主使用全片秒数，镜头不自启时钟，不依赖历史帧、随机数或 `onUpdate` 写状态。使用公开 Rolls 时，把第 2 层 `stage` 交给 `media`，把采用的 `text` 交给 B 屏幕文字组。取用前查 `asset.json` 的 `broll.slots`。有 `layer: text` 插槽就提供 `text` 宿主。Rolls 错相与 `handoff: "cut"` 按运行时接口接线。镜头不要写宿主 stage/text 的 opacity、visibility、filter，动画放在其子容器；窗口和属性所有权见 [runtime-interfaces.md](runtime-interfaces.md#rollsjs)。
 
 `asset.json` 的可选 `broll` 块必填字段：
 
@@ -62,7 +62,7 @@ function dispose() { shot.dispose(); rolls.dispose(); appearance.dispose(); }
 ## 画面与节奏自检
 
 - 整帧镜头仍在第 2 层，可盖背景；overlay 在上，captions 始终最高。主图与文字避开字幕安全区。
-- 承载信息的独立标题、解释与关键数字进入 text 根，遵守 A1、实际口播 cue 与阅读保护；stage 默认只放图形附着的短标注；具体资产声明允许的 embedded 文字类型时可保留该类型的独立文字，须执行下述文字清单与人工确认合同。B 结束恢复 A 的既有状态。
+- 文字落点、上屏提炼规则、信息完整性与阅读保护按 [visual-design.md](visual-design.md#文字归属与阅读)；embedded 文字仍执行下述资产声明、文字清单与人工确认合同。使用 Rolls 返回 A 时，恢复离开时的状态。
 - 纯注意力镜头不新增可读信息；事实约束不豁免，示意数据或界面标 `data-hf-schematic`。
 - `hold_fps` 等低帧量化只用于原地拍章、pulse、wobble；平移、旋转、翻面、飞离与重排按宿主时间逐帧求值，缓入缓出、不用回弹过冲，同一时刻只做一个主动作。默认时长下运动件单帧位移不超过短边约 4%、旋转不超过 5°；移动件保持不透明，深色背景上的贴纸与线条要有可见切边，结论帧不压暗。
 - 两个 Theme、全部画幅、最短/默认/最长时长都检查容量与 seek。顺播、直接 seek 与回拖结果一致，末帧有收束。
@@ -75,8 +75,8 @@ function dispose() { shot.dispose(); rolls.dispose(); appearance.dispose(); }
 
 Canvas/WebGL module 提供 `texts()` 完整清单；纯图形画布返回空数组，DOM 文字沿用扫描。`HarnessBroll.mount` 的 build 返回值提供 `texts()`，绑定也公开 `texts()`。每项为 `{id, text, start, end, kind, embedded, text_type?, region?}`：时间为片段本地秒，工具映射到 Work cue 窗；kind 为 attached/independent。独立 embedded 文字必须给出 `text_type` 并匹配该资产 `asset.json` 的 `text_ownership: {"mode":"embedded","kinds":["title"]}`。例如 Hook 3D 标题使用这一明确声明，不再享有隐式例外。region 可为归一化 `{x,y,width,height}`。
 
-文字清单必须覆盖整个片段，不能只返回当前可见文字。运行时校验时间、唯一 ID 和归属，采集到 `__hfTextSources` 并在 dispose 注销。非 HarnessBroll 的 module 由宿主把完整 `texts()` 提供函数注册到该 Set（时间映射为 Work 秒并补 scene/asset/font_family），dispose 必须注销；无字画布也显式注册空清单。多个已安装资产同名时传入完整 `assetRef`，避免把文字归属到另一张卡。A1、数值事实核对和阅读时长使用同一清单；位置、遮挡、挤动标为 `delegated`，不能表示检查通过。未声明的独立 embedded 文字报告错误。
+文字清单必须覆盖整个片段，不能只返回当前可见文字。运行时校验时间、唯一 ID 和归属，采集到 `__hfTextSources` 并在 dispose 注销。非 HarnessBroll 的 module 由宿主把完整 `texts()` 提供函数注册到该 Set（时间映射为 Work 秒并补 scene/asset/font_family），dispose 必须注销；无字画布也显式注册空清单。多个已安装资产同名时传入完整 `assetRef`，避免把文字归属到另一张卡。上屏提炼规则、数值事实核对和阅读时长使用同一清单；位置、遮挡、挤动标为 `delegated`，不能表示检查通过。未声明的独立 embedded 文字报告错误。
 
-设计卡 `fonts` 使用 `[{"family":"CardFont","path":"fonts/body.woff2","license":"fonts/OFL.txt","weight":400,"style":"normal"}]`，路径均在卡内。卡字体优先于 Theme 字体，Lock 保存摘要和项目内安装路径；第 4、5 层与适配引擎统一使用 `appearance.fontFamily`。字体与许可进入快照闭包；TTF/OTF/WOFF/WOFF2 的 Unicode cmap 加浏览器实际字体检查验证用字，缺字不能接受。文字层/字幕采用卡字体；完整字体或覆盖 Draft 实际用字的子集均可。
+设计卡 `fonts` 使用 `[{"family":"CardFont","path":"fonts/body.woff2","license":"fonts/OFL.txt","weight":400,"style":"normal"}]`，路径均在卡内。卡字体优先于 Theme 字体，Lock 保存摘要和项目内安装路径；第 4、5 层与适配引擎统一使用 `appearance.fontFamily`。字体与许可进入快照闭包；TTF/OTF/WOFF/WOFF2 的 Unicode cmap 加浏览器实际字体检查验证用字，缺字不能接受。信息文字与字幕采用卡字体；完整字体或覆盖 Draft 实际用字的子集均可。
 
 Draft 登记会固定 `module-texts.json` 及其摘要；包含 embedded 文字时，`preview accept <draft> --confirm-embedded S01 --confirm-embedded S02` 逐 Scene 记录用户已作出的确认，缺少任何 Scene 则拒绝。全局关闭 Draft 确认不会替代这项逐 Scene 确认。记录保存到 Draft 的 `embedded-text-acceptance.json` 和 Variant 接受状态。不得代替用户虚构确认。

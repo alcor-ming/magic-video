@@ -1,5 +1,7 @@
 # stage-full CHANGELOG
 
+- v13（2026-11-23）更新 A/B-roll 编排与主体默认值，明确分镜索引、Rolls 接线及三种文字落点。
+- v12（2026-11-21）：文字归属文档按世界里、页面里或屏幕上的落点改写，A1 与阅读保护引用通用规范；同步 Plan 说明、主体描述与文档摘要。capabilities、积木参数、运行时与示例行为不变。
 - v11（2026-10-30）：声音工具移出公开仓。删去 Plan `sound` 块与 `sound build`、`generate-sfx`、`import-bgm` 的引用；音轨以 `data-audio-role="stem"` 放进工程，`sfx.*` / `bgm.*` 配置字段不变。
 - v10（2026-10-27）：工具修复。`tools/sample-frames.mjs` 每次 seek 与宿主同一路径：`seek(t,false)` 后置 `__hfThreeTime` 并同步派发 `hf-seek`（`detail.time` / `waitUntil`），等全部 Promise 后再截图；原先只 seek 时间线，用 `HarnessScene.bindScene` 的页面停在初始态却报通过。新增防假通过：时刻不同而全部采样帧逐像素相同则失败退出。puppeteer-core 解析兼容 `lib/esm` 布局。`stages/draft.md` 前端踩坑清单新增「合成层与重 seek」。卡的行为与接口不变。
 - v9（2026-10-21）：去本地化与去绑定。卡内文档、积木注释、资产元数据与 CHANGELOG 删去具体 Work 编号、生产历史与运行环境细节；`settings_defaults.critic.model` 清空，不再指定评审模型；文档不再点名执行模型或生图服务，按执行者能力（能否看帧）描述；BGM 写法改为按 `bgm.enabled` / `bgm.policy` 配置，封面交由工具封面合同，不再写账号模板与角色库生图流程。行为、积木接口与示例画面不变。

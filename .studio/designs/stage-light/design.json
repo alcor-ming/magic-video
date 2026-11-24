@@ -1,6 +1,6 @@
 {
   "id": "stage-light",
-  "version": 5,
+  "version": 7,
   "type": "design",
   "compatibility": {
     "supersedes": [],
@@ -24,12 +24,12 @@
   },
   "subjects": {
     "A": {
-      "primary": "第2层动态图解或第4层文字",
-      "secondary": "角色反应与第3层指示"
+      "primary": "推进主叙事的舞台主物",
+      "secondary": "角色反应与第 3 层指示"
     },
     "B": {
-      "primary": "第2层媒体",
-      "secondary": "第4层B文字组与第3层指示"
+      "primary": "补充画面中的说明对象",
+      "secondary": "说明对象的标注与指示"
     }
   },
   "stages": {

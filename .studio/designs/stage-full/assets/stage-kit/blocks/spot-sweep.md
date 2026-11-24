@@ -49,4 +49,4 @@ var sweep = HarnessStageKit.create('spot.sweep', {
 // renderAt(t) 中调用 sweep.apply(t)。
 ```
 
-先加载 stage-kit.js，再加载 blocks/spot-sweep.js。不遮挡第 4 层正文：光心不得落在阅读窗口内。这是镜头表作者的责任，积木不校验阅读窗口。
+先加载 stage-kit.js，再加载 blocks/spot-sweep.js。不遮挡仍需阅读的信息：光心不得落在阅读窗口内，按 visual-design.md 核对。这是镜头表作者的责任，积木不校验阅读窗口。

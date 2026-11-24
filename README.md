@@ -10,7 +10,7 @@ Work 管一期内容，Variant 管独立制作版本。设计卡在制作中实�
 
 资产选型使用 `component list` 查询卡内资产，按用途、类型、标签或画幅筛选，再通过 interface 阅读用法。来源卡缺失或引用断链时明确报告；单张无效或同 ID 冲突的卡只停用自身。`--design <card>` 只列该卡 Variant 可用的资产，`usable_by` 与安装/绑定的实际范围一致；`component trace` 只读核对卡—引用—账号—Work 关系，分开报告缺源、未安装与旧冻结副本。设计卡声明 Plan、阶段指导、资产范围和豁免；素材卡只被引用或本地化，不能用作 Variant 的设计。
 
-五层宿主与 A/B-roll 按所选卡的合同取用，不以四模式或执行模型限制设计选择。字幕、音效和封面由设计默认值与各层覆盖决定；英语等用户设计的专属规则随卡维护。旧 `explainer`、`showcase`、`science`、`card`、`math`、`explainer/math-rap` 身份提示重选，不静默回退。
+五层宿主与 A/B-roll 编排按所选卡的合同取用，不以四模式或执行模型限制设计选择。字幕、音效和封面由设计默认值与各层覆盖决定；英语等用户设计的专属规则随卡维护。旧 `explainer`、`showcase`、`science`、`card`、`math`、`explainer/math-rap` 身份提示重选，不静默回退。
 
 公共 TTS 默认火山引擎，可配置替代脚本；切换提供方不改 Script / Plan。候选音频、正式声音采用与字词对齐分开记录，只采用提供方原生时间证据；缺少原生时间证据时明确报告缺失，不以估时或替代流程补齐。凭据不进入源码、日志、缓存与发行包，服务失败不自动换供应商。真实合成与听校须有各自证据。
 
@@ -122,7 +122,7 @@ Draft 与 Final 生命周期：
 
 Theme/Background 使用单资产合同与工程内的精确 vendor/lock；账号级 Motion 已退役，动作用工具级 `runtime/motion.js` 与设计卡的卡片动作包（卡内 `MOTION.md`），旧冻结 Work 里的四槽 Motion 照常校验与播放。外观变更仍使用 `appearance rebind`，旧冻结工程不因卡片编辑而自动换配。字段与参数见 [资产合同](.studio/spec/hyperframes-assets.md)。
 
-Motion v3 增加风格入退场、一次性强调与转场、back-out/spring 及 cue 相位 hold_fps；允许不同槽混用 v2/v3，新 lock 采用最高能力版本，旧冻结 Work 不自动升级。完整账号外观指定 Theme/Background；跨账号风格叠加省略 theme，保留各自账号 Theme。B-roll module 可通过 `component list --broll-role hook|concept|transition --tag <style>` 查询，接口卡显示完整挂载示例和插槽；Scene 手动接既有 A/B 编排，Binding schema 不变。合同与生产源自检见 [镜头创作指南](.studio/spec/broll-assets.md)。
+Motion v3 增加风格入退场、一次性强调与转场、back-out/spring 及 cue 相位 hold_fps；允许不同槽混用 v2/v3，新 lock 采用最高能力版本，旧冻结 Work 不自动升级。完整账号外观指定 Theme/Background；跨账号风格叠加省略 theme，保留各自账号 Theme。B-roll module 可通过 `component list --broll-role hook|concept|transition --tag <style>` 查询，接口卡显示完整挂载示例和插槽；这是 B-roll 的一种资产。开启 Rolls 的 Scene 按分镜索引手动接线，沿用既有 Binding schema。合同与生产源自检见 [镜头创作指南](.studio/spec/broll-assets.md)。
 
 封面按账号模板合成；账号角色库图片用任意生图工具生成透明 PNG，`account character add <账号> --name <角色名> --image <PNG> --prompt <提示词> --model <模型> [--tool <工具>]` 登记到账号。本工具不生成、不混合 BGM 与音效：音轨自备，以 `data-audio-role="stem"` 的本地 `<audio>` 放进工程。
 
@@ -205,7 +205,7 @@ work design compare my-stage
 work --work <Work-ID> --variant <Variant-ID> variant design-update
 ```
 
-新设计卡以 `capabilities` 描述能力，不必填写 `mode`：`layers.required/optional` 声明 background/stage/overlay/text；`rolls` 决定是否安装 A/B 运行时（为 true 时需声明 subjects）；`bindings` 分别声明 theme/background/motion 的 required/optional/none；`checks` 选择已注册的检查，`research_template` 和 `plan_template` 优先读取卡内同名模板，再使用工具默认模板。字幕默认值只读 `defaults.captions.enabled`。
+新设计卡以 `capabilities` 描述能力，不必填写 `mode`：`layers.required/optional` 声明 background/stage/overlay/text；`rolls` 决定是否安装公开 Rolls 与 B-roll 镜头运行时（为 true 时需声明 `subjects`，挂载时必须提供 A 的 `text` 宿主）；`bindings` 分别声明 theme/background/motion 的 required/optional/none；`checks` 选择已注册的检查，`research_template` 和 `plan_template` 优先读取卡内同名模板，再使用工具默认模板。字幕默认值只读 `defaults.captions.enabled`。3.7.0 的七列分镜检查只在 `director` 和 `rolls` 都开启时运行，详见 [Plan 合同](.studio/spec/visual-design.md#plan-检查)。
 
 `optional` 继承账户但允许留空，`none` 不继承账户但允许显式选择；两张内置舞台卡的三个绑定均为 optional。`bindings.motion` 只对旧锁有意义（账号级 Motion 已退役，新 Work 不再选动作槽）；`showcase stage/cast` 可由任意设计卡显式调用。旧卡、旧 Lock 和旧 Variant 仍按固定兼容映射读取，不原地改写。新外观 Lock 保存能力声明及其摘要，诊断只报告 required 层的缺失。
 
