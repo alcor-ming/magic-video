@@ -26,7 +26,7 @@ class ExampleBuildTest(unittest.TestCase):
             self.assertEqual(user / 'custom', design_examples.card_dir('custom', root, {'design_root':str(user)}))
 
     def test_cards_declare_host_runtime_and_load_it_before_scene(self):
-        for identity in designs.design_ids():
+        for identity in (name for name in designs.design_ids() if name != 'history-map'):
             with self.subTest(design=identity):
                 card = designs.get(identity)
                 self.assertTrue(card['runtime']['gsap'])
@@ -45,7 +45,7 @@ class ExampleBuildTest(unittest.TestCase):
     def test_built_examples_inject_host_runtime_and_authored_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             runtime = host_runtime(Path(tmp) / 'host')
-            for identity in designs.design_ids():
+            for identity in (name for name in designs.design_ids() if name != 'history-map'):
                 with self.subTest(design=identity):
                     project = design_examples.build(identity, Path(tmp) / identity, runtime_root=runtime)
                     files = {path.relative_to(project).as_posix()

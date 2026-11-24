@@ -198,7 +198,7 @@ class ReleaseCliTest(unittest.TestCase):
                 (staging / ".studio/components").mkdir(parents=True)
                 (staging / "tests").mkdir()
                 (staging / "tests/private-fixture.txt").write_text("development fixture")
-                for card in ("stage-full", "stage-light"):
+                for card in RELEASE.package_scopes()["public_cards"]:
                     path = staging / ".studio/designs" / card / "design.json"
                     path.parent.mkdir(parents=True)
                     path.write_text(json.dumps({"id": card, "version": 1}))

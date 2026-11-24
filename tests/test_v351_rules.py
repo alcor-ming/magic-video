@@ -40,6 +40,9 @@ def deployed_package(root: Path) -> Path:
         shutil.copyfile(ROOT / ".studio/templates" / name, root / ".studio/templates" / name)
     for source in (ROOT / ".studio/spec").glob("*.md"):
         shutil.copyfile(source, root / ".studio/spec" / source.name)
+    guide = Path(".studio/designs/history-map/GUIDE.md")
+    (root / guide).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(ROOT / guide, root / guide)
     return root
 
 

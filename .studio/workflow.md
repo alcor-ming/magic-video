@@ -8,7 +8,7 @@
 
 先区分讨论、继续现有 Work/Variant、同内容目标的独立 Variant、临时实验和新生产目标。普通修订留在当前 Variant；同一期新账号适配建立独立 Variant；只有用户明确要求旧归档实体只读、另建同一期实体时使用继任。用途有实质歧义才询问，不从 URL、缺账号或缺 Final 推断实验。
 
-账号属于 Variant；Work 级 Script/Research 由各 Variant 共享，各 Variant 独立维护 Plan、工程与接受结果。显式内容分支按 CLI 定位。新视频显式指定 `--purpose standard|ip|test`，生产用途指定系列；账号与制作版本可以稍后确定。视觉主题、背景和画幅按所选设计卡配置，动作用工具动作与卡片动作包（卡内 `MOTION.md`）；设计身份由设计卡显式选择（公共包 `stage-full`、`stage-light`；其他设计由用户卡目录提供），旧身份只读并提示重选，不隐式套用 `explainer`。Theme 负责字体、语义色与表面，不决定模式、布局或 cue；Variant 使用冻结外观。
+账号属于 Variant；Work 级 Script/Research 由各 Variant 共享，各 Variant 独立维护 Plan、工程与接受结果。显式内容分支按 CLI 定位。新视频显式指定 `--purpose standard|ip|test`，生产用途指定系列；账号与制作版本可以稍后确定。视觉主题、背景和画幅按所选设计卡配置，动作用工具动作与卡片动作包（卡内 `MOTION.md`）；设计身份由设计卡显式选择（公共包内置 `stage-full`、`stage-light`、`history-map`，用户卡目录可提供其他设计），旧身份只读并提示重选，不隐式套用 `explainer`。Theme 负责字体、语义色与表面，不决定模式、布局或 cue；Variant 使用冻结外观。
 
 WorkStore 按系列物理分层：`works/<系列ID>/<Work>/`，临时实验在 `works/test/`，未登记系列的 Work 在 `works/_未归系列/`；归档与停放只是 Work 内标记，不移动目录，`series move` 会把 Work 目录一并移到新系列文件夹（存活 Studio 先 `preview studio stop`）。旧版 `works/active|parked|archive/` 布局以 `work migrate layout` 预览、`--apply` 执行一次性迁移，可重复执行；Studio 记录是写入它的运行时的绝对路径，生产根须用 Windows 侧 `work.cmd` 执行，WSL 下会拒绝；迁移报告列出仍写着旧绝对路径的工作文件，由使用者下次使用时改正，冻结快照与证据不改写。系列经验规则即系列文件夹内的 `works/<系列ID>/AGENTS.md`，以 `work series rules show <id>` 读取、`work series rules put <id> --file -` 从标准输入整份替换（也可给文件路径；`series put <id> --file -` 同样从标准输入读配置 JSON；不要在 WorkStore 根目录落请求草稿；旧版与历史留在 control-plane）、`work series rules delete <id>` 撤下当前规则（正文转入历史）；`work status` 的 `series_rules` 给出所属系列规则路径。读写一律经系列 ID 的 CLI，不从 Work 的上级目录或链接位置推断，开始 Script 前读取；复盘只写回已成立、可复用的结论，合并重复、修正被推翻条目，不堆日志或猜测，也不自动变成系列默认配置。不再使用的系列以 `work series delete <id>` 退役：仍有任何 Work（含归档）归属时拒绝，须先 `series move`；系列文件夹除 `AGENTS.md` 外仍有内容时也拒绝；其他系列文件夹里没有 `WORK.md` 的目录不算 Work，不阻断；配置、配置历史与规则整体移入 WorkStore `control-plane/deleted/series/` 并移除空系列文件夹，不硬删，同 ID 可重新创建且版本从 1 起。系列 ID 不可改名，需要新 ID 时新建系列、逐个 `series move` 后删除旧系列。不再使用的账号以 `work account delete <id>` 退役：任一 Variant（含归档）冻结了该账号、或任一系列的 `accounts` 列出它时拒绝；系列文件夹里没有 `WORK.md` 的目录不算 Work，不阻断；配置、配置历史与账号资产（封面角色库）整体移入 `control-plane/deleted/account/`，不硬删，同 ID 可重新创建且版本从 1 起。账号 ID 同样不可改名：新建账号、把系列 `accounts` 改挂新账号，已冻结旧账号的 Variant 与导出保持原样，旧账号保留作历史。
 
@@ -19,6 +19,8 @@ WorkStore 按系列物理分层：`works/<系列ID>/<Work>/`，临时实验在 `
 实验采用结果先复制或冻结到目标 Work；来源关系不等于接受。保留稳定 Scene/Anchor ID、正式声音、已有成果和冻结历史。更换主题、叙事结构或确认观点属于方向变化，只确认受影响部分。
 
 ## 1. 内容准备
+
+`history-map` 的 Script 是无旁白镜头纲要。Plan 门同时核对事实表和史实底线表。该卡跳过 TTS、cues 和 beats，音乐可使用工程内本地 `stem`。见[历史卡使用指南](designs/history-map/GUIDE.md)。
 
 复用合格 Script、录音、对齐与材料。Script 只来自用户提供的文稿或用户撰写；Script 为空时整理用户文稿，不提供下载或转录提取，正文改动须用户批准。用 `work script text` 排除 Scene 索引，避免重复对齐处理。Script 稳定后通过 `work name` 补语义标题。
 

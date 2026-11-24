@@ -17,6 +17,7 @@ EXPECTED_DEFAULTS = {
     "english": {"captions": False, "sfx": False},
     "stage-full": {"captions": True, "sfx": True},
     "stage-light": {"captions": True, "sfx": True},
+    "history-map": {"captions": False, "sfx": False},
     "collage": {"captions": True, "sfx": True},
 }
 
@@ -24,7 +25,7 @@ EXPECTED_DEFAULTS = {
 class DesignCatalogTest(unittest.TestCase):
     def test_installed_cards_and_default_table(self):
         catalog = designs.catalog()
-        self.assertIn(set(catalog), ({"stage-full", "stage-light"}, set(designs.DESIGN_IDS)))
+        self.assertIn(set(catalog), ({"stage-full", "stage-light", "history-map"}, set(designs.DESIGN_IDS)))
         for identity in catalog:
             expected = EXPECTED_DEFAULTS[identity]
             with self.subTest(identity=identity):
@@ -166,7 +167,9 @@ class DesignCliTest(unittest.TestCase):
         work, _ = cli.locate_work(self.root, work_id)
         return cli.read_json(work / "variants" / name / "variant.yaml")
 
-    def test_work_cli_creates_all_six_designs(self):
+    def test_work_cli_creates_all_installed_designs(self):
+        from test_history_map import fixture_host
+        fixture_host(self.root)
         for identity in designs.catalog():
             with self.subTest(identity=identity):
                 work_id = self.new_work("Work " + identity, "--design", identity)

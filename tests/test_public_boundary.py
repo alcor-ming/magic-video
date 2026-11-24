@@ -50,6 +50,7 @@ class PublicBoundaryTest(unittest.TestCase):
         public = set(json.loads((REPO / '.studio/package-scopes.json').read_text(encoding='utf-8'))['public_cards'])
         cards = {name.split('/')[2] for name in self.files
                  if name.startswith('.studio/designs/') and name.count('/') >= 3}
+        self.assertIn('history-map', public)
         self.assertLessEqual(cards - {'shared'}, public)
 
     def test_no_personal_entries_or_new_trellis_material(self):

@@ -4,7 +4,7 @@
 
 完整的通用使用、流程与授权规则见 [.studio/AGENTS.md](.studio/AGENTS.md)；生命周期与三道人工门见 [.studio/workflow.md](.studio/workflow.md)；五层、A/B-roll、字幕与声音见 [.studio/spec/visual-design.md](.studio/spec/visual-design.md)；运行接口见 [.studio/spec/runtime-interfaces.md](.studio/spec/runtime-interfaces.md)。本文件只保留可移动入口，不复制授权边界。
 
-设计身份来自内置卡与用户卡 Catalog，素材卡不进入选择列表。随包安装的卡位于 `.studio/designs/`，是受管理文件、只读，公共包内置 `stage-full`、`stage-light` 两张；用户卡由根配置 `design_root` 定位，默认 `asset-library/designs`。同 ID 冲突拒绝，旧身份只读并提示重选。 单一流程为 Script → Research →（可选）优化 → 文案门 → Plan → Plan 门 → Draft+封面 → Draft 门 → MP4+封面；导出成功后 Variant 保持 active。
+设计身份来自内置卡与用户卡 Catalog，素材卡不进入选择列表。随包安装的卡位于 `.studio/designs/`，是受管理文件、只读，公共包内置 `stage-full`、`stage-light`、`history-map` 三张；用户卡由根配置 `design_root` 定位，默认 `asset-library/designs`。同 ID 冲突拒绝，旧身份只读并提示重选。 单一流程为 Script → Research →（可选）优化 → 文案门 → Plan → Plan 门 → Draft+封面 → Draft 门 → MP4+封面；导出成功后 Variant 保持 active。
 
 ## 资产开发
 

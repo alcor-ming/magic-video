@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "world",
+  "version": 1,
+  "kind": "module",
+  "entry": "index.js",
+  "dependencies": [
+    "atmo.js",
+    "batches.js",
+    "battle-particles.js",
+    "card.js",
+    "diecut.js",
+    "mapdraw.js",
+    "post.js",
+    "sprites.js",
+    "table.js",
+    "textures/fog.webp",
+    "textures/paper-grain.webp",
+    "textures/wood.webp",
+    "util.js"
+  ],
+  "description": "可按绝对秒数求值的地图桌、模切纸片、镜头、灯光、雾、纸烟和画面粒子。",
+  "rights": "Apache-2.0",
+  "asset_layer": "building-block"
+}

@@ -65,7 +65,7 @@ class IndependentLinesTest(unittest.TestCase):
         self.assertEqual('explainer', lines.frozen({'line': {'id': 'explainer', 'version': 1}})['id'])
 
     def test_card_default_captions(self):
-        expected = {'english': False, 'stage-full': True, 'stage-light': True, 'collage': True}
+        expected = {'english': False, 'stage-full': True, 'stage-light': True, 'history-map': False, 'collage': True}
         for identity, enabled in expected.items():
             if identity not in designs.DESIGN_IDS:
                 continue

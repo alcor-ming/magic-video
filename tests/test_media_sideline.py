@@ -84,7 +84,7 @@ class AccountCharacterTest(unittest.TestCase):
 
 class BgmTest(unittest.TestCase):
     def test_stage_cards_keep_bgm_off_until_the_account_turns_it_on(self):
-        for card in ('stage-full', 'stage-light'):
+        for card in ('stage-full', 'stage-light', 'history-map'):
             self.assertIs(False, designs.resolve(card)['values']['bgm.enabled'])
         values = designs.resolve('stage-full', account={'bgm': {'enabled': True, 'policy': 'incompetech 轻快'}})['values']
         self.assertEqual((True, 'incompetech 轻快'), (values['bgm.enabled'], values['bgm.policy']))

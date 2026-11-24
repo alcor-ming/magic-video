@@ -1,10 +1,12 @@
 # Magic Video Harness
 
-v4.2 开放设计卡脚手架：一张设计卡包含设计指导、阶段配方、范例和自己的资产库；素材卡只提供资产，不进入制作设计选择。公共包内置 `stage-full`、`stage-light` 两张只读卡；用户卡保存在工具之外的 `design_root`，由使用者直接编辑。
+v4.2 开放设计卡脚手架：一张设计卡包含设计指导、阶段配方、范例和自己的资产库；素材卡只提供资产，不进入制作设计选择。公共包内置 `stage-full`、`stage-light`、`history-map` 三张只读卡；用户卡保存在工具之外的 `design_root`，由使用者直接编辑。
 
 Work 管一期内容，Variant 管独立制作版本。设计卡在制作中实时读取，提交 Draft 时复制卡片文件与引用资产并记录摘要；已有 Draft、接受快照和 Final 保持独立。当前只提供 `hyperframes_video` 制作。Windows 原生、打包与生产验证单独记录。
 
 ## 快速开始
+
+`history-map` 用作战地图桌、立体纸片小景和中文牌制作无旁白历史短片。先填事实表与史实底线表，再参考三皇会战示例编排。音乐可选，封面默认开启。参见[历史卡使用指南](.studio/designs/history-map/GUIDE.md)。
 
 资产选型使用 `component list` 查询卡内资产，按用途、类型、标签或画幅筛选，再通过 interface 阅读用法。来源卡缺失或引用断链时明确报告；单张无效或同 ID 冲突的卡只停用自身。`--design <card>` 只列该卡 Variant 可用的资产，`usable_by` 与安装/绑定的实际范围一致；`component trace` 只读核对卡—引用—账号—Work 关系，分开报告缺源、未安装与旧冻结副本。设计卡声明 Plan、阶段指导、资产范围和豁免；素材卡只被引用或本地化，不能用作 Variant 的设计。
 
@@ -257,7 +259,7 @@ D:\HyperFrames\work.cmd doctor
 powershell -NoProfile -ExecutionPolicy Bypass -File D:\hf-packages\harness-2026.11.0\release.ps1 deploy -Root D:\HyperFrames
 ```
 
-升级只替换安装清单拥有的工具文件，不动 Work、用户卡、根配置与用户 Skill；被改过的工具文件会使升级拒绝并列出路径。同一解包目录还提供 `status`（查看已安装版本）、`verify`（校验解包内容）、`verify-root`、`rollback`（回到上一版）与 `recover`（中断后恢复），用法同上，把 `deploy` 换成对应命令并保留 `-Root`。公共包内置卡固定为 `stage-full`、`stage-light` 两张，升级不会新增内置卡，因此不会与 `design_root` 中的用户卡撞 ID。
+升级只替换安装清单拥有的工具文件，不动 Work、用户卡、根配置与用户 Skill；被改过的工具文件会使升级拒绝并列出路径。同一解包目录还提供 `status`（查看已安装版本）、`verify`（校验解包内容）、`verify-root`、`rollback`（回到上一版）与 `recover`（中断后恢复），用法同上，把 `deploy` 换成对应命令并保留 `-Root`。公共包当前内置 `stage-full`、`stage-light`、`history-map`。Catalog 会报告用户卡与内置卡的同 ID 冲突。
 
 维护者发布新版本（WSL，需要 GitHub 访问与 `gh` 登录；构建要求工作树干净、tag 指向 HEAD 且已推送）：
 
