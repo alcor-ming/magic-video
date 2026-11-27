@@ -1,215 +1,277 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "dbs": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs/SKILL.md",
-      "computedHash": "14f604631be31613b9780af9739dfce7059494fe5766b7047c24a81d2d0d8732"
+      "computedHash": "2cb92c88ca9478183d8cdd8622dc6d69f89a535ee73ffa6763d5db401994fe4d"
     },
     "dbs-action": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-action/SKILL.md",
-      "computedHash": "918ac38fbd4df28ab8b56799caa9906dadde84f962213e93b00cc1232334d256"
+      "computedHash": "397d135441d1d7d93445f33af378d81caf58567fe6b631543186a4b779ef34c1"
     },
     "dbs-ai-check": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-ai-check/SKILL.md",
-      "computedHash": "aea13699de9cdaec4a77d9eec4413d9c646235fe1a6bb4f47159e2048e46c657"
+      "computedHash": "f0ceb7cbfc43c61a1c97d002c8933973d6256fc9fe2e3200cdb1532ea683f430"
     },
     "dbs-benchmark": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-benchmark/SKILL.md",
-      "computedHash": "745cf97b6f7ccb14a91c2e136dc370ce0111debfb699b0270e13ebb5f22b1a7b"
+      "computedHash": "928c3070e143af464050e3835e56d2685345627c0a274c2d09b6c3868bd00c32"
     },
     "dbs-chatroom": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-chatroom/SKILL.md",
-      "computedHash": "8ee483def7b8da704fac6c49c2fb8f68e39d92413bfabd80214d5c246a6e2c98"
+      "computedHash": "d8c21c34c4cc59855c82ec9e82b75df0b52b8cbbf3f71ed250bee2c3073b9802"
     },
     "dbs-chatroom-austrian": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-chatroom-austrian/SKILL.md",
-      "computedHash": "c287d647a01641ffc51fb8ee685797e2aabca0328bb22814b3b3de9293495854"
+      "computedHash": "9d35ca36a87431c1a2fdaac00f481f79a5aa93417cfe58a22dded347ae54e386"
+    },
+    "dbs-computer-use": {
+      "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
+      "sourceType": "github",
+      "skillPath": "skills/dbs-computer-use/SKILL.md",
+      "computedHash": "717bcc3aa333a94803b970c77a7d85eac15294790cc580505e70fb63f1f8a164"
     },
     "dbs-content": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-content/SKILL.md",
-      "computedHash": "55c987555f888ee8b6fb6a94a6a3803338c44e69be3deb1b2fe2f5463b44cf43"
+      "computedHash": "50052ba74ba3f212f13eb69836ec86db218e6be2fe55f5b385840e168133c2de"
     },
     "dbs-content-risk-check": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-content-risk-check/SKILL.md",
-      "computedHash": "6768ed0a5054d55f0cb298918abe36811c8f01e64d76f2ec6af0b7a6ff8e7b64"
+      "computedHash": "1994ca6386f3a3949a50fcb9fa40fa18f6668ab988162e1fc3d5892cd060207e"
     },
     "dbs-content-system": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-content-system/SKILL.md",
-      "computedHash": "fd5d9264e3931665a232e4cf77829564ffbada664c2c6021a899aaf2d78c44ef"
+      "computedHash": "bbd0dc2fe433702d3fb7f312ae87be35ea6a5a5c4e21d2e2de6c0930d17c0df0"
     },
     "dbs-content-value": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-content-value/SKILL.md",
-      "computedHash": "3ba3b6194ca4e006ab29fe45ecaee0fea95dbaf813cbff34a0376f259a3a6b81"
+      "computedHash": "5d7e8f13b766728058d8ebbd4d9f6d786ac669f4941d745fa7624b8e8b854b41"
     },
     "dbs-decision": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-decision/SKILL.md",
-      "computedHash": "5b4f7167a5cf5fffd0b0b3a639a0829c5299e41fd924f23452d8f3e9225d22ac"
+      "computedHash": "e67e679a6f77d8a2c032a841b9f9a8368d143d2906dc40af73ce4f19e25c230f"
     },
     "dbs-deconstruct": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-deconstruct/SKILL.md",
-      "computedHash": "bcaa6eb0024ec19e8b2d4ebd7609af44f068b9d475b22f10c91d34ec9294c384"
+      "computedHash": "e9f21c551d45b4d39e7c0ab08d4eab2c64b9259e41da7f0927c10b5585fed705"
     },
     "dbs-diagnosis": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-diagnosis/SKILL.md",
-      "computedHash": "41b848aefd147c928c6842087aff2c3118218ea5d3b0a8a88b05d19c507263e6"
+      "computedHash": "feef0526bec7978474c6c2ebe55b9e731ada9f65aeb27b7c4da1f7d351a60987"
     },
     "dbs-goal": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-goal/SKILL.md",
-      "computedHash": "f84bba3be820f2f67f39c7719a97dcfb04e7fddd22bd82f698248c02bd22a48c"
+      "computedHash": "c9e3691874b640f1c0367a7d775a2e0924fa78140494c8c7ede40a4c304c6a04"
+    },
+    "dbs-goal-hold": {
+      "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
+      "sourceType": "github",
+      "skillPath": "skills/dbs-goal-hold/SKILL.md",
+      "computedHash": "548654ee9f133a785c813de9b353a8ffdf91a0e78c94a41fdd09dc2c0813f3b9"
     },
     "dbs-good-question": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-good-question/SKILL.md",
-      "computedHash": "2c63a89753da4cae72533d588ebeb23427804a9f857deb6ed1c0f0ce46916a6e"
+      "computedHash": "6049b972d1c7027524c5a8e3e2b58c987bbea8a663607ba744acbac6ab4162b4"
     },
     "dbs-human-dispatch": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-human-dispatch/SKILL.md",
-      "computedHash": "a1e82bdea802afd432a77439392af7ea6b5e7af837d84aa20319817a84df901a"
+      "computedHash": "a2eff096575e0c003151b9edc2fb7c5c657cdbe5bac59d6b6431c55f575cc9aa"
     },
     "dbs-install-skill": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-install-skill/SKILL.md",
-      "computedHash": "8a711e6329873a295e6282f7dfc69e2c87232e8ae7547be354d253426e64b7bb"
+      "computedHash": "8a0401c52a1aa84a1262d17d251159d760bbe8ecd62871be61118afeb67739e9"
     },
     "dbs-jtbd": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-jtbd/SKILL.md",
-      "computedHash": "8c9ac6ae144cd9cc3eb4305d9fb7b4980ae5a4c483427f448ed611d5bcd4650a"
+      "computedHash": "6d30d0fa1438e3b2796ff019a36f1060bfaec5ad7b8ab3cecf95c785ab0ebc5f"
     },
     "dbs-knowledge": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-knowledge/SKILL.md",
-      "computedHash": "9e88cb68917efef89339898e79e614467db3ab94c7fad826902817269c2ba2ff"
+      "computedHash": "3c699750c8296d88c12f27cfdac9ab21f827b2bf00e7d58b8f717f7594210252"
     },
     "dbs-learning": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-learning/SKILL.md",
-      "computedHash": "3b888cc0b09859ad9565b9e6247bdfee23df3292267b0f9403c73384b3a8d9dd"
+      "computedHash": "94f4690fde2e2256ba83fc7205174f2523ee3fb1a844699fcc15c8ed890c7456"
     },
     "dbs-plain-writing": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-plain-writing/SKILL.md",
-      "computedHash": "d0aaa0c605ee504675a046f986186b3d7fa6bb48e7d8284a71f3c86f1b94d257"
+      "computedHash": "f2bdf21c50fa3f3151959106f2b3fb257c19044100ae6256af2123cc8acad9b7"
     },
     "dbs-report": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-report/SKILL.md",
-      "computedHash": "30102ed8136124f8396c370587f141e1b1878061d18f2b0709d12d635163aac4"
+      "computedHash": "18f65ef357b4522f791efc260d8969ec5a5a7db23047503be09f5ce84a500fc1"
     },
     "dbs-resonate": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-resonate/SKILL.md",
-      "computedHash": "c1efbe396caf2886b191f6945704043ebd1bd16e83404f01a640adeb7d408045"
+      "computedHash": "e9a7bf8df7dff40ce8e2fb04918e06b01c5ceb7f93d2d74400113389a66cf662"
     },
     "dbs-restore": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-restore/SKILL.md",
-      "computedHash": "a23b9bbe875e68e56d4b40795758c78812f4c44ef1681647e48f2f512bf3bb7b"
+      "computedHash": "99f5766c2422f646c8dd542798c397275f3683992298f6a8d5e8ab894e8f6459"
     },
     "dbs-save": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-save/SKILL.md",
-      "computedHash": "f66f0e93f7d9db35f73d68710737f9a6d727ee21ddb5b0065a2f616fde456ce9"
+      "computedHash": "701b338f7957e0bd589761f9e84b2367676c7115af34bd26730968652f87fed9"
     },
     "dbs-script-flow": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-script-flow/SKILL.md",
-      "computedHash": "771d7bd4cf23559a852b89142038329355c5a1c6361f9d94b48022963bdd3a1f"
+      "computedHash": "1f7915daff40508c202218b430d65ec23f3772405c03aff2b7c43236542298a5"
     },
     "dbs-skill-maker": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-skill-maker/SKILL.md",
-      "computedHash": "99be1a2984868a55cc9af64913a14594168e18aba81320ee73453db6a15180fb"
+      "computedHash": "f9a515e49e6c51c3d391140d96393f40bc76f12db9cef62e211eb3dff5ba5823"
+    },
+    "dbs-speak-human": {
+      "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
+      "sourceType": "github",
+      "skillPath": "skills/dbs-speak-human/SKILL.md",
+      "computedHash": "f0f7fad8e822c33319267f60d6755effc5045c12cf6b5243168b622dad1b30d0"
     },
     "dbs-spread": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-spread/SKILL.md",
-      "computedHash": "90848e10359799dec94a4b68ae2416d236a871c8e1ef184dfdde2651475337cf"
+      "computedHash": "2bf09bc69ba496ee1a3179f2e6817051e2901b6da501f6a5eddb21e5c9098d73"
     },
     "dbs-standard-answer": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-standard-answer/SKILL.md",
-      "computedHash": "294b823021ae2caa2e738177e00cd479bc1aa57167f18b2b577aff4b0f53976d"
+      "computedHash": "c0d1d36b27337ea687ce52cfb6742d6eee3cc0db0d6552de88a7225a752309af"
+    },
+    "dbs-sync-to-dondon": {
+      "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
+      "sourceType": "github",
+      "skillPath": "skills/dbs-sync-to-dondon/SKILL.md",
+      "computedHash": "08120125c8a5f5aea073e010038f63cdee260bac228d53dbc4ac2ad19a0caf2e"
     },
     "dbs-theory-grounding": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-theory-grounding/SKILL.md",
-      "computedHash": "5f1568f13ad67ab3f3726fffd7e8fffa5bb1046c65fae021016ede376e19304c"
+      "computedHash": "3c048d1dd5be86b022cde990243a53ae4f6cfadd3ff58a4cdd764cf8836404c0"
     },
     "dbs-title-cover-intro": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-title-cover-intro/SKILL.md",
-      "computedHash": "2abad25cfc82338231053cfe3f0895165f1f73a32144e60a4f90050fed531c70"
+      "computedHash": "9ab14da04578f2b1e8c3b73597bc2af24663ca191afac04d75a6ef3fd0bb1b39"
     },
     "dbs-update": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-update/SKILL.md",
-      "computedHash": "f0e078bddb87da81153279b9dfb23b65beb2817f8760956998316adbfb1f1f4b"
+      "computedHash": "be246406c32b1bb3dcae979206a464237f3faf8050ba31e2185ca01ee63301f5"
     },
     "dbs-video-navigation": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-video-navigation/SKILL.md",
-      "computedHash": "d3c629d37d6f41311dff87500720edb10c39114e6dddb8d4f48a64305f87f52f"
+      "computedHash": "ad47454206f2c0a349eae7effd1c75d0c6f527ec2592f19cac5e56e70605cfe4"
     },
     "dbs-wechat-html": {
       "source": "dontbesilent2025/dbskill",
+      "commit": "be415227f2e6d67b62439e01a87e628da48a3796",
       "sourceType": "github",
       "skillPath": "skills/dbs-wechat-html/SKILL.md",
-      "computedHash": "83d4c41c4aaae3df5d85b759e4d62703d670461e50e3864d02e872973f1edf3a"
+      "computedHash": "e810e73709e58e28727ab087bad6d5f8818238793dd7cdd6c0e0e21d26456561"
     },
     "media-publish-check": {
       "source": "XshuiAi/media-publish-check",
       "sourceType": "github",
       "skillPath": "SKILL.md",
-      "computedHash": "50b1f7685d992ad7273532a5fa5073ef967077df09b6dff40d93cde49ce8268c"
+      "computedHash": "3d6b18133a673b33dbcd567cba5a013ee33f8d96d4ddfb388ebb42c9cf5d9c50"
     }
   }
 }
